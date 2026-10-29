@@ -88,7 +88,7 @@ function openBook(id){
  markup=markup.replace('__INITIAL_POSITION__',JSON.stringify(position));
  if (!markup.includes('pdl-openpageflip-integration')) {
  markup=markup.replace('</head>','<link rel="stylesheet" href="./vendor/openpageflip/0.7.0/styles.css"/><script src="./vendor/openpageflip/0.7.0/index.iife.js"></'+'script></head>');
- markup=markup.replace('</body>',document.getElementById('pdl-opf-template').textContent+'</body>');
+ markup=markup.replace('</body>',document.getElementById('pdl-opf-template').textContent.replace('__PDL_SCRIPT_END__','</'+'script>')+'</body>');
  }
  document.getElementById('reader-frame').srcdoc=markup;
  safeWrite('pdl:v140:lastbook',id);
@@ -99,7 +99,7 @@ function closeBook(){
  frame.removeAttribute('srcdoc');frame.src='about:blank';
  activeBook=null;
  document.body.classList.remove('reading');
- document.title='Pontian Digital Library — Βιβλιοθήκη v1.8.0';
+ document.title='Pontian Digital Library — Βιβλιοθήκη v1.8.1';
  refreshCatalog();
 }
 window.addEventListener('message',event=>{
@@ -298,116 +298,147 @@ async function pdlInstallApp(){
   const b=document.getElementById('pdl-install-app');if(b)b.hidden=true;
 }
 </script><script id="pdl-opf-template" type="text/plain"><style id="pdl-openpageflip-style">
-/* OpenPageFlip: independent chapter-sized book surface, non-invasive fallback */
-#pdl-opf-host{position:absolute;inset:0;z-index:5;display:none;align-items:center;justify-content:center;overflow:hidden;pointer-events:auto;background:var(--md-surface-dim)}
+/* Reader 1.8.1: render only the mode the renderer actually supports. */
+#pdl-opf-host{position:absolute;inset:0;z-index:5;display:none;align-items:center;justify-content:center;overflow:hidden;background:var(--pdl-desk, var(--md-surface-dim))}
 #pdl-opf-host.pdl-active{display:flex}
-#pdl-opf-book{width:100%;height:100%;position:relative}
-#pdl-opf-book>.pdl-opf-leaf{background:var(--md-surface);color:var(--md-on-surface);overflow:hidden;box-sizing:border-box;padding:32px 40px;}
-#pdl-opf-book .pdl-opf-content{width:100%;height:100%;font-family:var(--pdl-font, var(--font-body));font-size:inherit;line-height:inherit;overflow:hidden}
-#pdl-opf-book .pdl-opf-content p{text-align:justify;text-align-last:auto;hyphens:auto;}
+#pdl-opf-book{position:relative;width:100%;height:100%;}
+#pdl-opf-book>.pdl-opf-leaf{box-sizing:border-box;background:var(--pdl-page,var(--md-surface));color:var(--pdl-page-ink,var(--md-on-surface));overflow:hidden;padding:clamp(16px,2.2vh,27px) clamp(24px,3vw,48px)}
+#pdl-opf-book .pdl-opf-content{width:100%;height:100%;overflow:hidden;font-family:var(--pdl-font,var(--font-body));}
+#pdl-opf-book .pdl-opf-content p{text-align:justify;text-align-last:auto;hyphens:auto}
 #pdl-opf-book .pdl-opf-content p.dialogue{font-style:italic}
 body.pdl-opf-enabled #page-content,body.pdl-opf-enabled #pdl-second-page{visibility:hidden!important}
-@media(max-width:768px){#pdl-opf-book>.pdl-opf-leaf{padding:18px 22px}}
+/* Mobile is always one real text page, never a two-page OPF spread. */
+@media(max-width:768px){
+  #pdl-opf-host{display:none!important}
+  body.pdl-opf-enabled #page-content{visibility:visible!important}
+  body.pdl-double .pdl-second-page{display:none!important}
+  body.pdl-double .page-content#page-content{border-right:0!important}
+  .text-viewport{width:100%!important;max-width:100%!important;}
+  .page-content#page-content{width:100%!important;max-width:100%!important;min-width:0!important;flex:1 1 auto!important;}
+}
 </style>
 <script id="pdl-openpageflip-integration">
-/* OpenPageFlip experimental integration. Core 0.7.0 script is loaded before this script.
-   The original reader remains the fallback for failed loads, reflow, and edge cases. */
+/* 1.8.1: desktop double-spread opt-in; mobile/single stable native renderer.
+   Old StPageFlip is not used. Core 0.7.0 is local. */
 (function(){
  'use strict';
- let book=null, host=null, activeChapter=-1, state='off', rebuilding=false;
- const isDouble=()=>document.body.classList.contains('pdl-double')&&innerWidth>768;
- function abandon(){
-  if(book){try{book.destroy()}catch(e){console.warn('OpenPageFlip destroy',e)}book=null;}
-  host?.remove();host=null;activeChapter=-1;
+ let book=null,host=null,activeChapter=-1,activePage=-1,busy=false,timer=null;
+ const mobile=()=>matchMedia('(max-width: 768px)').matches;
+ const doubleMode=()=>!mobile()&&document.body.classList.contains('pdl-double');
+ function clear(){
+  if(book){try{book.destroy()}catch(e){console.warn('OpenPageFlip destroy:',e)}book=null}
+  if(host){host.remove();host=null}
+  activeChapter=-1;activePage=-1;
   document.body.classList.remove('pdl-opf-enabled');
-  document.documentElement.dataset.flipEngine='fallback';
+  document.documentElement.dataset.flipEngine='native';
  }
- function showFallback(message){abandon();if(message)console.warn('OpenPageFlip: fallback',message)}
+ function enforceMobile(){
+  if(!mobile())return;
+  if(document.body.classList.contains('pdl-double')){
+   document.body.classList.remove('pdl-double');
+   if(typeof pdlLayout!=='undefined')pdlLayout='single';
+   document.querySelectorAll('[data-pdl-layout]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.pdlLayout==='single')));
+   document.getElementById('pdl-spread-rail')?.classList.remove('pdl-selected');
+   if(typeof pdlScheduleRelayout==='function')setTimeout(pdlScheduleRelayout,0);
+  }
+ }
+ function schedule(){clearTimeout(timer);timer=setTimeout(mount,180)}
  function mount(){
-  if(rebuilding||!window.OpenPageFlip?.createBook||!Array.isArray(chapters)||!chapters[currentChapter]?.pages?.length){showFallback('core unavailable');return}
-  const viewport=document.getElementById('text-viewport');const leaf=document.getElementById('page-content');
-  if(!viewport||!leaf){showFallback('viewport missing');return}
-  const rect=leaf.getBoundingClientRect(),vrect=viewport.getBoundingClientRect();
-  const width=Math.floor(rect.width),height=Math.floor(Math.min(viewport.clientHeight-16,vrect.height-16));
-  if(width<160||height<230){showFallback('measured page too small');return}
-  rebuilding=true;
+  if(busy)return;
+  enforceMobile();
+  if(!doubleMode()){clear();return}
+  if(!window.OpenPageFlip?.createBook||!Array.isArray(chapters)||!chapters[currentChapter]?.pages?.length){clear();return}
+  const viewport=document.getElementById('text-viewport');
+  const leaf=document.getElementById('page-content');
+  if(!viewport||!leaf){clear();return}
+  const r=leaf.getBoundingClientRect(),vr=viewport.getBoundingClientRect();
+  const width=Math.floor(r.width),height=Math.floor(r.height);
+  if(width<180||height<280||width*2>vr.width+10){clear();return}
+  if(book&&activeChapter===currentChapter&&activePage===currentPage)return;
+  busy=true;
   try{
-   abandon();
+   clear();
    host=document.createElement('div');host.id='pdl-opf-host';host.className='pdl-active';
-   let el=document.createElement('div');el.id='pdl-opf-book';host.appendChild(el);
+   const element=document.createElement('div');element.id='pdl-opf-book';host.appendChild(element);
    viewport.style.position='relative';viewport.appendChild(host);
    const pages=chapters[currentChapter].pages;
    for(let i=0;i<pages.length;i++){
-    const p=document.createElement('div');p.className='pdl-opf-leaf';
-    const inner=document.createElement('div');inner.className='pdl-opf-content page-content';
-    inner.innerHTML=pdlPositionMarkup(currentChapter,i);
-    inner.style.fontSize=getComputedStyle(leaf).fontSize;inner.style.lineHeight=getComputedStyle(leaf).lineHeight;
-    p.appendChild(inner);el.appendChild(p);
+    const shell=document.createElement('div');shell.className='pdl-opf-leaf';
+    const contents=document.createElement('div');contents.className='pdl-opf-content page-content';
+    contents.innerHTML=pdlPositionMarkup(currentChapter,i);
+    const cs=getComputedStyle(leaf);contents.style.fontSize=cs.fontSize;contents.style.lineHeight=cs.lineHeight;
+    shell.appendChild(contents);element.appendChild(shell);
    }
-   book=window.OpenPageFlip.createBook(el,{width,height,size:'stretch',cover:false,startPage:Math.max(0,currentPage),flippingTime:520});
-   book.on('flip',({page})=>{
-    if(rebuilding||!Number.isInteger(page))return;
-    const pg=Math.max(0,Math.min(page,chapters[currentChapter].pages.length-1));
-    if(pg!==currentPage){currentPage=pg;render();}
+   book=window.OpenPageFlip.createBook(element,{width,height,size:'fixed',cover:false,startPage:Math.min(currentPage,pages.length-1),flippingTime:520});
+   book.on('flip',event=>{
+    const pg=event?.page;
+    if(busy||!doubleMode()||!Number.isInteger(pg)||activeChapter!==currentChapter)return;
+    const next=Math.min(Math.max(pg,0),pages.length-1);
+    if(currentPage!==next){currentPage=next;activePage=next;originalRender();}
    });
-   activeChapter=currentChapter;document.body.classList.add('pdl-opf-enabled');
+   activeChapter=currentChapter;activePage=currentPage;
+   document.body.classList.add('pdl-opf-enabled');
    document.documentElement.dataset.flipEngine='openpageflip-0.7.0';
-  }catch(e){showFallback(e.message)}
-  finally{rebuilding=false}
+  }catch(e){console.warn('OpenPageFlip fallback:',e);clear()}
+  finally{busy=false}
  }
- // Mount after reader pagination completes and fonts settle.
- let setupTimer=null;
- function queueMount(){clearTimeout(setupTimer);setupTimer=setTimeout(()=>{if(document.getElementById('page-content'))mount()},280)}
- const oldRender=render;
- render=function(){const result=oldRender.apply(this,arguments);if(book&&activeChapter!==currentChapter)queueMount();return result};
+ const originalRender=render;
+ render=function(){
+  if(book&&(activeChapter!==currentChapter||!doubleMode()))clear();
+  const v=originalRender.apply(this,arguments);
+  if(doubleMode()&&(!book||activeChapter!==currentChapter))schedule();
+  return v;
+ };
  const oldNext=nextPage,oldPrev=prevPage;
  nextPage=function(){
-  if(!book||activeChapter!==currentChapter){oldNext();return}
-  const step=isDouble()?2:1, last=chapters[currentChapter].pages.length-1;
-  if(currentPage+step<=last){Promise.resolve(book.flipNext()).catch(e=>showFallback(e.message));return}
-  abandon();oldNext();queueMount();
+  if(!doubleMode()||!book){clear();return oldNext.apply(this,arguments)}
+  try{const res=book.flipNext();Promise.resolve(res).catch(()=>{clear();oldNext()})}
+  catch(e){clear();oldNext()}
  };
  prevPage=function(){
-  if(!book||activeChapter!==currentChapter){oldPrev();return}
-  if(currentPage>0){Promise.resolve(book.flipPrev()).catch(e=>showFallback(e.message));return}
-  abandon();oldPrev();queueMount();
+  if(!doubleMode()||!book){clear();return oldPrev.apply(this,arguments)}
+  try{const res=book.flipPrev();Promise.resolve(res).catch(()=>{clear();oldPrev()})}
+  catch(e){clear();oldPrev()}
  };
- // Glossary selection on the *actual* page elements, not only the hidden legacy leaf.
+ // A single capture-phase handler for both native and OpenPageFlip text.
+ function wordAt(e){
+  let range=null;
+  if(document.caretRangeFromPoint)range=document.caretRangeFromPoint(e.clientX,e.clientY);
+  else if(document.caretPositionFromPoint){const c=document.caretPositionFromPoint(e.clientX,e.clientY);if(c){range=document.createRange();range.setStart(c.offsetNode,c.offset);range.collapse(true)}}
+  if(!range)return '';
+  const n=range.startContainer,parent=n.nodeType===3?n.parentElement:n;
+  const paragraph=parent?.closest?.('#pdl-opf-host p,#page-content p,#pdl-second-page p');
+  if(!paragraph)return '';
+  const walker=document.createTreeWalker(paragraph,NodeFilter.SHOW_TEXT);
+  let pos=-1,total=0,t;
+  while((t=walker.nextNode())){if(t===n)pos=total+range.startOffset;total+=(t.nodeValue||'').length}
+  if(pos<0)return '';
+  const source=paragraph.textContent||'';
+  const ch=c=>!!c&&/[\p{L}\p{M}\p{N}'’‘ʼ\u00ad\u200c\u200d]/u.test(c);
+  let a=Math.min(pos,source.length-1);if(!ch(source[a])&&a>0&&ch(source[a-1]))a--;
+  if(!ch(source[a]))return '';
+  let b=a+1;while(a>0&&ch(source[a-1]))a--;while(b<source.length&&ch(source[b]))b++;
+  return source.slice(a,b).replace(/\u00ad/g,'');
+ }
  document.addEventListener('dblclick',e=>{
-  if(!book||!e.target.closest?.('#pdl-opf-host'))return;
-  const selection=window.getSelection()?.toString()?.trim()||'';
-  const point=document.caretRangeFromPoint?.(e.clientX,e.clientY);
-  const node=point?.startContainer;
-  const para=(node?.nodeType===3?node.parentElement:node)?.closest?.('#pdl-opf-host p');
-  if(!para)return;
-  let word=selection;
-  if(!word||word.length>75||/\s/.test(word)){
-   const walk=document.createTreeWalker(para,NodeFilter.SHOW_TEXT);let offset=-1,total=0,n;
-   while(n=walk.nextNode()){if(n===node)offset=total+point.startOffset;total+=n.textContent.length;}
-   if(offset<0)return;
-   const t=para.textContent,letter=c=>!!c&&/[\p{L}\p{M}\p{N}'’‘ʼ]/u.test(c);
-   let a=offset,b=offset;if(!letter(t[a])&&letter(t[a-1]))a--;
-   if(!letter(t[a]))return;b=a+1;
-   while(a>0&&letter(t[a-1]))a--;while(b<t.length&&letter(t[b]))b++;
-   word=t.slice(a,b);
-  }
-  const found=window.pdlLookupDiagnostic?.(word);
-  if(!found)return;
-  const candidates=Object.values(typeof glossary==='object'?glossary:{});
-  const fold=t=>String(t).normalize('NFD').replace(/\p{M}/gu,'').toLowerCase().replace(/['’‘ʼ]/g,'');
-  const entry=candidates.find(x=>fold(String(x?.term||'').split(/\s+\(/)[0])===fold(word));
-  if(entry&&typeof showGloss==='function'){
-   showGloss(entry.term||word,entry);
-   document.getElementById('sidebar')?.classList.add('open');
-   if(typeof pdlV1315SyncStates==='function')pdlV1315SyncStates();
-   e.stopImmediatePropagation();e.preventDefault();
-  }
+  if(mobile()||!e.target.closest?.('#text-viewport'))return;
+  const text=wordAt(e),selection=window.getSelection()?.toString()?.trim();
+  const match=window.pdlLookupDiagnostic?.(text)||window.pdlLookupDiagnostic?.(selection);
+  if(!match)return;
+  if(typeof showGloss==='function')showGloss(match.term,{term:match.term,def:match.definition});
+  document.getElementById('sidebar')?.classList.add('open');
+  if(typeof pdlV1315SyncStates==='function')pdlV1315SyncStates();
+  e.preventDefault();e.stopImmediatePropagation();
  },true);
- // Rebuild after resize and settings changes. Never modify source book text.
- window.addEventListener('resize',queueMount,{passive:true});
- document.addEventListener('click',e=>{if(e.target.closest?.('[data-pdl-layout],[data-pdl-theme],#pdl-font-select,.fontsize-btn'))queueMount()},true);
- document.fonts?.ready?.then(queueMount);
- window.addEventListener('load',queueMount,{once:true});
- window.PDL_OpenPageFlip={refresh:queueMount,disable:()=>{state='disabled';abandon()},enable:()=>{state='on';queueMount()}};
+ // Layout changes destroy geometry before the native renderer reflows.
+ if(typeof pdlSetLayout==='function'){
+  const oldSet=pdlSetLayout;
+  pdlSetLayout=function(value){clear();oldSet(mobile()?'single':value);schedule()};
+ }
+ window.addEventListener('resize',()=>{clear();enforceMobile();schedule()},{passive:true});
+ document.addEventListener('click',e=>{if(e.target.closest?.('[data-pdl-layout],#pdl-font-select,.fontsize-btn')){clear();schedule()}},true);
+ document.fonts?.ready?.then(schedule);
+ window.addEventListener('load',()=>{enforceMobile();schedule()},{once:true});
+ window.PDL_OpenPageFlip={refresh:()=>{clear();schedule()},disable:()=>{clear();clearTimeout(timer)},enable:schedule};
 })();
-</script></script></body></html>
+__PDL_SCRIPT_END__</script></body></html>
