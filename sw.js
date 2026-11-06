@@ -1,8 +1,10 @@
-const CACHE='pontian-digital-library-v2.3.2-tiptap-plugin-fix';
-const CORE=['./','./index.html','./library-data.json','./admin.html','./manifest.webmanifest','./PontianDL_Logo.svg','./assets/book-placeholder.webp','./icons/icon-192.png','./icons/icon-512.png','./icons/icon-maskable-192.png','./icons/icon-maskable-512.png','./vendor/openpageflip/0.7.0/index.iife.js','./vendor/openpageflip/0.7.0/styles.css'];
+const CACHE='pontian-digital-library-v2.4.0-rc1';
+const CORE=['./','./index.html','./library-data.json','./manifest.webmanifest','./PontianDL_Logo.svg','./assets/book-placeholder.webp','./icons/icon-192.png','./icons/icon-512.png','./icons/icon-maskable-192.png','./icons/icon-maskable-512.png','./vendor/openpageflip/0.7.0/index.iife.js','./vendor/openpageflip/0.7.0/styles.css'];
+// Optional during source-only staging; required for full offline editing after CI build.
+const OPTIONAL=['./vendor/tiptap/tiptap.bundle.js','./vendor/hyphenopoly/6.1.0/Hyphenopoly_Loader.js','./vendor/hyphenopoly/6.1.0/Hyphenopoly.js','./vendor/hyphenopoly/6.1.0/hyphenEngine.wasm','./vendor/hyphenopoly/6.1.0/hyphenEngine.asm.js','./vendor/hyphenopoly/6.1.0/patterns/el-polyton.hpb','./vendor/hyphenopoly/6.1.0/patterns/el-monoton.hpb'];
 const base=new URL('./',self.registration.scope);
 const appIndex=new URL('index.html',base).href;
-const studioIndex=new URL('studio/index.html',base).href;
+const studioIndex=new URL('admin.html',base).href;
 const libraryJson=new URL('library-data.json',base).href;
 const timeout=5000;
 async function network(req){
@@ -20,6 +22,10 @@ self.addEventListener('install',event=>event.waitUntil((async()=>{
    if(!res.ok)throw Error('Critical precache asset '+path+': HTTP '+res.status);
    await cache.put(url.href,res);
   }));
+  // Cache vendored editor/hyphenation assets if the verified build has published them.
+  await Promise.all(OPTIONAL.map(async file=>{
+    try{const url=new URL(file,base);const response=await fetch(new Request(url,{cache:'reload'}));if(response.ok)await cache.put(url.href,response);}catch(err){console.warn('Optional offline asset unavailable',file,err);}
+  }));
   await self.skipWaiting();
  }catch(e){await caches.delete(CACHE);throw e;}
 })()));
@@ -30,7 +36,7 @@ self.addEventListener('activate',event=>event.waitUntil((async()=>{
 self.addEventListener('fetch',event=>{
  const req=event.request;if(req.method!=='GET')return;
  const url=new URL(req.url);if(url.origin!==location.origin||!url.href.startsWith(base.href))return;
- const studio=url.pathname.startsWith(new URL('studio/',base).pathname);
+ const studio=url.pathname===new URL('admin.html',base).pathname;
  const isNav=req.mode==='navigate';
  const isJson=url.href===libraryJson;
  if(isNav||isJson){event.respondWith((async()=>{
@@ -51,8 +57,9 @@ self.addEventListener('fetch',event=>{
  })());return;}
  event.respondWith((async()=>{
   const cache=await caches.open(CACHE);
-  const hit=await cache.match(req);if(hit)return hit;
-  try{const res=await fetch(req);if(res.ok&&url.pathname.match(/\.(?:css|js|svg|png|webp|woff2?)$/))event.waitUntil(cache.put(req,res.clone()));return res;}
-  catch(e){return Response.error();}
+  // Versioned static files still use network-first to prevent stale assets after redeployment.
+  try{const response=await network(req);if(response.ok){event.waitUntil(cache.put(req,response.clone()).catch(()=>{}));return response;}}
+  catch(e){}
+  return await cache.match(req)||Response.error();
  })());
 });
