@@ -7,7 +7,7 @@ const tip=path.join(root,'vendor','tiptap');mkdirSync(tip,{recursive:true});
 await build({entryPoints:[path.join(tip,'src','entry.mjs')],outfile:path.join(tip,'tiptap.bundle.js'),bundle:true,format:'esm',platform:'browser',target:['es2022'],minify:true,sourcemap:false,logLevel:'info',legalComments:'inline'});
 const hySrc=path.join(root,'node_modules','hyphenopoly');
 const hyTarget=path.join(root,'vendor','hyphenopoly','6.1.0');mkdirSync(path.join(hyTarget,'patterns'),{recursive:true});
-const required=['Hyphenopoly_Loader.js','Hyphenopoly.js','hyphenEngine.wasm','hyphenEngine.asm.js','patterns/el-polyton.hpb','patterns/el-monoton.hpb','LICENSE'];
+const required=['Hyphenopoly_Loader.js','Hyphenopoly.js','patterns/el-polyton.wasm','patterns/el-monoton.wasm','LICENSE'];
 for(const file of required){const a=path.join(hySrc,file),b=path.join(hyTarget,file);if(!existsSync(a))throw Error('Missing Hyphenopoly asset: '+file);copyFileSync(a,b)}
 const stamp=createHash('sha256');
 for(const asset of [path.join(tip,'tiptap.bundle.js'),...required.map(file=>path.join(hyTarget,file))])stamp.update(readFileSync(asset));
