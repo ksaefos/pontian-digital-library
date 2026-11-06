@@ -1,0 +1,26 @@
+{
+  "name": "pontian-digital-library",
+  "private": true,
+  "version": "2.4.0-rc.1",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build-assets.mjs",
+    "test": "node tests/regression.mjs",
+    "test:browser": "node tests/browser-smoke.mjs"
+  },
+  "dependencies": {
+    "@tiptap/core": "3.31.3",
+    "@tiptap/pm": "3.31.3",
+    "@tiptap/starter-kit": "3.31.3",
+    "@tiptap/extension-text-align": "3.31.3",
+    "@tiptap/extension-table": "3.31.3",
+    "@tiptap/extension-image": "3.31.3",
+    "@tiptap/extension-subscript": "3.31.3",
+    "@tiptap/extension-superscript": "3.31.3",
+    "hyphenopoly": "6.1.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.12",
+    "playwright": "1.55.1"
+  }
+}
