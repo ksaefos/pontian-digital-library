@@ -1,5 +1,5 @@
-const CACHE='pontian-digital-library-v2.1.3-catalog-sort-sections';
-const CORE=['./','./index.html','./library-data.json','./admin.html','./manifest.webmanifest','./PontianDL_Logo.svg','./icons/icon-192.png','./icons/icon-512.png','./icons/icon-maskable-192.png','./icons/icon-maskable-512.png','./vendor/openpageflip/0.7.0/index.iife.js','./vendor/openpageflip/0.7.0/styles.css'];
+const CACHE='pontian-digital-library-v2.1.4-covers-toc-typography';
+const CORE=['./','./index.html','./library-data.json','./admin.html','./manifest.webmanifest','./PontianDL_Logo.svg','./assets/book-placeholder.webp','./icons/icon-192.png','./icons/icon-512.png','./icons/icon-maskable-192.png','./icons/icon-maskable-512.png','./vendor/openpageflip/0.7.0/index.iife.js','./vendor/openpageflip/0.7.0/styles.css'];
 const base=new URL('./',self.registration.scope);
 const appIndex=new URL('index.html',base).href;
 const studioIndex=new URL('studio/index.html',base).href;
