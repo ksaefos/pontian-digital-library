@@ -540,7 +540,7 @@ const editor=document.getElementById('editAuthor');if(editor){const field=docume
     const Superscript=superMod.Superscript||superMod.default;
     if(!Editor||!StarterKit||!TextAlign||!TableKit||!Image||!Subscript||!Superscript)throw Error('Λείπει επέκταση TipTap');
     editor=new Editor({
-      element:view,extensions:[StarterKit.configure({heading:{levels:[1,2,3]}}),TextAlign.configure({types:['heading','paragraph'],defaultAlignment:'justify'}),TableKit,Image.configure({allowBase64:false}),Subscript,Superscript],
+      element:view,extensions:[StarterKit.configure({heading:{levels:[1,2,3]},gapcursor:false,dropcursor:false}),TextAlign.configure({types:['heading','paragraph'],defaultAlignment:'justify'}),TableKit,Image.configure({allowBase64:false}),Subscript,Superscript],
       content:'<p></p>',editorProps:{attributes:{lang:'el',spellcheck:'false'}},
       onUpdate:()=>{dirty=true;status.textContent='Μη αποθηκευμένες αλλαγές στο τρέχον κεφάλαιο';},
       onSelectionUpdate:refresh,
@@ -610,8 +610,8 @@ const editor=document.getElementById('editAuthor');if(editor){const field=docume
     status.textContent='TipTap ενεργό · έτοιμο για επεξεργασία.';
   } catch(error) {
     console.error('Tiptap could not load',error);
-    status.textContent='Το TipTap δεν φορτώθηκε ('+(error.message||error)+'). Χρησιμοποίησε το πεδίο απλού κειμένου ή σύνδεση στο διαδίκτυο.';
+    status.textContent='Το TipTap δεν φορτώθηκε ('+(error.message||error)+'). Χρησιμοποίησε προσωρινά το απλό κείμενο. Αν επανεμφανιστεί, ανέφερε το ακριβές σφάλμα.';
     bar.remove();view.remove();plain.style.display='';plainToggle.remove();
   }
 })();
-</script></body></html>
+</script><!-- /* Pontian TipTap plugin-key fix — v2.3.2 */ --></body></html>
