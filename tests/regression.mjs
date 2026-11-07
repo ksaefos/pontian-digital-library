@@ -77,18 +77,36 @@ test('glossary scoped to book provenance',()=>{
  const foreign=data.entries.find(e=>e.references?.length&&e.references.every(r=>String(r.bookId)!==String(book.id))&&!Object.hasOwn(result,e.term));
  assert.ok(foreign);
 });
-test('reference refresh removes stale matches',()=>{
+test('reference refresh retains textual variants but drops deleted chapters',()=>{
  const start=studio.indexOf('function updateGlossaryReferences(){');
  const stop=studio.indexOf('function renderLex(){',start);
  const fn=studio.slice(start,stop);
- const state={books:[{id:'book1',title:'Βιβλίο',chapters:[{id:'chapter1',text:'άλλη λέξη'}]}],entries:[{id:'entry1',term:'σπίτι',sources:['Βιβλίο'],references:[{bookId:'book1',chapterId:'chapter1'}]}]};
+ const state={books:[{id:'book1',title:'Βιβλίο',chapters:[{id:'chapter1',text:'άλλη λέξη'},{id:'chapter2',text:'σπίτι'}]}],entries:[{id:'entry1',term:'σπίτι',sources:['Βιβλίο'],references:[{bookId:'book1',chapterId:'chapter1'}]}]};
  const norm=x=>String(x||'').normalize('NFC').toLocaleLowerCase('el').trim();
  const ctx={state,searchNorm:norm,headwordOnly:x=>String(x).split('(')[0].trim()};
- vm.runInNewContext(fn+';updateGlossaryReferences();',ctx,{timeout:1000});
- assert.equal(state.entries[0].references.length,0);
- state.books[0].chapters[0].text='και το σπίτι είναι εδώ';
- vm.runInNewContext('updateGlossaryReferences();',ctx,{timeout:1000});
- assert.equal(state.entries[0].references.length,1);
+ const run=()=>vm.runInNewContext(fn+';updateGlossaryReferences();',ctx,{timeout:1000});
+ run();assert.ok(state.entries[0].references.some(r=>r.chapterId==='chapter1'));
+ assert.ok(state.entries[0].references.some(r=>r.chapterId==='chapter2'));
+ state.books[0].chapters[0].text='αλλαγμένο';run();
+ assert.ok(state.entries[0].references.some(r=>r.chapterId==='chapter1'));
+ state.books[0].chapters.shift();run();
+ assert.ok(!state.entries[0].references.some(r=>r.chapterId==='chapter1'));
+ assert.ok(state.entries[0].references.some(r=>r.chapterId==='chapter2'));
+});
+test('glossary source matching NFC apostrophes and section numbers',()=>{
+ const start=reader.indexOf('function pdlSeparateTerm(value){');
+ const stop=reader.indexOf('function pdlParagraphs(text){',start);
+ const f=vm.runInNewContext(reader.slice(start,stop)+';pdlGlossaryFromEntries',{},{timeout:2000});
+ const b={id:'b',title:"Αέρα σ' μαναχόν κανείται",chapters:[{id:'c'}]};
+ const item={term:'δοκιμή',definition:'σημασία',sources:['Αέρα σ’ μαναχόν κανείται §1'],references:[]};
+ assert.ok(Object.hasOwn(f([item],b),'δοκιμή'));
+});
+test('every glossary entry can resolve to at least one source book',()=>{
+ const start=reader.indexOf('function pdlSeparateTerm(value){');
+ const stop=reader.indexOf('function pdlParagraphs(text){',start);
+ const f=vm.runInNewContext(reader.slice(start,stop)+';pdlGlossaryFromEntries',{},{timeout:2000});
+ const unlinked=data.entries.filter(e=>!data.books.some(b=>Object.keys(f([e],b)).length));
+ assert.equal(unlinked.length,0,'Unlinked: '+unlinked.slice(0,10).map(x=>x.term).join(', '));
 });
 test('Content Security Policy pins inline admin scripts',()=>{
  assert.match(studio,/<meta http-equiv="Content-Security-Policy"/);
