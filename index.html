@@ -291,18 +291,23 @@ function pdlSeparateTerm(value){
  }
  return depth===0?{term:term.slice(0,at).trim(),etymology:suffix.slice(1,-1).trim()}:{term,etymology:''};
 }
+function pdlSourceBookKey(value){
+ return String(value||'').split(/\s*\|\s*/)[0].normalize('NFC')
+  .replace(/[’‘ʼ`΄´']/g,'’').replace(/\s*§\s*\d+(?:\s*,\s*\d+)*\s*$/u,'')
+  .toLocaleLowerCase('el').replace(/\s+/g,' ').trim();
+}
 function pdlGlossaryFromEntries(entries,book){
  const dictionary=Object.create(null);
  const bookId=String(book?.id||'').replace(/^studio:/,'');
- const title=String(book?.title||'').normalize('NFC').toLocaleLowerCase('el').trim();
+ const title=pdlSourceBookKey(book?.title);
  for(const row of entries){
   // Prioritize explicit book/chapter provenance. Unreferenced entries use their
   // declared source book, not an indiscriminate cross-book glossary.
   const refs=Array.isArray(row?.references)?row.references:[];
-  if(refs.length){if(!refs.some(r=>String(r.bookId)===bookId))continue;}
+  if(refs.length){if(!refs.some(r=>String(r.bookId)===bookId&&book.chapters?.some(c=>String(c.id)===String(r.chapterId))))continue;}
   else {
     const sources=Array.isArray(row?.sources)?row.sources:[];
-    if(!sources.some(src=>String(src).split(/\s*\|\s*/)[0].normalize('NFC').toLocaleLowerCase('el').trim()===title))continue;
+    if(!sources.some(src=>pdlSourceBookKey(src)===title))continue;
   }
 
   if(!row||typeof row.term!=='string'||typeof row.definition!=='string')continue;
