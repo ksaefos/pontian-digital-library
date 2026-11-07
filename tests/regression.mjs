@@ -41,7 +41,11 @@ test('publication loss safeguards',()=>{
  assert.match(studio,/if\(old\.etymology&&!fresh\.etymology\)/);
  assert.ok(studio.includes("!manuallyRemovedReferenceKeys.has(String(id)+'|'+ref)"));
  assert.match(studio,/if\(oldChapter\.richHtml&&!next\.richHtml\)/);
- assert.match(studio,/Δημιουργήθηκε αυτόματο τοπικό backup/);
+ // Manual downloads remain available, but must not run on login/publish.
+ assert.match(studio,/\$\('backupQuick'\)\.onclick=backup/);
+ assert.match(studio,/\$\('exportBackup'\)\.onclick=backup/);
+ assert.doesNotMatch(studio,/Δημιουργήθηκε αυτόματο τοπικό backup/);
+ assert.match(studio,/window\.pdlExplicitDeletedEntries\.has\(id\)/);
 });
 test('rich chapter protected when rich editor unavailable',()=>{
  assert.match(studio,/field\.readOnly=!!ch\?\.richHtml/);
