@@ -134717,8 +134717,19 @@
       "definition": "τι συμβαίνει; τί νέα;",
       "category": "expression",
       "etymology": "(τουρκ. hayır haber)",
-      "sources": [],
-      "references": []
+      "sources": [
+        "Η Σωνίτσα"
+      ],
+      "references": [
+        {
+          "bookId": "99a52ef1-f5a7-4894-826c-577ea0d2148e",
+          "chapterId": "c32e6e2a-f736-4525-96b9-71b7611426f1"
+        },
+        {
+          "bookId": "48715ee4-83f2-40b9-85cd-468e9b67a948",
+          "chapterId": "a1340ea9-12be-47a9-a8f0-0d5d68fa67b6"
+        }
+      ]
     }
   ]
 }
