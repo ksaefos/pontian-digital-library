@@ -11,7 +11,24 @@ export default {async fetch(request,env){const origin=request.headers.get('Origi
  if(request.method==='OPTIONS')return new Response(null,{status:204,headers:{...(cors?{'Access-Control-Allow-Origin':cors}:{ }),'Access-Control-Allow-Methods':'GET, PUT, OPTIONS','Access-Control-Allow-Headers':'Authorization, Content-Type','Access-Control-Max-Age':'3600','Vary':'Origin'}});
  const url=new URL(request.url);if(url.pathname!=='/api/library'||!['GET','PUT'].includes(request.method))return json({error:'Δεν βρέθηκε.'},404,cors);
  if(!env.ADMIN_PASSWORD||!env.GITHUB_TOKEN||!env.GITHUB_OWNER||!env.GITHUB_REPO||!allowed)return json({error:'Λείπουν ρυθμίσεις Worker.'},500,cors);
- const token=request.headers.get('Authorization')||'';if(!token.startsWith('Bearer ')||!sameSecret(token.slice(7),env.ADMIN_PASSWORD))return json({error:'Λανθασμένος κωδικός πρόσβασης.'},401,cors);
+ // Rate limit only FAILED authentication attempts. A correctly authenticated Studio session is not counted.
+ const token=request.headers.get('Authorization')||'';
+ if(!token.startsWith('Bearer ')||!sameSecret(token.slice(7),env.ADMIN_PASSWORD)){
+   // CF-Connecting-IP is set by Cloudflare; never trust a caller-provided X-Forwarded-For.
+   // Use a per-client counter so one attacker cannot lock out all administrators.
+   if(env.AUTH_RATE_LIMITER && typeof env.AUTH_RATE_LIMITER.limit==='function'){
+     try{
+       const client=request.headers.get('CF-Connecting-IP')||'unknown';
+       const {success}=await env.AUTH_RATE_LIMITER.limit({key:'failed-auth:'+client});
+       if(!success)return new Response(JSON.stringify({error:'Πάρα πολλές αποτυχημένες προσπάθειες. Δοκίμασε αργότερα.'}),{status:429,headers:{...responseHeaders(cors),'Retry-After':'60'}});
+     }catch(e){
+       // Limiter outage must not expose protected data or bypass password verification.
+       console.error('Authentication limiter unavailable');
+     }
+   }
+   return json({error:'Λανθασμένος κωδικός πρόσβασης.'},401,cors);
+ }
+
  const branch=env.GITHUB_BRANCH||'main';const endpoint=`https://api.github.com/repos/${encodeURIComponent(env.GITHUB_OWNER)}/${encodeURIComponent(env.GITHUB_REPO)}/contents/library-data.json`;
  const headers={'Authorization':'Bearer '+env.GITHUB_TOKEN,'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28','User-Agent':'PontianLibrarySync/1.0'};
  try{if(request.method==='GET'){const r=await fetch(endpoint+'?ref='+encodeURIComponent(branch),{headers,cache:'no-store'});if(!r.ok)return json({error:'Αποτυχία ανάγνωσης GitHub: HTTP '+r.status},r.status===404?404:502,cors);const f=await r.json();const blobUrl=`https://api.github.com/repos/${encodeURIComponent(env.GITHUB_OWNER)}/${encodeURIComponent(env.GITHUB_REPO)}/git/blobs/${f.sha}`;const br=await fetch(blobUrl,{headers,cache:'no-store'});if(!br.ok)return json({error:'Αποτυχία ανάγνωσης πλήρους αρχείου GitHub: HTTP '+br.status},502,cors);const blob=await br.json();if(blob.encoding!=='base64'||!blob.content)return json({error:'Το GitHub δεν επέστρεψε το περιεχόμενο του αρχείου.'},502,cors);const body=fromBase64(blob.content);let parsed;try{parsed=JSON.parse(body)}catch{return json({error:'Μη έγκυρα JSON δεδομένα στο GitHub.'},502,cors)};if(parsed?.format!=='pontian-digital-library'||!Array.isArray(parsed.books)||!Array.isArray(parsed.entries))return json({error:'Μη έγκυρη μορφή βιβλιοθήκης στο GitHub.'},502,cors);return new Response('{"sha":'+JSON.stringify(f.sha)+',"data":'+body+'}',{status:200,headers:responseHeaders(cors)})}

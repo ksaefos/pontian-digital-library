@@ -143,3 +143,18 @@
 **Αντικατάσταση:** `admin.html`, `package.json`, `README.md`.
 **Προσθήκη:** `tests/idb-recovery-regression.mjs` στον **ήδη υπάρχοντα** φάκελο `tests`.
 **Καμία αλλαγή:** `library-data.json`, `index.html`, `sw.js`, `cloudflare-worker.js`, `vendor/`, `scripts/`, τα λοιπά tests και ο Worker στο Cloudflare.
+
+
+# Authentication rate limiting patch — 2026-11-07
+
+Changes: adds best-effort limiter for **failed** GET/PUT authentication, keyed by Cloudflare-provided CF-Connecting-IP. Correctly authenticated requests are not counted. Each failed attempt invokes the native rate limiter. Limit configuration: 10 attempts / 60 seconds per Cloudflare location. The Cloudflare API is approximate, not an account-wide strict lockout.
+
+## In `main`
+- **Replace:** `cloudflare-worker.js`, `package.json`, `README.md`.
+- **Add:** `tests/rate-limit-regression.mjs`; `wrangler.ratelimit.example.toml` (reference only; optional and not deployed).
+- **No change:** `admin.html`, `index.html`, `library-data.json`, `sw.js`, `vendor/`, other `tests/`, `.github/`.
+
+## Important Cloudflare activation
+Updating the GitHub file **does not** update the live Worker. More importantly, **the code alone does not activate rate limiting**: the `AUTH_RATE_LIMITER` binding must be configured in Wrangler with the supplied reference snippet. Native ratelimit bindings are deployed via Wrangler (>= 4.36). Keep the exact existing Worker name, environment variables and secrets; do not deploy the incomplete example as-is. Verify the live binding after deployment. Without it, invalid passwords still return 401, but rate limiting is inactive. Do not report it as active from npm tests alone.
+
+Run `npm test` on complete repository. Regression file mocks the limiter and exercises 401, 429, correct login, CORS and absent-binding compatibility. Actual Cloudflare bindings require live test. 

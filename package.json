@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "node scripts/build-assets.mjs",
-    "test": "node tests/regression.mjs && node tests/bookmark-regression.mjs && node tests/worker-regression.mjs && node tests/reader-security-regression.mjs && node tests/idb-recovery-regression.mjs",
+    "test": "node tests/regression.mjs && node tests/bookmark-regression.mjs && node tests/worker-regression.mjs && node tests/reader-security-regression.mjs && node tests/idb-recovery-regression.mjs && node tests/rate-limit-regression.mjs",
     "test:browser": "node tests/browser-smoke.mjs"
   },
   "dependencies": {
