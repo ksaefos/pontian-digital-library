@@ -23,5 +23,5 @@ const cache=sw.match(/const\s+CACHE\s*=\s*['"]([^'"]+)['"]/);
 assert.ok(app&&cache,'Missing declared app/cache version');
 const version=pkg.version.replace(/-rc\.(\d+)$/,'-rc$1');
 assert.equal(app[1],version,'Reader version must equal package version');
-assert.ok(cache[1].endsWith(version),'Service Worker cache version must match');
+assert.ok(cache[1] === `pontian-digital-library-v${version}` || cache[1].startsWith(`pontian-digital-library-v${version}-`),'Service Worker cache version must match');
 console.log('PASS reader CSP, iframe safety, bundled libraries, version compatibility');
