@@ -1,7 +1,9 @@
 name: Build and verify Pontian Library
 on:
   push:
-    branches: [stabilization-2.4]
+    branches: [stabilization-2.4, main]
+  pull_request:
+    branches: [main, stabilization-2.4]
   workflow_dispatch:
 permissions:
   contents: write
@@ -19,9 +21,13 @@ jobs:
         with:
           node-version: '22'
       - name: Install pinned npm dependencies
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
       - name: Assemble local Tiptap and Hyphenopoly assets
         run: npm run build
+      - name: Validate Studio CSP hashes
+        run: |
+          python3 scripts/set-csp.py
+          git diff --exit-code -- admin.html
       - name: Core regression tests
         run: npm test
       - name: Install Chromium for browser validation
@@ -29,6 +35,7 @@ jobs:
       - name: End-to-end browser smoke tests
         run: npm run test:browser
       - name: Commit generated assets to staging branch after passing tests
+        if: github.event_name == 'push' && github.ref == 'refs/heads/stabilization-2.4'
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
