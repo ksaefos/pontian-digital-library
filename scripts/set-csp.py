@@ -10,7 +10,7 @@ for match in re.finditer(r'<script(?P<attrs>[^>]*)>(?P<code>.*?)</script>',s,re.
  if not match['code'].strip():continue
  digest=base64.b64encode(hashlib.sha256(match['code'].encode('utf-8')).digest()).decode('ascii')
  hashes.append("'sha256-"+digest+"'")
-policy="default-src 'self'; object-src 'none'; base-uri 'self'; script-src 'self' "+' '.join(hashes)+"; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; font-src 'self' data:; connect-src 'self' https:; frame-src 'self'"
+policy="default-src 'self'; object-src 'none'; base-uri 'self'; script-src 'self' "+' '.join(hashes)+"; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; font-src 'self' data:; connect-src 'self' https://*.workers.dev; frame-src 'self'"
 meta='<meta http-equiv="Content-Security-Policy" content="'+html.escape(policy,quote=True)+'">'
 s=s.replace('<meta charset="utf-8">','<meta charset="utf-8">'+meta,1)
 p.write_text(s,encoding='utf-8')
