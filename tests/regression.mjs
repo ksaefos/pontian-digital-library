@@ -19,8 +19,14 @@ test('glossary metadata unchanged on edit',()=>{
  assert.ok(begin>0&&end>begin);
  const code=studio.slice(begin,end);
  let entry={id:'test',term:'λέξη',definition:'σημασία',category:'word',sources:['βιβλίο'],etymology:'αρχ. ελλ.',references:[{bookId:'b',chapterId:'c'}],privateNote:'keep'};
- const state={entries:[entry]};const fields={dlgTerm:{value:'λέξη'},dlgDefinition:{value:'νέα σημασία'},dlgCat:{value:'word'},dlgSources:{value:'βιβλίο'},dlgSave:{},entryDialog:{close(){}}};
- const $=key=>fields[key];const ctx={state,editingEntry:'test',$,persist(){},renderLex(){},notify(){},uid(){return 'new'},mergeEntries(){throw Error('Editing must not merge/drop metadata')}};
+ // The save dialog now validates selected book/chapter references. Supply its
+ // in-memory draft and confirmation state in this isolated VM fixture.
+ const state={books:[{id:'b',title:'βιβλίο',chapters:[{id:'c',text:'λέξη'}]}],entries:[entry]};
+ const fields={dlgTerm:{value:'λέξη'},dlgDefinition:{value:'νέα σημασία'},dlgCat:{value:'word'},dlgEtymology:{value:'αρχ. ελλ.'},dlgSources:{value:'βιβλίο'},dlgSave:{},entryDialog:{close(){}}};
+ const draftEntryRefs=[{bookId:'b',chapterId:'c'}];
+ const manuallyRemovedReferenceKeys=new Set();
+ const referenceKey=(entryId,ref)=>String(entryId)+'|'+String(ref.bookId)+'|'+String(ref.chapterId);
+ const $=key=>fields[key];const ctx={state,editingEntry:'test',$,draftEntryRefs,manuallyRemovedReferenceKeys,referenceKey,persist(){},renderLex(){},notify(){},uid(){return 'new'},mergeEntries(){throw Error('Editing must not merge/drop metadata')}};
  vm.runInNewContext(code,ctx,{timeout:1000});
  ctx.$('dlgSave').onclick();
  const next=state.entries[0];
@@ -33,7 +39,7 @@ test('rich HTML plain fallback preserves br and blockquotes',()=>{
 });
 test('publication loss safeguards',()=>{
  assert.match(studio,/if\(old\.etymology&&!fresh\.etymology\)/);
- assert.match(studio,/if\(!freshRefs\.has\(ref\)\)/);
+ assert.ok(studio.includes("!manuallyRemovedReferenceKeys.has(String(id)+'|'+ref)"));
  assert.match(studio,/if\(oldChapter\.richHtml&&!next\.richHtml\)/);
  assert.match(studio,/Δημιουργήθηκε αυτόματο τοπικό backup/);
 });
