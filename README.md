@@ -100,3 +100,21 @@
 - Το `npm test` περιλαμβάνει το νέο `tests/bookmark-regression.mjs`.
 - Αλλαγές: `index.html`, `package.json`, `tests/bookmark-regression.mjs`, `README.md`. Δεν απαιτείται αλλαγή σε admin.html, Worker, δεδομένα ή vendor.
 - Το ειδικό regression test εκτελέστηκε επιτυχώς σε Node.js. Δεν έχει επαληθευτεί σε πραγματική κινητή συσκευή.
+
+
+## Ενίσχυση Worker και έλεγχος συμβατότητας (2026-11-07)
+
+- Το GET του `cloudflare-worker.js` απαντά στην ίδια μορφή `{sha,data}`, χωρίς να κάνει περιττό `JSON.stringify()` του μεγάλου αντικειμένου βιβλιοθήκης. Η απομακρυσμένη JSON μορφή ελέγχεται πριν επιστραφεί.
+- Η αυθεντικοποίηση `Bearer`, ο έλεγχος `Origin`, το SHA/409 και ο περιορισμός μεγέθους διατηρούνται αμετάβλητα. Προστέθηκε `X-Content-Type-Options: nosniff`.
+- Προστέθηκε `tests/worker-regression.mjs` για GET, PUT, αποτυχημένη αυθεντικοποίηση, CORS, 409 και πλήρη βιβλιοθήκη. Το `npm test` εκτελεί πλέον και αυτό το test.
+- **Σημαντικό:** Η αλλαγή του `cloudflare-worker.js` στο GitHub **δεν δημοσιεύει αυτόματα** την αλλαγή στον ενεργό Cloudflare Worker. Πρέπει να εφαρμοστεί χωριστά στο dashboard του Worker (Deploy). Δεν απαιτούνται αλλαγές στα secrets ή στο `admin.html`.
+- Το rate limiting γίνεται στην πλευρά του Cloudflare (WAF / Rate limiting rules, ανάλογα με το πλάνο)· δεν έχει ενεργοποιηθεί μέσω αυτού του ZIP. Προτείνεται ειδικός κανόνας για υπερβολικές προσπάθειες στο `/api/library`, με προσεκτική εξαίρεση της κανονικής σύνδεσης.
+- Το πραγματικό όριο CPU/μνήμης πρέπει να επιβεβαιωθεί με Workers Logs σε παραγωγή. Τα tests είναι προσομοιωμένα HTTP αιτήματα σε Node.js, όχι Cloudflare runtime.
+
+### Ακριβείς αλλαγές στο main
+
+**Αντικατάσταση:** `cloudflare-worker.js`, `package.json`, `README.md`.
+
+**Προσθήκη:** `tests/worker-regression.mjs` μέσα στον υπάρχοντα φάκελο `tests/`.
+
+**Καμία αλλαγή:** `admin.html`, `index.html`, `library-data.json`, `sw.js`, `vendor/`, `scripts/` και λοιποί φάκελοι.
