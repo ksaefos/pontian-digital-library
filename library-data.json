@@ -134694,9 +134694,15 @@
       "definition": "είναι αργόσχολος/η, τεμπελιάζει, αλητεύει",
       "category": "word",
       "sources": [
-        "τουρκ. salahana<salhane/selhhâne < αραβ.-περσ. selh-hâne κυριολεκτ. «σφαγείο», μεταφ. για άτομο αργόσχολο, απ’ την έκφραση «salhane köpekleri: όπως τα σκυλιά των σφαγείων»"
+        "Η Σωνίτσα"
       ],
-      "references": []
+      "references": [
+        {
+          "bookId": "99a52ef1-f5a7-4894-826c-577ea0d2148e",
+          "chapterId": "017a0cb2-fbca-4844-9c67-64f9b5f47f11"
+        }
+      ],
+      "etymology": "τουρκ. salahana<salhane/selhhâne < αραβ.-περσ. selh-hâne κυριολεκτ. «σφαγείο», μεταφ. για άτομο αργόσχολο, απ’ την έκφραση «salhane köpekleri: όπως τα σκυλιά των σφαγείων»"
     },
     {
       "id": "228b11d4-2a2d-4f47-931e-2ebc66b25f3d",
