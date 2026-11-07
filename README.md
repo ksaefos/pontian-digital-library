@@ -118,3 +118,13 @@
 **Προσθήκη:** `tests/worker-regression.mjs` μέσα στον υπάρχοντα φάκελο `tests/`.
 
 **Καμία αλλαγή:** `admin.html`, `index.html`, `library-data.json`, `sw.js`, `vendor/`, `scripts/` και λοιποί φάκελοι.
+
+
+## Συμπλήρωμα: πολιτική ασφάλειας Reader και τεκμηρίωση (07/11/2026)
+
+- Προστέθηκε στο `index.html` CSP: `object-src 'none'`, `base-uri 'self'`, `form-action 'none'`, `connect-src 'self'`, `img-src 'self' https: data: blob:`. Δεν περιορίζουμε ακόμη τα inline scripts, ώστε να μη χαλάσει το `srcdoc` του Reader.
+- Δεν προστέθηκε iframe `sandbox`, καθώς οι σελιδοδείκτες αποθηκεύονται στο ίδιο origin.
+- Νέο `tests/reader-security-regression.mjs` ελέγχει την πολιτική, τις εξαρτήσεις OpenPageFlip/Hyphenopoly και την ευθυγράμμιση εκδόσεων `package.json`–`index.html`–`sw.js`. Το `npm test` περιλαμβάνει τον νέο έλεγχο.
+- Η τεκμηρίωση `SETUP-EL.md` περιγράφει το ισχύον Studio, CSP hashes και τις τρέχουσες προϋποθέσεις ασφάλειας.
+- Δεν τροποποιήθηκαν αρχεία βιβλίων, Studio, Worker, service worker ή vendor. Δεν έχει τεθεί σε λειτουργία rate limiting.
+- Κατά την εγκατάσταση στο `main`, αντικατάστησε **μόνο** `index.html`, `package.json`, `README.md`, `SETUP-EL.md` και πρόσθεσε **μόνο** `tests/reader-security-regression.mjs` στον υπάρχοντα φάκελο `tests`.
