@@ -10,6 +10,17 @@ if (typeof version !== 'string' || !/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(v
   throw Error('Invalid package.json version');
 }
 
+// Fail before modifying generated assets if the three app version sources drift.
+const lock = JSON.parse(readFileSync(path.join(root, 'package-lock.json'), 'utf8'));
+if (lock.version !== version || lock.packages?.['']?.version !== version) {
+  throw Error(`Version mismatch: package.json=${version}, package-lock.json=${lock.version}, lock root=${lock.packages?.['']?.version}. Regenerate the npm lockfile.`);
+}
+const reader = readFileSync(path.join(root, 'index.html'), 'utf8');
+const readerVersion = reader.match(/\bPDL_APP_VERSION\s*=\s*['"]([^'"]+)['"]/);
+if (!readerVersion || readerVersion[1] !== version) {
+  throw Error(`Version mismatch: package.json=${version}, Reader=${readerVersion?.[1] ?? 'not found'}`);
+}
+
 // Hyphenopoly 4+ ships a WASM engine for EACH language under patterns/.
 // The old hyphenEngine.wasm/.asm.js and *.hpb assets do not exist in v6.1.0.
 const hyVersion = pkg.dependencies?.hyphenopoly;
@@ -71,7 +82,7 @@ const hash = createHash('sha256');
 for (const file of [path.join(tip, 'tiptap.bundle.js'), ...hyAssets.map(x => path.join(hyTarget, x))]) {
   hash.update(readFileSync(file));
 }
-const cacheId = `pontian-digital-library-${hash.digest('hex').slice(0, 12)}-v${version}`;
+const cacheId = `pontian-digital-library-v${version}-${hash.digest('hex').slice(0, 12)}`;
 // Keep the actual pre-cached files synchronized with what this build ships.
 const optionalFiles = [
   './vendor/tiptap/tiptap.bundle.js',
