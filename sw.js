@@ -1,4 +1,4 @@
-const CACHE='pontian-digital-library-v3.1.1-97a8d68cb710';
+const CACHE='pontian-digital-library-v3.1.2-97a8d68cb710';
 const CORE=['./','./index.html','./library-data.json','./manifest.webmanifest','./PontianDL_Logo.svg','./assets/book-placeholder.webp','./icons/icon-192.png','./icons/icon-512.png','./icons/icon-maskable-192.png','./icons/icon-maskable-512.png','./vendor/openpageflip/0.7.0/index.iife.js','./vendor/openpageflip/0.7.0/styles.css'];
 // Optional during source-only staging; required for full offline editing after CI build.
 const OPTIONAL=["./vendor/tiptap/tiptap.bundle.js","./vendor/hyphenopoly/6.1.0/Hyphenopoly_Loader.js","./vendor/hyphenopoly/6.1.0/Hyphenopoly.js","./vendor/hyphenopoly/6.1.0/patterns/el-polyton.wasm","./vendor/hyphenopoly/6.1.0/patterns/el-monoton.wasm"];

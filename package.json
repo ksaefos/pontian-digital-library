@@ -1,12 +1,12 @@
 {
   "name": "pontian-digital-library",
   "private": true,
-  "version": "3.1.1",
+  "version": "3.1.2",
   "type": "module",
   "scripts": {
     "build": "node scripts/build-assets.mjs",
-    "test": "node tests/regression.mjs && node tests/bookmark-regression.mjs && node tests/worker-regression.mjs && node tests/reader-security-regression.mjs && node tests/editorial-settings-regression.mjs && node tests/idb-recovery-regression.mjs && node tests/rate-limit-regression.mjs",
-    "test:browser": "node tests/browser-smoke.mjs"
+    "test": "node tests/regression.mjs && node tests/bookmark-regression.mjs && node tests/worker-regression.mjs && node tests/reader-security-regression.mjs && node tests/editorial-settings-regression.mjs && node tests/idb-recovery-regression.mjs && node tests/rate-limit-regression.mjs && node tests/progressive-reader-regression.mjs",
+    "test:browser": "node tests/browser-smoke.mjs && node tests/progressive-browser.mjs"
   },
   "dependencies": {
     "@tiptap/core": "3.31.3",
