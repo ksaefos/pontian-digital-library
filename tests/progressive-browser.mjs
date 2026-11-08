@@ -9,6 +9,21 @@ const root=resolve(import.meta.dirname,'..');
 const data=JSON.parse(readFileSync(resolve(root,'library-data.json'),'utf8'));
 const book=data.books.find(b=>b.title==='Η Σωνίτσα');
 assert.ok(book,'Stress-test book is missing');
+// Browser regression fixtures must be independent of editorial settings on
+// publicly published books. A book with Hyphenopoly enabled intentionally uses
+// the legacy paginator in v3.1.2, so it cannot exercise the progressive engine.
+// Override settings ONLY in the in-memory HTTP response; never alter the real
+// library-data.json. Test Hyphenopoly explicitly as a separate scenario below.
+const fixtureLibrary=structuredClone(data);
+const progressiveBook=fixtureLibrary.books.find(b=>b.id===book.id);
+progressiveBook.hyphenation='off';
+const hyphenBook=fixtureLibrary.books.find(b=>b.title==='Το ψωμίν');
+assert.ok(hyphenBook,'Hyphenopoly browser fixture book is missing');
+hyphenBook.hyphenation='el-polyton';
+hyphenBook.chapters=[{...hyphenBook.chapters[0],
+ text:'Η παραδοσιακή βιβλιοθήκη είναι καταπληκτική. Καλημέρα στην παραδοσιακή βιβλιοθήκη.',
+ richHtml:''}];
+const fixtureJSON=Buffer.from(JSON.stringify(fixtureLibrary),'utf8');
 
 // Run the PWA with a real, same-origin HTTP address, like the public website.
 // page.setContent() creates an opaque-origin about:blank document, where
@@ -21,6 +36,11 @@ const types={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=
 const server=createServer(async(req,res)=>{
  try{
   const pathname=decodeURIComponent(new URL(req.url,'http://localhost').pathname);
+  if(pathname==='/library-data.json'){
+   res.writeHead(200,{'Content-Type':'application/json; charset=utf-8',
+    'Content-Length':String(fixtureJSON.length),'Cache-Control':'no-store'});
+   res.end(fixtureJSON);return;
+  }
   const filename=resolve(root,'.'+pathname);
   if(filename!==root&&!filename.startsWith(root+path.sep)){
    res.writeHead(403).end();return;
@@ -59,6 +79,9 @@ try{
  await page.waitForFunction(()=>typeof document.querySelector('#reader-frame')?.contentWindow?.pdlProgressStats==='function',null,{timeout:30000});
  frame=page.frames().find(f=>f.url()==='about:srcdoc');
  assert.ok(frame,'Reader iframe not initialized');
+ const mode=await frame.evaluate(()=>({hyphenation:PDL_HYPH.mode(),grid:pdlGridEnabled}));
+ assert.equal(mode.hyphenation,'off','Progressive fixture must exercise the grid, not editorial Hyphenopoly');
+ assert.ok(mode.grid,'Progressive grid must be enabled');
  // Stop immediately on a real engine failure instead of hiding it behind a timeout.
  await frame.waitForFunction(()=>{
   const s=pdlProgressStats();return s.chapters[0]?.pages>=6||s.errors.length>0;
@@ -113,8 +136,30 @@ try{
  if(reflow.page+1<reflow.progress.chapters[reflow.ch].pages)assert.ok(cmp(reflow.next,before.anchor)>0,'Reflow must retain the saved anchor on the restored page');
  assert.ok(!reflow.progress.errors.length,'Font change must not fail progressive pagination');
  assert.ok(!errors.length,'Browser JS errors after font change: '+errors.join(';'));
- await page.close();
  console.log('PASS progressive book: first six pages, exact page-60 jump, all six chapters and complete text integrity');
+ // The second fixture exercises both Greek WASM hyphenators and the explicitly
+ // configured selector. This catches the former minWordLength TypeError.
+ await page.evaluate(id=>openBook('studio:'+id),hyphenBook.id);
+ await page.waitForFunction(()=>document.querySelector('#reader-frame')?.contentDocument?.title?.includes('Το ψωμίν')&&
+  typeof document.querySelector('#reader-frame')?.contentWindow?.pdlProgressStats==='function',null,{timeout:30000});
+ const hyphFrame=page.frames().find(f=>f.url()==='about:srcdoc');
+ assert.ok(hyphFrame,'Hyphenopoly Reader iframe not initialized');
+ await hyphFrame.waitForFunction(()=>PDL_HYPH.ready()||document.getElementById('pdl-hyphen-status')?.textContent?.includes('Δεν φορτώθηκε'),null,{timeout:45000});
+ const hyphReport=await hyphFrame.evaluate(()=>{
+  const polyton={mode:PDL_HYPH.mode(),ready:PDL_HYPH.ready(),breaks:PDL_HYPH.tokenBreaks('παραδοσιακός')};
+  PDL_HYPH.setMode('el-monoton');
+  const monoton={mode:PDL_HYPH.mode(),breaks:PDL_HYPH.tokenBreaks('παραδοσιακός')};
+  return {polyton,monoton};
+ });
+ assert.equal(hyphReport.polyton.mode,'el-polyton');
+ assert.ok(hyphReport.polyton.ready,'Hyphenopoly WASM must load');
+ assert.ok(hyphReport.polyton.breaks.length>0,'Polytonic pattern must provide valid word breaks');
+ assert.ok(hyphReport.monoton.breaks.length>0,'Monotonic pattern must provide valid word breaks');
+ assert.ok(!warnings.some(w=>w.includes('Hyphenopoly token')||w.includes('Hyphenopoly unavailable for this reading session')||w.includes('minWordLength')),
+  'No Hyphenopoly token error, including minWordLength, is allowed');
+ assert.ok(!errors.length,'Hyphenopoly browser errors: '+errors.join(';'));
+ console.log('PASS Hyphenopoly 6.1.0: polytonic/monotonic selectors and word breaks');
+ await page.close();
 }catch(e){
  console.error('Progressive browser test diagnostics:',JSON.stringify(await diagnostics(),null,2));
  if(errors.length)console.error('JavaScript errors:',errors.join(' | '));

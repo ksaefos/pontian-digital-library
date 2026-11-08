@@ -26,6 +26,7 @@ for(const marker of [
  'pdlGridSliceBlock(source,',
  'pdlProgressGo(ch,Math.max(0,Number(initial.pg)||0))'
  ])assert.ok(shell.includes(marker),'Missing progressive invariant: '+marker);
+assert.ok(shell.includes("h(normalized,'.pdl-hyphen-probe')"),'Hyphenopoly string hyphenator must use the configured selector');
 assert.ok(shell.includes('pdlProgressStart();'),'Grid dispatcher must start progressive scheduling');
 assert.ok(shell.includes('pdlProgressNotify('),'Status must be reported');
 assert.ok(shell.includes('pdlProgressPump();'),'Reader must schedule progressive work');
