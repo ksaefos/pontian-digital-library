@@ -77,6 +77,9 @@ try{
  });
  await page.goto(base+'/index.html',{waitUntil:'domcontentloaded',timeout:30000});
  await page.waitForFunction(()=>document.querySelector('#pdl-import-status')?.textContent?.includes('Δημοσιεύτηκαν'),null,{timeout:30000});
+ // A previously saved public 'off' switch must not disable page turning in
+ // every book after the toggle has been retired.
+ await page.evaluate(()=>localStorage.setItem('pdlOpenPageFlip','off'));
  await page.evaluate(id=>openBook('studio:'+id),book.id);
  await page.waitForFunction(()=>typeof document.querySelector('#reader-frame')?.contentWindow?.pdlProgressStats==='function',null,{timeout:30000});
  frame=page.frames().find(f=>f.url()==='about:srcdoc');
@@ -140,6 +143,21 @@ try{
  assert.equal(opfAfter.builds,opfBefore.builds,'OpenPageFlip must not be destroyed during a normal turn');
  assert.equal(opfAfter.activeChapter,opfBefore.ch,'OpenPageFlip must remain on the same chapter');
  assert.ok(!opfAfter.failed,'OpenPageFlip must not fall back to static native pages');
+ // Previous tests used nextPage() only.  Reproduce an actual edge drag: a
+ // generated animation is required even when the vendored core releases the
+ // pointer without completing its own gesture.
+ const edge=await frame.locator('#pdl-opf-host').boundingBox();
+ assert.ok(edge&&edge.width>200,'OpenPageFlip must expose a visible gesture surface');
+ const preDrag=await frame.evaluate(()=>({page:currentPage,chapter:currentChapter,turns:pdlOpenPageFlipDebug().animatedTurns}));
+ const y=edge.y+edge.height*0.5;
+ await page.mouse.move(edge.x+edge.width-9,y);
+ await page.mouse.down();
+ await page.mouse.move(edge.x+15,y,{steps:22});
+ await page.mouse.up();
+ await frame.waitForFunction(v=>{
+  const d=pdlOpenPageFlipDebug();
+  return d.animatedTurns>v.turns&&d.state==='read'&&currentChapter===v.chapter&&currentPage===v.page+1;
+ },preDrag,{timeout:15000});
  assert.ok(!errors.length,'Browser JS errors: '+errors.join(';'));
  // A font change during a long book must not leave an obsolete page index
  // or silently lose the exact text anchor from which reflow began.
