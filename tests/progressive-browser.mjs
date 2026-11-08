@@ -20,8 +20,11 @@ progressiveBook.hyphenation='off';
 const hyphenBook=fixtureLibrary.books.find(b=>b.title==='Το ψωμίν');
 assert.ok(hyphenBook,'Hyphenopoly browser fixture book is missing');
 hyphenBook.hyphenation='el-polyton';
+// Enough text for several real pages with the *legacy* paginator. Earlier
+// versions only tested tokenBreaks and failed to notice that OPF never mounted.
 hyphenBook.chapters=[{...hyphenBook.chapters[0],
- text:'Η παραδοσιακή βιβλιοθήκη είναι καταπληκτική. Καλημέρα στην παραδοσιακή βιβλιοθήκη.',
+ text:Array.from({length:42},()=>
+  'Η παραδοσιακή βιβλιοθήκη είναι καταπληκτική. Καλημέρα στην παραδοσιακή βιβλιοθήκη.').join('\n\n'),
  richHtml:''}];
 const fixtureJSON=Buffer.from(JSON.stringify(fixtureLibrary),'utf8');
 
@@ -185,6 +188,33 @@ try{
  const hyphFrame=page.frames().find(f=>f.url()==='about:srcdoc');
  assert.ok(hyphFrame,'Hyphenopoly Reader iframe not initialized');
  await hyphFrame.waitForFunction(()=>PDL_HYPH.ready()||document.getElementById('pdl-hyphen-status')?.textContent?.includes('Δεν φορτώθηκε'),null,{timeout:45000});
+ // A hyphenated book intentionally has no progressive chapter state.
+ // Its legacy pages MUST still mount OpenPageFlip and support an actual edge drag.
+ await hyphFrame.waitForFunction(()=>{
+  const d=pdlOpenPageFlipDebug();
+  return PDL_HYPH.mode()==='el-polyton'&&pdlProgressStats().chapters.length===0&&
+   d.enabled&&!d.failed&&d.builds>0&&d.activeChapter===currentChapter&&d.state==='read';
+ },null,{timeout:30000});
+ const hyphOPF=await hyphFrame.evaluate(()=>({
+  ...pdlOpenPageFlipDebug(),chapter:currentChapter,page:currentPage,
+  pages:chapters[currentChapter].pages.length,
+  computedHyphens:getComputedStyle(document.querySelector('#page-content p')).hyphens
+ }));
+ assert.ok(hyphOPF.pages>=2,'Hyphenated book fixture must have multiple pages');
+ const hyphEdge=await hyphFrame.locator('#pdl-opf-host').boundingBox();
+ assert.ok(hyphEdge&&hyphEdge.width>=200,'Hyphenated OpenPageFlip surface must exist');
+ const hyphY=hyphEdge.y+hyphEdge.height*0.5;
+ await page.mouse.move(hyphEdge.x+hyphEdge.width-9,hyphY);
+ await page.mouse.down();
+ await page.mouse.move(hyphEdge.x+15,hyphY,{steps:22});
+ await page.mouse.up();
+ await hyphFrame.waitForFunction(before=>{
+  const d=pdlOpenPageFlipDebug();
+  return d.enabled&&!d.failed&&d.animatedTurns>before.animatedTurns&&
+   d.state==='read'&&currentChapter===before.chapter&&currentPage===before.page+1;
+ },hyphOPF,{timeout:15000});
+ assert.ok(!errors.length,'Hyphenated OpenPageFlip JS errors: '+errors.join(';'));
+ console.log('PASS OpenPageFlip with active editorial el-polyton: legacy pages mount and real mouse drag animates');
  const hyphReport=await hyphFrame.evaluate(()=>{
   const polyton={mode:PDL_HYPH.mode(),ready:PDL_HYPH.ready(),breaks:PDL_HYPH.tokenBreaks('παραδοσιακός')};
   PDL_HYPH.setMode('el-monoton');
