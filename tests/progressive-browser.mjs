@@ -62,6 +62,8 @@ const diagnostics=async()=>{
   return {url:location.href,importStatus:document.querySelector('#pdl-import-status')?.textContent,
    readerExists:!!reader,readerFontStatus:reader?.document?.fonts?.status,
    progress:reader?.pdlProgressStats?.(),
+   location:reader?.pdlProgressLocation?.(),
+   pageFlip:reader?.pdlOpenPageFlipDebug?.(),
    status:reader?.document?.getElementById('pdl-progress-status')?.textContent||''};
  });}catch(e){return {diagnosticsError:String(e)};}
 };
@@ -118,6 +120,26 @@ try{
  assert.ok(report.integrity.every(item=>item.equal),'Text must be preserved byte-for-byte as Unicode content');
  assert.ok(report.stats.chapters.every(ch=>ch.done),'All chapter batches must complete');
  assert.equal(report.absolute,60,'A requested absolute page 60 must resolve exactly');
+ // A live OpenPageFlip book must be present after a progressive long-distance
+ // jump, and turning an already published page must animate without rebuilding
+ // the engine mid-turn. This prevents the invisible/static-turn regression.
+ await frame.waitForFunction(()=>{
+  const d=pdlOpenPageFlipDebug();return d.enabled&&!d.failed&&d.activeChapter===currentChapter&&d.state==='read';
+ },null,{timeout:20000});
+ const opfBefore=await frame.evaluate(()=>({
+  ...pdlOpenPageFlipDebug(),ch:currentChapter,pg:currentPage,
+  total:chapters[currentChapter].pages.length
+ }));
+ assert.ok(opfBefore.pg+1<opfBefore.total-3,'Flip fixture must start away from a chapter/window edge');
+ await frame.evaluate(()=>nextPage());
+ await frame.waitForFunction(before=>{
+  const d=pdlOpenPageFlipDebug();return currentChapter===before.ch&&currentPage===before.pg+1&&d.state==='read';
+ },{ch:opfBefore.ch,pg:opfBefore.pg},{timeout:12000});
+ const opfAfter=await frame.evaluate(()=>pdlOpenPageFlipDebug());
+ assert.ok(opfAfter.animatedTurns>opfBefore.animatedTurns,'OpenPageFlip must perform an animated turn');
+ assert.equal(opfAfter.builds,opfBefore.builds,'OpenPageFlip must not be destroyed during a normal turn');
+ assert.equal(opfAfter.activeChapter,opfBefore.ch,'OpenPageFlip must remain on the same chapter');
+ assert.ok(!opfAfter.failed,'OpenPageFlip must not fall back to static native pages');
  assert.ok(!errors.length,'Browser JS errors: '+errors.join(';'));
  // A font change during a long book must not leave an obsolete page index
  // or silently lose the exact text anchor from which reflow began.
