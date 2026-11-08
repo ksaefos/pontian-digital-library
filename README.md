@@ -1,8 +1,43 @@
-# Barnebok / Reader compound glossary patch
+# Pontian Digital Library — v3.1
 
-Replace exactly two files in GitHub main: `admin.html` and `index.html`. No data, worker, sw, vendor or other files changed.
+Δημόσια σελιδοποιημένη ψηφιακή βιβλιοθήκη, με ανεξάρτητο Book Studio και κοινό γλωσσάρι.
 
-Studio: restore normal OpenType shaping as used by Reader (remove previous kern/liga/calt disabling); CSP hashes regenerated.
-Reader: punctuation-tolerant link decoration for hyphenated expressions and apostrophe variants. Requires term to already be present in the published book glossary; does not create or publish missing glossary entries.
+## Αρχεία
 
-Please verify the expression is in published `library-data.json` with matching reference IDs and a complete GitHub Pages deployment. This patch does not resolve a missing or stale published JSON itself.
+- `index.html`: κατάλογος και ενσωματωμένος Reader (`#pdl-reader-shell`, iframe `srcdoc`).
+- `admin.html`: Book Studio, rich text, metadata, δημοσίευση μέσω Cloudflare Worker.
+- `library-data.json`: **δεδομένα παραγωγής**. Δεν τα αντικαθιστούμε κατά τον καθαρισμό UI.
+- `sw.js`: offline cache του δημόσιου Reader (όχι του Studio).
+- `scripts/build-assets.mjs`: κατασκευή τοπικών TipTap/Hyphenopoly assets, έλεγχος έκδοσης, ανανέωση SW cache.
+- `tests/`: regression tests και browser smoke tests.
+
+## Εκδοτικές επιλογές ανά βιβλίο
+
+Στο **Studio → Επεξεργασία → Τυπογραφία δημοσιευμένου βιβλίου** ορίζονται:
+
+- `showChapterTitles` (`false` αν λείπει): αν εμφανίζεται ο τίτλος στην πρώτη σελίδα του κεφαλαίου. Παραμένει πάντα στα περιεχόμενα.
+- `dropCap` (`true` αν λείπει): αρχίγραμμα στην αρχή του κεφαλαίου.
+- `hyphenation` (`off` αν λείπει): `off`, `el-polyton` ή `el-monoton`.
+
+Οι επιλογές αποθηκεύονται στο βιβλίο μέσω Studio και δημοσιεύονται με το επόμενο `library-data.json`. Δεν μετατρέπονται τα παλαιά βιβλία μαζικά και οι αναγνώστες δεν αλλάζουν τον εκδοτικό συλλαβισμό.
+
+Ο Reader με `off` χρησιμοποιεί το αυστηρό πλέγμα CSS columns και επιβεβαίωση κάτω ορίου. Με ενεργοποιημένο Hyphenopoly χρησιμοποιεί τη συμβατή εφεδρική διάταξη, ώσπου να διασφαλιστεί πλήρης αντιστοιχία συλλαβισμένων χαρακτήρων με τα offsets της νέας μηχανής.
+
+Η αναζήτηση ανοίγει στο κάτω μέρος, με διακριτά κουμπιά **εκκαθάρισης** και **κλεισίματος**. Στο κινητό το κουμπί αναζήτησης βρίσκεται στην κάτω μπάρα.
+
+## Ανάπτυξη και επαλήθευση
+
+```sh
+npm ci --no-audit --no-fund
+npm run build
+python3 scripts/set-csp.py
+npm test
+npx playwright install --with-deps chromium
+npm run test:browser
+```
+
+Μετά από κάθε αλλαγή σε inline scripts του `admin.html` πρέπει να αναδημιουργούνται και να δεσμεύονται οι CSP hashes. Η έκδοση πρέπει να συμφωνεί σε `package.json`, `package-lock.json`, `PDL_APP_VERSION` και `sw.js`. Το build ελέγχει και ανανεώνει τη cache. Για χρήση CI δείτε `.github/workflows/verify-and-build.yml` (runner Ubuntu 24.04).
+
+**Ασφάλεια:** διατηρείτε αντίγραφα του δημοσιευμένου `library-data.json` πριν από κάθε αλλαγή. Τοπικά αποθηκευμένα δεδομένα Studio και δημόσια δημοσίευση είναι διαφορετικές καταστάσεις· οι νέες επιλογές ισχύουν μετά τη δημοσίευση.
+
+Περισσότερα: [SETUP-EL.md](SETUP-EL.md).
