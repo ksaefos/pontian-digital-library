@@ -1,7 +1,7 @@
 const CACHE='pontian-digital-library-v3.0.0';
 const CORE=['./','./index.html','./library-data.json','./manifest.webmanifest','./PontianDL_Logo.svg','./assets/book-placeholder.webp','./icons/icon-192.png','./icons/icon-512.png','./icons/icon-maskable-192.png','./icons/icon-maskable-512.png','./vendor/openpageflip/0.7.0/index.iife.js','./vendor/openpageflip/0.7.0/styles.css'];
 // Optional during source-only staging; required for full offline editing after CI build.
-const OPTIONAL=['./vendor/tiptap/tiptap.bundle.js','./vendor/hyphenopoly/6.1.0/Hyphenopoly_Loader.js','./vendor/hyphenopoly/6.1.0/Hyphenopoly.js','./vendor/hyphenopoly/6.1.0/hyphenEngine.wasm','./vendor/hyphenopoly/6.1.0/hyphenEngine.asm.js','./vendor/hyphenopoly/6.1.0/patterns/el-polyton.hpb','./vendor/hyphenopoly/6.1.0/patterns/el-monoton.hpb'];
+const OPTIONAL=['./vendor/tiptap/tiptap.bundle.js', './vendor/hyphenopoly/6.1.0/Hyphenopoly_Loader.js', './vendor/hyphenopoly/6.1.0/Hyphenopoly.js', './vendor/hyphenopoly/6.1.0/patterns/el-polyton.wasm', './vendor/hyphenopoly/6.1.0/patterns/el-monoton.wasm'];
 const base=new URL('./',self.registration.scope);
 const appIndex=new URL('index.html',base).href;
 const studioIndex=new URL('admin.html',base).href;
