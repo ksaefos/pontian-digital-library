@@ -53,7 +53,7 @@
       "publicationYear": 1950,
       "showChapterTitles": false,
       "dropCap": true,
-      "hyphenation": "el-polyton"
+      "hyphenation": "off"
     },
     {
       "id": "99a52ef1-f5a7-4894-826c-577ea0d2148e",
@@ -115,7 +115,7 @@
       "publicationYear": 1963,
       "showChapterTitles": false,
       "dropCap": true,
-      "hyphenation": "el-polyton"
+      "hyphenation": "off"
     },
     {
       "id": "542bc75a-8f1e-4d95-8cf5-ba70154df062",
@@ -151,7 +151,7 @@
       "publicationYear": 1969,
       "showChapterTitles": false,
       "dropCap": true,
-      "hyphenation": "el-polyton"
+      "hyphenation": "off"
     },
     {
       "id": "60843498-408e-4d0b-94be-66a01400582e",
@@ -335,7 +335,7 @@
       "publicationYear": 2018,
       "showChapterTitles": false,
       "dropCap": true,
-      "hyphenation": "el-polyton"
+      "hyphenation": "off"
     }
   ],
   "entries": [
