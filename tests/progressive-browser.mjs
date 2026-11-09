@@ -5,6 +5,21 @@ import {readFile, stat} from 'node:fs/promises';
 import path, {resolve} from 'node:path';
 import {chromium} from 'playwright';
 
+// OpenPageFlip is rebuilt by the adapter after layout/progress events. A real
+// pointer gesture started while such a rebuild is pending would be orphaned
+// (the host element is replaced), which is the failure this helper prevents:
+// wait until the adapter is idle and its build counter has stopped changing.
+async function waitForOpfQuiet(target,{quietMs=600,timeout=20000}={}){
+ await target.waitForFunction(({quietMs})=>{
+  const d=pdlOpenPageFlipDebug();
+  const sig=[d.builds,d.animatedTurns,d.page,d.state,d.buildQueued,d.pendingTurn,d.gestureHold].join('|');
+  const now=performance.now();
+  if(window.__pdlOpfQuiet?.sig!==sig){window.__pdlOpfQuiet={sig,since:now};return false;}
+  return d.enabled&&!d.failed&&d.state==='read'&&!d.buildQueued&&!d.pendingTurn&&
+   d.gestureHold===0&&now-window.__pdlOpfQuiet.since>=quietMs;
+ },{quietMs},{timeout,polling:100});
+}
+
 const root=resolve(import.meta.dirname,'..');
 const data=JSON.parse(readFileSync(resolve(root,'library-data.json'),'utf8'));
 const book=data.books.find(b=>b.title==='Η Σωνίτσα');
@@ -181,6 +196,15 @@ try{
  // Previous tests used nextPage() only.  Reproduce an actual edge drag: a
  // generated animation is required even when the vendored core releases the
  // pointer without completing its own gesture.
+ // Idle first; then prove that a layout-ready event for an UNCHANGED window no
+ // longer replaces the OpenPageFlip host (the cause of orphaned gestures).
+ await waitForOpfQuiet(frame);
+ const unchangedBefore=await frame.evaluate(()=>pdlOpenPageFlipDebug());
+ await frame.evaluate(()=>window.dispatchEvent(new Event('pdl-grid-layout-ready')));
+ await waitForOpfQuiet(frame,{quietMs:500});
+ const unchangedAfter=await frame.evaluate(()=>pdlOpenPageFlipDebug());
+ assert.equal(unchangedAfter.builds,unchangedBefore.builds,
+  'An unchanged layout-ready event must not rebuild OpenPageFlip');
  const edge=await frame.locator('#pdl-opf-host').boundingBox();
  assert.ok(edge&&edge.width>200,'OpenPageFlip must expose a visible gesture surface');
  const preDrag=await frame.evaluate(()=>({page:currentPage,chapter:currentChapter,turns:pdlOpenPageFlipDebug().animatedTurns}));
@@ -233,6 +257,7 @@ try{
   computedHyphens:getComputedStyle(document.querySelector('#page-content p')).hyphens
  }));
  assert.ok(hyphOPF.pages>=2,'Hyphenated book fixture must have multiple pages');
+ await waitForOpfQuiet(hyphFrame);
  const hyphEdge=await hyphFrame.locator('#pdl-opf-host').boundingBox();
  assert.ok(hyphEdge&&hyphEdge.width>=200,'Hyphenated OpenPageFlip surface must exist');
  const hyphY=hyphEdge.y+hyphEdge.height*0.5;
