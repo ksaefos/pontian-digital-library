@@ -143,7 +143,10 @@ try{
  },{ch:opfBefore.ch,pg:opfBefore.pg},{timeout:12000});
  const opfAfter=await frame.evaluate(()=>pdlOpenPageFlipDebug());
  assert.ok(opfAfter.animatedTurns>opfBefore.animatedTurns,'OpenPageFlip must perform an animated turn');
- assert.equal(opfAfter.builds,opfBefore.builds,'OpenPageFlip must not be destroyed during a normal turn');
+ // An adapter refresh after the completed animation can legitimately
+ // rebuild the page window. Test whether the *active turn* was interrupted.
+ assert.equal(opfAfter.interruptedTurns,opfBefore.interruptedTurns,
+  'OpenPageFlip must not interrupt an animated turn');
  assert.equal(opfAfter.activeChapter,opfBefore.ch,'OpenPageFlip must remain on the same chapter');
  assert.ok(!opfAfter.failed,'OpenPageFlip must not fall back to static native pages');
  // Regression: a layout refresh can momentarily destroy the OPF instance
@@ -164,6 +167,17 @@ try{
  },raceBefore,{timeout:20000});
  assert.ok(!(await frame.evaluate(()=>pdlOpenPageFlipDebug())).failed,
   'OpenPageFlip must remain active after the relayout/navigation race');
+ // Trigger a pagination-ready event *while* a genuine animation is underway.
+ // The next OPF build may happen after the turn, but must never cancel it.
+ const refreshBefore=await frame.evaluate(()=>({chapter:currentChapter,page:currentPage,
+  turns:pdlOpenPageFlipDebug().animatedTurns,interrupts:pdlOpenPageFlipDebug().interruptedTurns}));
+ await frame.evaluate(()=>{nextPage();window.dispatchEvent(new Event('pdl-grid-layout-ready'));});
+ await frame.waitForFunction(before=>{
+  const d=pdlOpenPageFlipDebug();return currentChapter===before.chapter&&
+   currentPage===before.page+1&&d.animatedTurns>before.turns&&d.state==='read';
+ },refreshBefore,{timeout:20000});
+ assert.equal((await frame.evaluate(()=>pdlOpenPageFlipDebug())).interruptedTurns,
+  refreshBefore.interrupts,'Layout-ready event must not interrupt the turn');
  // Previous tests used nextPage() only.  Reproduce an actual edge drag: a
  // generated animation is required even when the vendored core releases the
  // pointer without completing its own gesture.
