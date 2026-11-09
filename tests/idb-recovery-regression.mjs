@@ -1,40 +1,37 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
+
+// v3.1.2 Admin is cloud-first. IndexedDB recovery functions may remain for
+// deliberately requested rescue, but NO local dataset is loaded or written
+// automatically while the Studio starts or edits an authenticated workspace.
 const html=readFileSync(new URL('../admin.html',import.meta.url),'utf8');
 const start=html.indexOf('const PDL_DRAFT_DB=');
 const end=html.indexOf('function norm(s){',start);
-assert.ok(start>0&&end>start,'IDB implementation present');
+assert.ok(start>0&&end>start,'Legacy manual rescue functions present');
 const js=html.slice(start,end);
-const records=new Map();
-const opened=()=>({
- objectStoreNames:{contains:()=>true},close(){},
- transaction(){
-  const tx={error:null,oncomplete:null,onerror:null,onabort:null,objectStore(){return {
-   put(value,key){records.set(key,structuredClone(value));queueMicrotask(()=>tx.oncomplete?.());},
-   get(key){const req={result:records.get(key),onsuccess:null,onerror:null};queueMicrotask(()=>req.onsuccess?.());return req;}
-  }}};
-  return tx;
- }
-});
-const indexedDB={open(){const req={result:opened(),onsuccess:null,onerror:null};queueMicrotask(()=>req.onsuccess?.());return req}};
-const store=new Map();const notifications=[];
-const context={indexedDB,window:{indexedDB},document:{addEventListener(){}},state:{books:[{id:'a'}],entries:[{id:'one'}]},
- localStorage:{setItem:(k,v)=>store.set(k,v)},STORAGE:'pdl-test',notify:m=>notifications.push(m),
- structuredClone,setTimeout:(fn)=>setTimeout(fn,0),clearTimeout,console,Promise,Date,Error};
+assert.ok(html.includes('let state={books:[],entries:[]};'),'No book is preloaded before GitHub authentication');
+assert.ok(html.includes('id="initial-data">{"books":[],"entries":[]}'),'Embedded demo content is not preloaded');
+assert.ok(!html.includes('localStorage.getItem(STORAGE)'),'Never read old localStorage dataset at startup');
+assert.ok(!html.includes('pdl_studio_worker_url'),'Never load an old full worker URL');
+assert.ok(!js.includes('pdlDraftSchedule();'),'No automatic IndexedDB writes');
+assert.ok(html.includes('pdlStudioConnected')&&html.includes('pdlCloudGate'),'Editing requires authentication');
+assert.ok(html.includes('pdlHandleConnectionLoss')&&html.includes('Θέλεις να αποθηκεύσεις'),'Explicit rescue only when connection is lost');
+const writes=[],legacyWrites=[];
+const state={books:[{id:'github-book',chapters:[]}],entries:[]};
+const context={state,pdlCloudStorageDirty:false,pdlCloudSnapshot:JSON.stringify(state),
+  window:{pdlStudioConnected:()=>true,addEventListener(){}},
+  document:{addEventListener(){}},
+  localStorage:{setItem:(...args)=>legacyWrites.push(args)},
+  indexedDB:{open(){writes.push('open');throw Error('Unexpected IndexedDB access');}},
+  structuredClone,console,Date,Error,Promise,setTimeout,clearTimeout};
 vm.createContext(context);
 vm.runInContext(js,context);
 assert.equal(vm.runInContext('persist()',context),true);
-await new Promise(r=>setTimeout(r,30));
-let first=await vm.runInContext('pdlDraftGet()',context);
-assert.equal(first.data.books[0].id,'a');
-vm.runInContext('state.books[0].id="b";persist()',context);
-await new Promise(r=>setTimeout(r,30));
-let second=await vm.runInContext('pdlDraftGet()',context);
-assert.equal(second.data.books[0].id,'b','recovery mirror keeps latest local draft');
-assert.equal(store.has('pdl-test'),true,'existing localStorage contract preserved');
-assert.ok(html.includes('pdlRecoverIndexedDb'),'recovery UI present');
-assert.ok(html.includes('if(!confirm(msg))return'),'recovery requires confirmation');
-assert.ok(html.includes('backup();\n  state=structuredClone(saved.data)'), 'manual restore exports prior state');
-assert.ok(!js.includes('bridge.password'),'secret never written to backup');
-console.log('PASS IndexedDB mirror saves latest state, keeps legacy localStorage, and requires explicit recovery');
+assert.equal(vm.runInContext('pdlCloudStorageDirty',context),false);
+vm.runInContext("state.books[0].id='edited-book';persist()",context);
+assert.equal(vm.runInContext('pdlCloudStorageDirty',context),true);
+assert.equal(writes.length,0,'No background IndexedDB read/write');
+assert.equal(legacyWrites.length,0,'No background localStorage write');
+assert.ok(html.includes('localStorage.setItem(\'pdl_worker_nick\',nick)'),'Only the short Worker nickname is remembered');
+console.log('PASS Admin cloud-only: no local dataset load/autosave, auth gate, in-memory edits, lost-connection rescue');
