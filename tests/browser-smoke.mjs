@@ -1,6 +1,7 @@
 import {chromium} from 'playwright';
 import {createServer} from 'node:http';
 import {readFile, stat} from 'node:fs/promises';
+import assert from 'node:assert/strict';
 import path from 'node:path';
 const root=path.resolve(import.meta.dirname,'..');
 const types={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json; charset=utf-8','.svg':'image/svg+xml','.wasm':'application/wasm','.hpb':'application/octet-stream','.webp':'image/webp','.png':'image/png'};
@@ -15,8 +16,33 @@ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
 const url=`http://127.0.0.1:${server.address().port}`;
 let browser;
 try{
- browser=await chromium.launch({headless:true});
+ browser=await chromium.launch({headless:true,
+  ...(process.env.PDL_CHROMIUM_EXECUTABLE?{executablePath:process.env.PDL_CHROMIUM_EXECUTABLE}:{})});
  const page=await browser.newPage();const errors=[];page.on('pageerror',err=>errors.push(String(err)));
+ // Studio requires an authenticated Worker GET before editing. Mock only the
+ // network boundary: the actual login dialog, access gate and editor all run
+ // unmodified. No GitHub write, real credential or production account involved.
+ const fixture=JSON.parse(await readFile(path.join(root,'library-data.json'),'utf8'));
+ const worker='https://pontian-library-sync.ksaefos.workers.dev/api/library';
+ const secret='ci-smoke-password-only';
+ let workerGetCount=0;
+ await page.route(worker,async route=>{
+  const request=route.request();
+  const headers={
+   'Access-Control-Allow-Origin':url,
+   'Access-Control-Allow-Headers':'authorization,content-type',
+   'Access-Control-Allow-Methods':'GET, OPTIONS',
+   'Cache-Control':'no-store'
+  };
+  if(request.method()==='OPTIONS'){
+   await route.fulfill({status:204,headers});return;
+  }
+  assert.equal(request.method(),'GET','Smoke login must never publish to the Worker');
+  assert.equal(request.headers()['authorization'],'Bearer '+secret);
+  workerGetCount++;
+  await route.fulfill({status:200,headers,contentType:'application/json',
+   body:JSON.stringify({sha:'browser-smoke-fixture-sha',data:fixture})});
+ });
  await page.goto(url+'/admin.html',{waitUntil:'domcontentloaded'});
  await page.waitForFunction(()=>document.querySelector('#pdl-tiptap-editor')?.textContent?.includes('TipTap'),null,{timeout:20000});
  await page.waitForFunction(()=>[...document.querySelectorAll('[role="status"]')].some(n=>n.textContent.includes('TipTap ενεργό')),null,{timeout:25000});
@@ -24,6 +50,22 @@ try{
  const font=await page.locator('.pdl-tip-canvas').evaluate(el=>getComputedStyle(el).fontFamily);
  if(!/Barnebok/i.test(font))throw new Error('Barnebok is not active: '+font);
  console.log('PASS TipTap bundle initializes and Barnebok is configured');
+ // The modal is a security feature. Validate the gate and log in through it
+ // rather than force-clicking an inert editor behind the dialog.
+ await page.locator('#pdlLoginDialog').waitFor({state:'visible'});
+ assert.equal(await page.locator('.app').evaluate(el=>el.inert),true,
+  'Studio editing must remain locked before authentication');
+ assert.equal(await page.evaluate(()=>state.books.length),0,
+  'Studio must not preload a local library before remote GET');
+ await page.locator('#pdlWorkerNick').fill('ksaefos');
+ await page.locator('#pdlPassword').fill(secret);
+ await page.locator('#pdlLoginSubmit').click();
+ await page.locator('#pdlLoginDialog').waitFor({state:'hidden',timeout:30000});
+ await page.waitForFunction(()=>window.pdlStudioConnected?.()===true,null,{timeout:30000});
+ assert.equal(await page.locator('.app').evaluate(el=>el.inert),false,
+  'Studio editing must unlock after authenticated Worker GET');
+ assert.equal(workerGetCount,1,'Exactly one authenticated Worker GET expected');
+ console.log('PASS Studio login gate: remote-only library GET unlocks editor');
  await page.locator('aside button[data-view="editor"]').click();
  const editable=page.locator('.pdl-tip-canvas .ProseMirror');
  await editable.waitFor({state:'visible'});await editable.click();
