@@ -146,6 +146,24 @@ try{
  assert.equal(opfAfter.builds,opfBefore.builds,'OpenPageFlip must not be destroyed during a normal turn');
  assert.equal(opfAfter.activeChapter,opfBefore.ch,'OpenPageFlip must remain on the same chapter');
  assert.ok(!opfAfter.failed,'OpenPageFlip must not fall back to static native pages');
+ // Regression: a layout refresh can momentarily destroy the OPF instance
+ // between the readiness check and a real user navigation command. The turn
+ // must be retained and animated after reconstruction, never handled by an
+ // immediate, static fallback to the native page renderer.
+ const raceBefore=await frame.evaluate(()=>({
+  ch:currentChapter,pg:currentPage,turns:pdlOpenPageFlipDebug().animatedTurns
+ }));
+ await frame.evaluate(()=>{
+  window.dispatchEvent(new Event('pdl-grid-layout-ready'));
+  nextPage();
+ });
+ await frame.waitForFunction(before=>{
+  const d=pdlOpenPageFlipDebug();
+  return currentChapter===before.ch&&currentPage===before.pg+1&&
+   d.animatedTurns>before.turns&&d.state==='read'&&!d.pendingTurn;
+ },raceBefore,{timeout:20000});
+ assert.ok(!(await frame.evaluate(()=>pdlOpenPageFlipDebug())).failed,
+  'OpenPageFlip must remain active after the relayout/navigation race');
  // Previous tests used nextPage() only.  Reproduce an actual edge drag: a
  // generated animation is required even when the vendored core releases the
  // pointer without completing its own gesture.
