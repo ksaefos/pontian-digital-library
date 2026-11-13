@@ -57,6 +57,9 @@ try{
   'Studio editing must remain locked before authentication');
  assert.equal(await page.evaluate(()=>state.books.length),0,
   'Studio must not preload a local library before remote GET');
+ const backupButton=page.locator('#backupQuick');
+ assert.equal(await backupButton.isVisible(),true,'Manual backup must remain visible');
+ assert.equal(await backupButton.isEnabled(),false,'Manual backup must stay disabled until login');
  await page.locator('#pdlWorkerNick').fill('ksaefos');
  await page.locator('#pdlPassword').fill(secret);
  await page.locator('#pdlLoginSubmit').click();
@@ -65,6 +68,7 @@ try{
  assert.equal(await page.locator('.app').evaluate(el=>el.inert),false,
   'Studio editing must unlock after authenticated Worker GET');
  assert.equal(workerGetCount,1,'Exactly one authenticated Worker GET expected');
+ assert.equal(await backupButton.isEnabled(),true,'Manual backup must unlock after authenticated GET');
  console.log('PASS Studio login gate: remote-only library GET unlocks editor');
  await page.locator('aside button[data-view="editor"]').click();
  const editable=page.locator('.pdl-tip-canvas .ProseMirror');
@@ -76,6 +80,20 @@ try{
  await page.locator('.pdl-tip-toolbar select').selectOption('h3');
  if(await editable.locator('h3').count()===0)throw new Error('H3 formatting failed');
  console.log('PASS H1/H2/H3 toolbar commands');
+ // A manual backup must capture a title typed but not saved/published, as well
+ // as the original book data; it must never send a PUT to the Worker.
+ const unsavedTitle='Δοκιμή αδημοσίευτου τίτλου CI';
+ await page.locator('#editTitle').fill(unsavedTitle);
+ const [backupDownload]=await Promise.all([
+  page.waitForEvent('download',{timeout:15000}),backupButton.click()
+ ]);
+ const backupData=JSON.parse(await readFile(await backupDownload.path(),'utf8'));
+ assert.equal(backupData.format,'pontian-studio-backup');
+ assert.equal(backupData.data.books.length,fixture.books.length);
+ assert.equal(backupData.data.books.find(b=>b.id===fixture.books[0].id)?.title,unsavedTitle,
+  'Manual export must capture unsaved book changes');
+ assert.equal(workerGetCount,1,'Manual backup must not call remote publish');
+ console.log('PASS Studio manual JSON backup: visible, authenticated, captures unsaved edits');
  const page2=await browser.newPage({viewport:{width:390,height:844}});const errors2=[];page2.on('pageerror',err=>errors2.push(String(err)));
  await page2.goto(url+'/index.html',{waitUntil:'domcontentloaded'});
  await page2.waitForFunction(()=>document.querySelector('#pdl-import-status')?.textContent&&!document.querySelector('#pdl-import-status').textContent.includes('Φόρτωση'),null,{timeout:30000});

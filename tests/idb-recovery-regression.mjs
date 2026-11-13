@@ -34,4 +34,17 @@ assert.equal(vm.runInContext('pdlCloudStorageDirty',context),true);
 assert.equal(writes.length,0,'No background IndexedDB read/write');
 assert.equal(legacyWrites.length,0,'No background localStorage write');
 assert.ok(html.includes('localStorage.setItem(\'pdl_worker_nick\',nick)'),'Only the short Worker nickname is remembered');
+// Manual JSON export must be reachable after authentication without reviving
+// any automatic localStorage/IndexedDB persistence or offline editing.
+assert.match(html,/#publishView > \.panel:not\(#pdlCloudPanel\),#publishView > \.warn\{display:none!important\}/,
+ 'Legacy cloud panels remain hidden without hiding the global backup control');
+assert.ok(!html.includes('#publishView > .warn,#backupQuick{display:none!important}'),
+ 'The global manual backup control must not be hidden by legacy styles');
+assert.match(html,/<button id="backupQuick" type="button" disabled[^>]*>[^<]*<svg[\s\S]*?Λήψη αντιγράφου JSON<\/button>/,
+ 'Backup button must be visible in the header but disabled before login');
+assert.ok(html.includes("$('backupQuick').disabled=!connected;"),
+ 'Manual backup must follow the authenticated Worker state');
+assert.ok(html.includes("$('backupQuick').onclick=()=>{if(!window.pdlStudioConnected?.())return;keepEditorChanges();persist();backup();};"),
+ 'Export must capture unsaved editor fields before saving an explicit JSON backup');
+
 console.log('PASS Admin cloud-only: no local dataset load/autosave, auth gate, in-memory edits, lost-connection rescue');

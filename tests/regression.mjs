@@ -42,7 +42,7 @@ test('publication loss safeguards',()=>{
  assert.ok(studio.includes("!manuallyRemovedReferenceKeys.has(String(id)+'|'+ref)"));
  assert.match(studio,/if\(oldChapter\.richHtml&&!next\.richHtml\)/);
  // Manual downloads remain available, but must not run on login/publish.
- assert.match(studio,/\$\('backupQuick'\)\.onclick=backup/);
+ assert.ok(studio.includes("$('backupQuick').onclick=()=>{if(!window.pdlStudioConnected?.())return;keepEditorChanges();persist();backup();};"),'Authenticated manual backup must capture current edits before export');
  assert.match(studio,/\$\('exportBackup'\)\.onclick=backup/);
  assert.doesNotMatch(studio,/Δημιουργήθηκε αυτόματο τοπικό backup/);
  assert.match(studio,/window\.pdlExplicitDeletedEntries\.has\(id\)/);
