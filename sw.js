@@ -4,12 +4,12 @@ const CORE=['./','./index.html','./library-data.json','./manifest.webmanifest','
 const OPTIONAL=["./vendor/tiptap/tiptap.bundle.js","./vendor/hyphenopoly/6.1.0/Hyphenopoly_Loader.js","./vendor/hyphenopoly/6.1.0/Hyphenopoly.js","./vendor/hyphenopoly/6.1.0/patterns/el-polyton.wasm","./vendor/hyphenopoly/6.1.0/patterns/el-monoton.wasm"];
 const base=new URL('./',self.registration.scope);
 const appIndex=new URL('index.html',base).href;
-const studioIndex=new URL('admin.html',base).href;
+const studioPath=new URL('admin.html',base).pathname;
 const libraryJson=new URL('library-data.json',base).href;
 const timeout=5000;
-async function network(req){
+async function network(req,cacheMode='no-cache'){
  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),timeout);
- try{return await fetch(req,{cache:'no-cache',signal:controller.signal});}
+ try{return await fetch(req,{cache:cacheMode,signal:controller.signal});}
  finally{clearTimeout(timer);}
 }
 self.addEventListener('install',event=>event.waitUntil((async()=>{
@@ -30,13 +30,26 @@ self.addEventListener('install',event=>event.waitUntil((async()=>{
  }catch(e){await caches.delete(CACHE);throw e;}
 })()));
 self.addEventListener('activate',event=>event.waitUntil((async()=>{
- const keys=await caches.keys();await Promise.all(keys.filter(k=>k.startsWith('pontian-digital-library-')&&k!==CACHE).map(k=>caches.delete(k)));
+ const keys=await caches.keys();
+ await Promise.all(keys.filter(k=>k.startsWith('pontian-digital-library-')&&k!==CACHE).map(k=>caches.delete(k)));
+ // Earlier versions dynamically cached admin.html despite excluding it from
+ // precache. Evict those old responses from the retained version as well,
+ // including URLs carrying query parameters, before controlling clients.
+ const cache=await caches.open(CACHE);
+ const requests=await cache.keys();
+ await Promise.all(requests.filter(req=>new URL(req.url).pathname===studioPath).map(req=>cache.delete(req)));
  await self.clients.claim();
 })()));
 self.addEventListener('fetch',event=>{
  const req=event.request;if(req.method!=='GET')return;
  const url=new URL(req.url);if(url.origin!==location.origin||!url.href.startsWith(base.href))return;
- const studio=url.pathname===new URL('admin.html',base).pathname;
+ // The Studio is online-only. Do not read or write its HTML through any
+ // CacheStorage route (including query-string variants). Never serve the
+ // public Reader as an offline replacement for the administration page.
+ if(url.pathname===studioPath){
+  event.respondWith(network(req,'no-store').catch(()=>Response.error()));
+  return;
+ }
  const isNav=req.mode==='navigate';
  const isJson=url.href===libraryJson;
  if(isNav||isJson){event.respondWith((async()=>{
@@ -50,7 +63,6 @@ self.addEventListener('fetch',event=>{
   }catch(err){
    const cached=await cache.match(req);
    if(cached)return cached;
-   if(studio)return await cache.match(studioIndex)||Response.error();
    if(isNav)return await cache.match(appIndex)||Response.error();
    return await cache.match(libraryJson)||Response.error();
   }
