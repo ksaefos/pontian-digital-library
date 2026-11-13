@@ -19,18 +19,55 @@ assert.ok(html.includes('pdlStudioConnected')&&html.includes('pdlCloudGate'),'Ed
 assert.ok(html.includes('pdlHandleConnectionLoss')&&html.includes('Θέλεις να αποθηκεύσεις'),'Explicit rescue only when connection is lost');
 const writes=[],legacyWrites=[];
 const state={books:[{id:'github-book',chapters:[]}],entries:[]};
-const context={state,pdlCloudStorageDirty:false,pdlCloudSnapshot:JSON.stringify(state),
+const baseline=JSON.stringify(state);
+let serializations=0,nextTimer=0;
+const queued=new Map();
+const jsonInstrument={stringify(...args){serializations++;return JSON.stringify(...args)}};
+const context={state,pdlCloudStorageDirty:false,pdlCloudSnapshot:baseline,
   window:{pdlStudioConnected:()=>true,addEventListener(){}},
   document:{addEventListener(){}},
   localStorage:{setItem:(...args)=>legacyWrites.push(args)},
   indexedDB:{open(){writes.push('open');throw Error('Unexpected IndexedDB access');}},
-  structuredClone,console,Date,Error,Promise,setTimeout,clearTimeout};
+  JSON:jsonInstrument,structuredClone,console,Date,Error,Promise,
+  setTimeout(fn,ms){const id=++nextTimer;queued.set(id,{fn,ms});return id;},
+  clearTimeout(id){queued.delete(id);}};
+function flushTimers(){
+ for(const [id,t] of [...queued]){queued.delete(id);t.fn();}
+}
 vm.createContext(context);
 vm.runInContext(js,context);
-assert.equal(vm.runInContext('persist()',context),true);
-assert.equal(vm.runInContext('pdlCloudStorageDirty',context),false);
+for(let i=0;i<150;i++)assert.equal(vm.runInContext('persist()',context),true);
+assert.equal(serializations,0,'Frequent persist calls must NOT serialize the full library');
+assert.equal(queued.size,1,'Only one deferred exact check should remain queued');
+assert.equal(vm.runInContext('pdlCloudStorageDirty',context),true,
+ 'Conservative dirty flag protects a close before the idle comparison');
+flushTimers();
+assert.equal(serializations,1,'The idle check should serialize once, not per persist');
+assert.equal(vm.runInContext('pdlCloudStorageDirty',context),false,
+ 'A navigation-only persist must clear the temporary dirty flag after idle');
 vm.runInContext("state.books[0].id='edited-book';persist()",context);
 assert.equal(vm.runInContext('pdlCloudStorageDirty',context),true);
+flushTimers();
+assert.equal(vm.runInContext('pdlCloudStorageDirty',context),true,
+ 'A data change must remain dirty after exact reconciliation');
+// Reverting back to the published content must clear false positives at idle.
+vm.runInContext("state.books[0].id='github-book';persist()",context);
+flushTimers();
+assert.equal(vm.runInContext('pdlCloudStorageDirty',context),false);
+// A still-unsubmitted form or rich-text edit must NEVER be cleared by a
+// comparison of state alone, because the editor has not committed it yet.
+for(const name of ['pdlCloudEditorDraft','pdlCloudEntryDraft','pdlCloudRichDraft']){
+ vm.runInContext(`${name}=true;pdlCloudStorageDirty=true`,context);
+ assert.equal(vm.runInContext('pdlCloudReconcileDirty()',context),true,
+  `${name} must preserve the rescue/unload warning`);
+ vm.runInContext(`${name}=false`,context);
+}
+assert.equal(vm.runInContext('pdlCloudReconcileDirty()',context),false);
+// A network publish races with user edits. Sync to the *submitted* snapshot,
+// not an updated live state, or the unsent edits would be marked as published.
+vm.runInContext("state.books[0].id='new-after-PUT';pdlCloudSyncSnapshot(pdlCloudSnapshot)",context);
+assert.equal(vm.runInContext('pdlCloudStorageDirty',context),true,
+ 'Changes made during a publish must remain dirty');
 assert.equal(writes.length,0,'No background IndexedDB read/write');
 assert.equal(legacyWrites.length,0,'No background localStorage write');
 assert.ok(html.includes('localStorage.setItem(\'pdl_worker_nick\',nick)'),'Only the short Worker nickname is remembered');
@@ -47,4 +84,4 @@ assert.ok(html.includes("$('backupQuick').disabled=!connected;"),
 assert.ok(html.includes("$('backupQuick').onclick=()=>{if(!window.pdlStudioConnected?.())return;keepEditorChanges();persist();backup();};"),
  'Export must capture unsaved editor fields before saving an explicit JSON backup');
 
-console.log('PASS Admin cloud-only: no local dataset load/autosave, auth gate, in-memory edits, lost-connection rescue');
+console.log('PASS Admin cloud-only and deferred exact dirty check: no background saves or unsafe clean state');
