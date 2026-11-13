@@ -38,7 +38,10 @@ for(const retired of ['function pdlGridPaginate(', 'function pdlGridRepairPages(
  'pdlGridSignature(', 'pdlGridCache', 'pdlGridStats', 'if(false)']){
  assert.ok(!shell.includes(retired),'Abandoned Grid paginator code remains: '+retired);
 }
-assert.ok(shell.includes("return pdlLegacyPaginate();"),'Hyphenopoly must keep the compatible paginator');
+assert.ok(shell.includes("return pdlLegacyPaginate();"),'Legacy fallback must remain available while Hyphenopoly loads or if progressive validation fails');
+assert.ok(shell.includes('pdl-progress-hyphenated'),'Progressive measurer must support discretionary cut points');
+assert.ok(shell.includes('PDL_HYPH.sourceOffset(textNode'),'Validator must map inserted SHY to original source anchors');
+assert.ok(shell.includes('pdlProgressHyphenationFailed=true'),'Failed progressive hyphenation must fall back to legacy');
 // Stylesheet cleanup must not reintroduce conflicting native auto-hyphenation
 // or the old arbitrary word-wrapping override that was neutralized in v2.2.0.
 assert.ok(!shell.includes('id="pdl-v216-pagination-css"'),
@@ -60,14 +63,22 @@ assert.ok(hyphenationCSS.includes('display:inline;'),
 const dispatcher=shell.match(/function pdlPaginate\(\)\{[\s\S]*?\n\}/)?.[0];
 assert.ok(dispatcher,'Active dispatcher must be available');
 const calls=[];
-const ctx={pdlGridEnabled:true,PDL_HYPH:{mode:()=>ctx.mode},mode:'off',
+const ctx={pdlGridEnabled:true,pdlProgressHyphenationFailed:false,
+ PDL_HYPH:{mode:()=>ctx.mode,ready:()=>ctx.ready},mode:'off',ready:false,
  pdlProgressStart:()=>calls.push('progressive'),pdlLegacyPaginate:()=>calls.push('legacy')};
 runInNewContext(dispatcher+'; pdlPaginate();',ctx);
 assert.deepEqual(calls,['progressive'],'Hyphenation off must reach the progressive paginator');
 ctx.mode='el-polyton';runInNewContext('pdlPaginate();',ctx);
-assert.deepEqual(calls,['progressive','legacy'],'Polytonic books must reach the legacy paginator');
-ctx.mode='off';ctx.pdlGridEnabled=false;runInNewContext('pdlPaginate();',ctx);
-assert.deepEqual(calls,['progressive','legacy','legacy'],'Explicitly disabled Grid must still reach the legacy paginator');
+assert.deepEqual(calls,['progressive','legacy'],'Hyphenated books must use legacy until WASM is ready');
+ctx.ready=true;runInNewContext('pdlPaginate();',ctx);
+assert.deepEqual(calls,['progressive','legacy','progressive'],'Loaded polytonic patterns must reach progressive pagination');
+ctx.mode='el-monoton';runInNewContext('pdlPaginate();',ctx);
+assert.deepEqual(calls,['progressive','legacy','progressive','progressive'],'Monotonic patterns must also reach progressive pagination');
+ctx.pdlProgressHyphenationFailed=true;runInNewContext('pdlPaginate();',ctx);
+assert.equal(calls.at(-1),'legacy','A failed progressive validation must retain the safe legacy route');
+ctx.mode='off';ctx.pdlProgressHyphenationFailed=false;ctx.pdlGridEnabled=false;
+runInNewContext('pdlPaginate();',ctx);
+assert.equal(calls.at(-1),'legacy','Explicitly disabled Grid must still reach the legacy paginator');
 
 // Exercise the actual editorial hyphenator logic without using a network or
 // relying on a browser layout mock. A WASM result is replaced with fixed cuts,

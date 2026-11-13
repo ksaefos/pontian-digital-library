@@ -24,19 +24,17 @@ const root=resolve(import.meta.dirname,'..');
 const data=JSON.parse(readFileSync(resolve(root,'library-data.json'),'utf8'));
 const book=data.books.find(b=>b.title==='Η Σωνίτσα');
 assert.ok(book,'Stress-test book is missing');
-// Browser regression fixtures must be independent of editorial settings on
-// publicly published books. A book with Hyphenopoly enabled intentionally uses
-// the legacy paginator in v3.1.2, so it cannot exercise the progressive engine.
-// Override settings ONLY in the in-memory HTTP response; never alter the real
-// library-data.json. Test Hyphenopoly explicitly as a separate scenario below.
+// Never rewrite published book settings just to fit a test. The in-memory
+// response exercises both the nonhyphenated and the WASM-hyphenated progressive
+// paths, preserving the source data on disk.
 const fixtureLibrary=structuredClone(data);
 const progressiveBook=fixtureLibrary.books.find(b=>b.id===book.id);
 progressiveBook.hyphenation='off';
 const hyphenBook=fixtureLibrary.books.find(b=>b.title==='Το ψωμίν');
 assert.ok(hyphenBook,'Hyphenopoly browser fixture book is missing');
 hyphenBook.hyphenation='el-polyton';
-// Enough text for several real pages with the *legacy* paginator. Earlier
-// versions only tested tokenBreaks and failed to notice that OPF never mounted.
+// Enough text for multiple progressive batches with real Greek WASM patterns.
+// Earlier versions tested tokenBreaks without testing the actual page layout.
 hyphenBook.chapters=[{...hyphenBook.chapters[0],
  text:Array.from({length:42},()=>
   'Η παραδοσιακή βιβλιοθήκη είναι καταπληκτική. Καλημέρα στην παραδοσιακή βιβλιοθήκη.').join('\n\n'),
@@ -244,12 +242,45 @@ try{
  const hyphFrame=page.frames().find(f=>f.url()==='about:srcdoc');
  assert.ok(hyphFrame,'Hyphenopoly Reader iframe not initialized');
  await hyphFrame.waitForFunction(()=>PDL_HYPH.ready()||document.getElementById('pdl-hyphen-status')?.textContent?.includes('Δεν φορτώθηκε'),null,{timeout:45000});
- // A hyphenated book intentionally has no progressive chapter state.
- // Its legacy pages MUST still mount OpenPageFlip and support an actual edge drag.
+ // The initial safe legacy pages are replaced by progressive batches only
+ // after the actual Greek Hyphenopoly WASM has loaded successfully.
+ await hyphFrame.waitForFunction(()=>{
+  const s=pdlProgressStats();return s.complete||s.errors.length>0||s.fallback;
+ },null,{timeout:180000});
+ const hyphStats=await hyphFrame.evaluate(()=>pdlProgressStats());
+ assert.equal(hyphStats.mode,'progressive-hyphenated-batches',
+  'Loaded el-polyton MUST use the unified progressive paginator');
+ assert.ok(!hyphStats.fallback&&!hyphStats.errors.length,
+  'Hyphenation must not silently fall back after a failed progressive layout: '+hyphStats.errors.join(' | '));
+ assert.ok(hyphStats.complete&&hyphStats.chapters.every(ch=>ch.done),
+  'Every hyphenated chapter must complete its progressive batches');
+ const hyphIntegrity=await hyphFrame.evaluate(()=>chapters.map((chapter,ci)=>{
+  const original=PDL_SOURCE[ci].blocks.map(b=>pdlPlain(b.text||'')).join('');
+  const rendered=chapter.pages.flat().map(b=>pdlPlain(b.text||'')).join('');
+  const structural=['divider','telos','table','image'];
+  const before=PDL_SOURCE[ci].blocks.filter(b=>structural.includes(b.type)).map(b=>b.type);
+  const after=chapter.pages.flat().filter(b=>structural.includes(b.type)).map(b=>b.type);
+  return {ci,bytesEqual:original===rendered,structuresEqual:JSON.stringify(before)===JSON.stringify(after)};
+ }));
+ assert.ok(hyphIntegrity.every(ch=>ch.bytesEqual&&ch.structuresEqual),
+  'Hyphenated progressive pages must preserve every source character and structural element');
+ // Real WASM word cuts must generate individual measurable segments with
+ // source-based offsets, not SHY-inflated positions or arbitrary graphemes.
+ const segments=await hyphFrame.evaluate(()=>{
+  const word='παραδοσιακός';const node=document.createElement('p');node.textContent=word;
+  const result=pdlGridWordify(node,true);
+  return {word,rendered:node.textContent.replaceAll('\u00AD',''),
+   offsets:result.words.map(el=>Number(el.dataset.offset)),
+   cuts:PDL_HYPH.tokenBreaks(word)};
+ });
+ assert.equal(segments.rendered,segments.word,'Measurement separators must not alter source letters');
+ assert.ok(segments.cuts.length>0&&segments.offsets.length>1,
+  'WASM word breaks must create measurable progressive fragments');
+ assert.deepEqual(segments.offsets.slice(1),segments.cuts,
+  'Every hyphenation fragment must retain its original source offset');
  await hyphFrame.waitForFunction(()=>{
   const d=pdlOpenPageFlipDebug();
-  return PDL_HYPH.mode()==='el-polyton'&&pdlProgressStats().chapters.length===0&&
-   d.enabled&&!d.failed&&d.builds>0&&d.activeChapter===currentChapter&&d.state==='read';
+  return d.enabled&&!d.failed&&d.builds>0&&d.activeChapter===currentChapter&&d.state==='read';
  },null,{timeout:30000});
  const hyphOPF=await hyphFrame.evaluate(()=>({
   ...pdlOpenPageFlipDebug(),chapter:currentChapter,page:currentPage,
@@ -271,8 +302,34 @@ try{
    d.state==='read'&&currentChapter===before.chapter&&currentPage===before.page+1;
  },hyphOPF,{timeout:15000});
  assert.ok(!errors.length,'Hyphenated OpenPageFlip JS errors: '+errors.join(';'));
- console.log('PASS OpenPageFlip with active editorial el-polyton: legacy pages mount and real mouse drag animates');
- const hyphReport=await hyphFrame.evaluate(()=>{
+ console.log('PASS OpenPageFlip with progressive el-polyton: complete pages, source integrity and real mouse drag');
+ // Reflow must restore the exact source anchor even when WASM hyphenation
+ // changes the page count. This is a separate navigation regression from drag.
+ const hyphBeforeReflow=await hyphFrame.evaluate(()=>({
+  generation:pdlProgressStats().generation,
+  anchor:pdlPageAnchor(currentChapter,currentPage)
+ }));
+ await hyphFrame.evaluate(()=>pdlSetFont('Barnebok Pontian'));
+ await hyphFrame.waitForFunction(g=>pdlProgressStats().generation>g,hyphBeforeReflow.generation,{timeout:30000});
+ await hyphFrame.waitForFunction(()=>{
+  const s=pdlProgressStats();return s.complete||s.errors.length>0||s.fallback;
+ },null,{timeout:180000});
+ const hyphReflow=await hyphFrame.evaluate(()=>({
+  stats:pdlProgressStats(),start:pdlPageAnchor(currentChapter,currentPage),
+  next:pdlPageAnchor(currentChapter,currentPage+1),
+  last:currentPage+1>=chapters[currentChapter].pages.length,
+  integrity:chapters.every((c,i)=>PDL_SOURCE[i].blocks.map(b=>pdlPlain(b.text||'')).join('')===
+    c.pages.flat().map(b=>pdlPlain(b.text||'')).join(''))
+ }));
+ const compareAnchor=(a,b)=>a.index-b.index||(a.offset||0)-(b.offset||0);
+ assert.ok(hyphReflow.stats.complete&&!hyphReflow.stats.fallback&&!hyphReflow.stats.errors.length,
+  'Hyphenated font reflow must complete without silent legacy fallback');
+ assert.ok(hyphReflow.integrity,'Hyphenated font reflow must retain all chapter text');
+ assert.ok(compareAnchor(hyphReflow.start,hyphBeforeReflow.anchor)<=0,
+  'Hyphenated reflow must never skip the previously visible source anchor');
+ if(!hyphReflow.last)assert.ok(compareAnchor(hyphReflow.next,hyphBeforeReflow.anchor)>0,
+  'Hyphenated reflow must keep the saved anchor on the restored page');
+ const hyphReport=await hyphFrame.evaluate(()=>{ 
   const polyton={mode:PDL_HYPH.mode(),ready:PDL_HYPH.ready(),breaks:PDL_HYPH.tokenBreaks('παραδοσιακός')};
   PDL_HYPH.setMode('el-monoton');
   const monoton={mode:PDL_HYPH.mode(),breaks:PDL_HYPH.tokenBreaks('παραδοσιακός')};
