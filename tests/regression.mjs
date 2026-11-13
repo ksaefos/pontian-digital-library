@@ -43,7 +43,8 @@ test('publication loss safeguards',()=>{
  assert.match(studio,/if\(oldChapter\.richHtml&&!next\.richHtml\)/);
  // Manual downloads remain available, but must not run on login/publish.
  assert.ok(studio.includes("$('backupQuick').onclick=()=>{if(!window.pdlStudioConnected?.())return;keepEditorChanges();persist();backup();};"),'Authenticated manual backup must capture current edits before export');
- assert.match(studio,/\$\('exportBackup'\)\.onclick=backup/);
+ assert.ok(!studio.includes('id="exportBackup"'),'Duplicate legacy backup control must be removed');
+ assert.match(studio,/<details id="pdlRecoveryTools"/,'Historical recovery remains manually available');
  assert.doesNotMatch(studio,/Δημιουργήθηκε αυτόματο τοπικό backup/);
  assert.match(studio,/window\.pdlExplicitDeletedEntries\.has\(id\)/);
 });
