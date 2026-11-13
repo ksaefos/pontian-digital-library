@@ -205,3 +205,83 @@ test('offline build asset pipeline included',()=>{
 });
 
 console.log('All mandatory regression tests passed.');
+
+// Execute the real Service Worker in an isolated runtime. Unlike a string
+// assertion, these checks fail if an offline Studio response is ever read from
+// CacheStorage or if a navigation to admin.html populates dynamic cache again.
+await (async function verifyAdminNeverCached(){
+ const origin='https://test.example';
+ const scope=origin+'/pontian/';
+ const cacheName=sw.match(/const CACHE='([^']+)'/)[1];
+ const storage=new Map();
+ const calls={writes:[],reads:[],fetches:[],claimed:0};
+ const href=req=>typeof req==='string'?req:req.url;
+ const cacheFor=name=>{
+  if(!storage.has(name))storage.set(name,new Map());
+  const records=storage.get(name);
+  return {
+   put:async(req,res)=>{calls.writes.push(href(req));records.set(href(req),res.clone());},
+   match:async req=>{calls.reads.push(href(req));return records.get(href(req))?.clone();},
+   keys:async()=>[...records.keys()].map(url=>({url})),
+   delete:async req=>records.delete(href(req))
+  };
+ };
+ const cacheAPI={open:async name=>cacheFor(name),keys:async()=>[...storage.keys()],delete:async name=>storage.delete(name)};
+ const listeners={};
+ let offline=false;
+ const mockFetch=async(req,options)=>{
+  calls.fetches.push({url:href(req),mode:options?.cache});
+  if(offline)throw new TypeError('Network unavailable');
+  return new Response('NETWORK:'+href(req),{status:200});
+ };
+ const selfMock={registration:{scope},addEventListener:(type,fn)=>{listeners[type]=fn;},
+  clients:{claim:async()=>{calls.claimed++;}}};
+ vm.runInNewContext(sw,{self:selfMock,caches:cacheAPI,URL,Request,Response,
+  AbortController,setTimeout,clearTimeout,fetch:mockFetch,location:{origin},console},
+  {timeout:2000});
+ assert.equal(typeof listeners.activate,'function');
+ assert.equal(typeof listeners.fetch,'function');
+ const oldName='pontian-digital-library-v3.1.1-expired';
+ await (await cacheAPI.open(oldName)).put(scope+'admin.html',new Response('OLD ADMIN'));
+ const active=await cacheAPI.open(cacheName);
+ await active.put(scope+'admin.html',new Response('STALE ADMIN'));
+ await active.put(scope+'admin.html?old=1',new Response('STALE ADMIN QUERY'));
+ await active.put(scope+'index.html',new Response('OFFLINE READER'));
+ const activation=[];
+ listeners.activate({waitUntil:p=>activation.push(p)});
+ await Promise.all(activation);
+ assert.equal(storage.has(oldName),false,'Old version caches must be removed');
+ assert.equal(calls.claimed,1,'New Service Worker must claim its clients');
+ assert.deepEqual((await active.keys()).map(x=>x.url),[scope+'index.html'],
+  'Activation must remove cached Admin HTML and its query-string variants');
+ const dispatch=async(url,mode='navigate')=>{
+  let responsePromise;
+  const waits=[];
+  listeners.fetch({request:{url,method:'GET',mode},respondWith:p=>{responsePromise=p;},
+   waitUntil:p=>waits.push(p)});
+  assert.ok(responsePromise,'Within-scope GET must be handled');
+  const response=await responsePromise;
+  await Promise.all(waits);
+  return response;
+ };
+ // An online Admin request must bypass CacheStorage and browser HTTP cache.
+ const writesBefore=calls.writes.length,readsBefore=calls.reads.length;
+ const online=await dispatch(scope+'admin.html?session=1');
+ assert.equal(online.status,200);
+ assert.match(await online.text(),/^NETWORK:/);
+ assert.equal(calls.fetches.at(-1).mode,'no-store','Admin HTTP caching must be disabled');
+ assert.equal(calls.writes.length,writesBefore,'Admin request must not write to CacheStorage');
+ assert.equal(calls.reads.length,readsBefore,'Admin request must not read CacheStorage');
+ // Even a preexisting stale entry must NEVER become an offline Studio.
+ await active.put(scope+'admin.html',new Response('UNSAFE STALE ADMIN'));
+ offline=true;
+ const readsOffline=calls.reads.length;
+ const missing=await dispatch(scope+'admin.html');
+ assert.equal(missing.type,'error','Offline Studio must fail, not render cached Admin or Reader');
+ assert.equal(calls.reads.length,readsOffline,'Offline Studio must not consult CacheStorage');
+ const index=await dispatch(scope+'index.html');
+ assert.equal(await index.text(),'OFFLINE READER',
+  'Reader offline navigation must remain available');
+ console.log('PASS SW Admin HTML is network-only; stale cache entries purged; public Reader remains offline');
+})();
+
