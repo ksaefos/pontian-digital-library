@@ -307,10 +307,25 @@ try{
  // changes the page count. This is a separate navigation regression from drag.
  const hyphBeforeReflow=await hyphFrame.evaluate(()=>({
   generation:pdlProgressStats().generation,
-  anchor:pdlPageAnchor(currentChapter,currentPage)
+  anchor:pdlPageAnchor(currentChapter,currentPage),
+  font:pdlFont,
+  computedFont:getComputedStyle(document.getElementById('page-content')).fontFamily
  }));
- await hyphFrame.evaluate(()=>pdlSetFont('Barnebok Pontian'));
- await hyphFrame.waitForFunction(g=>pdlProgressStats().generation>g,hyphBeforeReflow.generation,{timeout:30000});
+ // The previous book already selected Barnebok and the Reader persists that
+ // preference in localStorage. Setting Barnebok again is not a font change:
+ // the progress signature remains unchanged and no new generation is expected.
+ // Select the OTHER font to test actual reflow, regardless of saved settings.
+ const hyphNextFont=hyphBeforeReflow.font==='Barnebok Pontian'
+  ?'GFS Galatea Pontian':'Barnebok Pontian';
+ assert.notEqual(hyphNextFont,hyphBeforeReflow.font,
+  'The hyphenated reflow test must request a real font change');
+ await hyphFrame.evaluate(font=>pdlSetFont(font),hyphNextFont);
+ await hyphFrame.waitForFunction(({generation,font})=>
+  pdlFont===font&&pdlProgressStats().generation>generation,
+  {generation:hyphBeforeReflow.generation,font:hyphNextFont},{timeout:30000});
+ const hyphAppliedFont=await hyphFrame.evaluate(()=>getComputedStyle(document.getElementById('page-content')).fontFamily);
+ assert.notEqual(hyphAppliedFont,hyphBeforeReflow.computedFont,
+  'The Reader must apply a different computed font before verifying reflow');
  await hyphFrame.waitForFunction(()=>{
   const s=pdlProgressStats();return s.complete||s.errors.length>0||s.fallback;
  },null,{timeout:180000});
@@ -329,6 +344,7 @@ try{
   'Hyphenated reflow must never skip the previously visible source anchor');
  if(!hyphReflow.last)assert.ok(compareAnchor(hyphReflow.next,hyphBeforeReflow.anchor)>0,
   'Hyphenated reflow must keep the saved anchor on the restored page');
+ console.log(`PASS hyphenated font reflow: ${hyphBeforeReflow.font} → ${hyphNextFont}; complete pages and source anchor retained`);
  const hyphReport=await hyphFrame.evaluate(()=>{ 
   const polyton={mode:PDL_HYPH.mode(),ready:PDL_HYPH.ready(),breaks:PDL_HYPH.tokenBreaks('παραδοσιακός')};
   PDL_HYPH.setMode('el-monoton');
