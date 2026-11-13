@@ -69,6 +69,78 @@ assert.deepEqual(calls,['progressive','legacy'],'Polytonic books must reach the 
 ctx.mode='off';ctx.pdlGridEnabled=false;runInNewContext('pdlPaginate();',ctx);
 assert.deepEqual(calls,['progressive','legacy','legacy'],'Explicitly disabled Grid must still reach the legacy paginator');
 
+// Exercise the actual editorial hyphenator logic without using a network or
+// relying on a browser layout mock. A WASM result is replaced with fixed cuts,
+// while the original normalization, grapheme mapping and DOM insertion run.
+const hyphSrc=shell.match(/const PDL_HYPH=\(function\(\)\{[\s\S]*?\}\)\(\);/)?.[0];
+assert.ok(hyphSrc,'Editorial hyphenator implementation must be available');
+const shy='\u00ad';
+const sampleWord='βιβλιοθήκη';
+const polytonic='α\u0301β\u0301γ\u0301δεζηθ';
+const polytonicNfc=polytonic.normalize('NFC');
+const hyphenator=(word)=>{
+ if(word===sampleWord)return 'βιβλιο'+shy+'θήκη';
+ if(word===polytonicNfc){
+  const g=Array.from(new Intl.Segmenter('el',{granularity:'grapheme'}).segment(word),x=>x.segment);
+  return g.slice(0,2).join('')+shy+g[2]+shy+g.slice(3).join('');
+ }
+ return word;
+};
+const mockWalker=(root)=>{
+ const nodes=root.textNodes;
+ let i=0;
+ return {nextNode:()=>nodes[i++]||null};
+};
+const hyphContext={PDL_BOOK_EDITOR_SETTINGS:{hyphenation:'el-polyton'},
+ window:{Hyphenopoly:{hyphenators:{'el-polyton':hyphenator,'el-monoton':hyphenator}}},
+ document:{getElementById:()=>null,createTreeWalker:mockWalker},
+ NodeFilter:{SHOW_TEXT:4},pdlLayoutInProgress:false,pdlScheduleRelayout:()=>{},
+ setTimeout:()=>0,console};
+runInNewContext(hyphSrc+';globalThis.hyph=PDL_HYPH;',hyphContext);
+const hyph=hyphContext.hyph;
+await hyph.activate();
+assert.equal(hyph.ready(),true,'Pattern-based hyphenator must activate');
+assert.deepEqual(Array.from(hyph.tokenBreaks(polytonic)),[6],
+ 'Polytonic left minimum must count graphemes: reject a cut after only two accented letters');
+assert.deepEqual(Array.from(hyph.tokenBreaks(sampleWord)),[6],
+ 'Monotonic positions must retain their original UTF-16 offsets');
+const originalManual='αυτο'+shy+'συλλαβή ';
+const textNodes=[{nodeValue:originalManual},{nodeValue:sampleWord}];
+const paragraph={nodeName:'P',textNodes};
+hyph.apply(paragraph);
+assert.equal(textNodes[0].nodeValue,originalManual,
+ 'Explicitly authored soft hyphens must not disappear during rendering');
+assert.equal(textNodes[1].nodeValue,'βιβλιο'+shy+'θήκη',
+ 'Automatic pattern breaks must appear in the live DOM');
+hyph.apply(paragraph);
+assert.equal(textNodes[1].nodeValue,'βιβλιο'+shy+'θήκη',
+ 'Repeated render calls must not accumulate automatic soft hyphens');
+hyph.setMode('off');hyph.apply(paragraph);
+assert.equal(textNodes[0].nodeValue,originalManual,
+ 'Turning off automatic hyphenation must not discard the editorial markers');
+assert.equal(textNodes[1].nodeValue,sampleWord,
+ 'Turning off automatic hyphenation must remove only automatically inserted breaks');
+hyph.setMode('el-polyton');hyph.apply(paragraph);
+assert.equal(textNodes[1].nodeValue,'βιβλιο'+shy+'θήκη',
+ 'Re-enabling hyphenation must preserve a single set of automatic breaks');
+textNodes[1].nodeValue='Ενημερωμένο '+sampleWord;
+hyph.apply(paragraph);
+assert.equal(textNodes[1].nodeValue,'Ενημερωμένο βιβλιο'+shy+'θήκη',
+ 'Changes made outside the renderer must never be replaced with an older snapshot');
+// A book with editorial hyphenation disabled must not walk text nodes on
+// every page turn. A legacy browser without Segmenter still handles accents.
+const offCtx={...hyphContext,PDL_BOOK_EDITOR_SETTINGS:{hyphenation:'off'},
+ document:{...hyphContext.document,createTreeWalker:()=>{throw Error('Unexpected DOM scan for an off book');}}};
+runInNewContext(hyphSrc+';globalThis.hyphOff=PDL_HYPH;',offCtx);
+offCtx.hyphOff.apply(paragraph);
+assert.deepEqual(Array.from(offCtx.hyphOff.tokenBreaks(polytonic)),[]);
+const oldBrowserCtx={...hyphContext,Intl:{},pdlLayoutInProgress:false};
+runInNewContext(hyphSrc+';globalThis.hyphFallback=PDL_HYPH;',oldBrowserCtx);
+await oldBrowserCtx.hyphFallback.activate();
+assert.deepEqual(Array.from(oldBrowserCtx.hyphFallback.tokenBreaks(polytonic)),[6],
+ 'Without Intl.Segmenter combining marks must still count as one grapheme');
+console.log('PASS editorial Hyphenopoly: NFC graphemes, manual soft hyphens, repeated render, mode switch');
+
 assert.ok(shell.includes('pdlProgressNotify('),'Status must be reported');
 assert.ok(shell.includes('pdlProgressPump();'),'Reader must schedule progressive work');
 assert.ok(shell.includes('function pdlPositionMarkup('),'Page renderer must remain present');
