@@ -39,6 +39,22 @@ for(const retired of ['function pdlGridPaginate(', 'function pdlGridRepairPages(
  assert.ok(!shell.includes(retired),'Abandoned Grid paginator code remains: '+retired);
 }
 assert.ok(shell.includes("return pdlLegacyPaginate();"),'Hyphenopoly must keep the compatible paginator');
+// Stylesheet cleanup must not reintroduce conflicting native auto-hyphenation
+// or the old arbitrary word-wrapping override that was neutralized in v2.2.0.
+assert.ok(!shell.includes('id="pdl-v216-pagination-css"'),
+ 'Retired arbitrary wrapping stylesheet must remain removed');
+const bookTypography=shell.match(/<style id="pdl-v154-typography">([\s\S]*?)<\/style>/)?.[1];
+assert.ok(bookTypography,'Book typography stylesheet must remain available');
+assert.ok(!/-webkit-hyphens\s*:\s*auto|(?:^|[;\s])hyphens\s*:\s*auto/.test(bookTypography),
+ 'Book typography must not reinstate superseded native auto hyphenation');
+const hyphenationCSS=shell.match(/<style id="pdl-220-hyphenation">([\s\S]*?)<\/style>/)?.[1];
+assert.ok(hyphenationCSS,'Manual Hyphenopoly stylesheet must remain available');
+assert.ok(hyphenationCSS.includes('overflow-wrap:normal!important') &&
+ hyphenationCSS.includes('hyphens:manual!important'),
+ 'Manual hyphenation must protect words from arbitrary splitting');
+assert.ok(hyphenationCSS.includes('display:inline;'),
+ 'Decorative page-break hyphen must keep its inline display');
+
 // Execute the actual dispatcher with isolated stubs, rather than relying only
 // on string markers. Both live pagination routes must remain reachable.
 const dispatcher=shell.match(/function pdlPaginate\(\)\{[\s\S]*?\n\}/)?.[0];
