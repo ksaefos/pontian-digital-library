@@ -47,6 +47,82 @@ test('publication loss safeguards',()=>{
  assert.doesNotMatch(studio,/Δημιουργήθηκε αυτόματο τοπικό backup/);
  assert.match(studio,/window\.pdlExplicitDeletedEntries\.has\(id\)/);
 });
+test('book/chapter removal requires explicit consent and keeps glossary metadata',()=>{
+ const start=studio.indexOf('const manuallyRemovedReferenceKeys=new Set();');
+ const stop=studio.indexOf('function showEntryReferences(){',start);
+ assert.ok(start>0&&stop>start,'Deletion engine must be independently reviewable');
+ const oldState={books:[
+  {id:'b1',title:'Πρώτο βιβλίο',chapters:[{id:'c1',title:'Πρώτο',text:'α'},{id:'c2',title:'Δεύτερο',text:'β'}]},
+  {id:'b2',title:'Άλλο βιβλίο',chapters:[{id:'c3',title:'Μόνο',text:'γ'}]}
+ ],entries:[
+  {id:'e1',term:'λέξη',definition:'σημασία',etymology:'αρχ. ελλ.',sources:['Πρώτο βιβλίο'],references:[{bookId:'b1',chapterId:'c1'},{bookId:'b1',chapterId:'c2'},{bookId:'b2',chapterId:'c3'}]},
+  {id:'e2',term:'άλλη',definition:'σημασία',sources:['Πρώτο βιβλίο'],references:[{bookId:'b1',chapterId:'c1'}]}
+ ]};
+ const state=structuredClone(oldState),remote=structuredClone(oldState);
+ let confirmation=true,typed='ΔΙΑΓΡΑΦΗ',promptCount=0,confirmCount=0,notifyCount=0;
+ const window={pdlStudioConnected:()=>true,pdlExplicitDeletedEntries:new Set(),pdlPublishedBooksForDeletion:()=>remote.books};
+ const ctx={state,window,structuredClone,
+  searchNorm:s=>String(s).toLocaleLowerCase('el').trim(),
+  keepEditorChanges(){},persist(){},view(){},notify(){notifyCount++},
+  confirm(){confirmCount++;return confirmation},
+  prompt(){promptCount++;return typed},
+  selectedBook:'b1',selectedChapter:'c1'};
+ vm.createContext(ctx);
+ vm.runInContext(studio.slice(start,stop),ctx,{timeout:2500});
+ const run=js=>vm.runInContext(js,ctx,{timeout:2500});
+ assert.equal(run('pdlRemovalImpact("b1","c1").references'),2);
+ assert.equal(run('pdlRemovalImpact("b1").sourceEntries'),2);
+ confirmation=false;
+ assert.equal(run('pdlRemoveContent("b1","c1")'),false);
+ assert.equal(state.books[0].chapters.length,2,'Cancel must not remove content');
+ confirmation=true;typed='λάθος';
+ assert.equal(run('pdlRemoveContent("b1","c1")'),false);
+ assert.equal(state.entries[0].references.length,3,'Bad confirmation must preserve references');
+ typed='ΔΙΑΓΡΑΦΗ';
+ assert.equal(run('pdlRemoveContent("b1","c1")'),true);
+ assert.equal(state.books[0].chapters.length,1);
+ assert.deepEqual(JSON.parse(JSON.stringify(state.entries[0].references.map(r=>r.bookId+':'+r.chapterId))),['b1:c2','b2:c3'],
+  'Other books/chapters must retain their references');
+ assert.equal(state.entries[0].etymology,'αρχ. ελλ.','Etymology must not be deleted');
+ assert.deepEqual(state.entries[0].sources,['Πρώτο βιβλίο'],'Historic source text must remain');
+ assert.equal(state.entries.length,2,'Glossary entries must never be deleted automatically');
+ assert.equal(run('manuallyRemovedReferenceKeys.has("e1|b1|c1")'),true);
+ assert.equal(run('pdlExplicitDeletedChapters.has("b1|c1")'),true);
+ const review=()=>run('pdlReviewRemovedContent(new Map(('+JSON.stringify(remote.books)+').map(b=>[b.id,b])),new Map(state.books.map(b=>[b.id,b])),pdlExplicitDeletedBooks,pdlExplicitDeletedChapters)');
+ assert.equal(review().losses.length,0,'Explicit chapter deletion must be publishable');
+ assert.equal(review().deletedChapters.length,1);
+ assert.ok(run('pdlReviewRemovedContent(new Map(('+JSON.stringify(remote.books)+').map(b=>[b.id,b])),new Map(state.books.map(b=>[b.id,b])),new Set(),new Set()).losses.length')>0,
+  'Exactly the same omission without explicit consent must be blocked');
+ assert.equal(run('pdlRemoveContent("b1","c2")'),false,'Last chapter cannot be deleted');
+ assert.equal(run('pdlRemoveContent("b1")'),true,'Confirmed book deletion must be allowed');
+ assert.equal(state.books.length,1);
+ assert.deepEqual(JSON.parse(JSON.stringify(state.entries[0].references.map(r=>r.bookId))),['b2'],
+  'Deleting a book must keep unrelated references');
+ assert.equal(review().losses.length,0);
+ assert.equal(review().deletedBooks.length,1);
+ // A newly created, never-published book only needs the initial confirmation.
+ state.books.push({id:'new',title:'Αδημοσίευτο',chapters:[{id:'newc',title:'Νέο',text:''}]});
+ const beforePrompt=promptCount;
+ assert.equal(run('pdlRemoveContent("new")'),true);
+ assert.equal(promptCount,beforePrompt,'Unpublished book must not require GitHub deletion phrase');
+ assert.equal(run('pdlExplicitDeletedBooks.has("new")'),false);
+ run('pdlResetDeletionIntent()');
+ assert.equal(run('pdlExplicitDeletedBooks.size'),0);
+ assert.equal(run('pdlExplicitDeletedChapters.size'),0);
+ assert.equal(run('manuallyRemovedReferenceKeys.size'),0);
+ assert.ok(confirmCount>=3&&notifyCount>=1);
+ // An already-rich chapter whose richHtml disappears remains forbidden even
+ // with explicit deletion consents for different objects.
+ const richOld=[{id:'rich',title:'Rich',chapters:[{id:'rc',title:'Chapter',text:'a',richHtml:'<p>a</p>'}]}];
+ const richNew=[{id:'rich',title:'Rich',chapters:[{id:'rc',title:'Chapter',text:'a'}]}];
+ ctx.richOld=richOld;ctx.richNew=richNew;
+ const richReview=run('pdlReviewRemovedContent(new Map(richOld.map(b=>[b.id,b])),new Map(richNew.map(b=>[b.id,b])),new Set(["rich"]),new Set(["rich|rc"]))');
+ assert.ok(richReview.losses.some(x=>x.includes('εμπλουτισμένου')),'Rich text loss is never authorized by deletion consent');
+ assert.ok(studio.includes("losses.push('ορφανή δομημένη παραπομπή"),'Publisher must refuse dangling references');
+ assert.ok(studio.includes("prompt(message)!=='ΔΙΑΓΡΑΦΗ'"),'Publishing approved deletions requires a second typed confirmation');
+ assert.ok(studio.includes('window.pdlPublishedBooksForDeletion=()=>bridge.remote?.books||[]'),
+  'Cloud bridge must expose only published book IDs to earlier Studio script');
+});
 test('rich chapter protected when rich editor unavailable',()=>{
  assert.match(studio,/field\.readOnly=!!ch\?\.richHtml/);
  assert.ok(!studio.includes("import(base+'@tiptap"));
