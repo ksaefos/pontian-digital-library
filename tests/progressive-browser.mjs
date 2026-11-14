@@ -230,7 +230,7 @@ try{
   turns:pdlOpenPageFlipDebug().animatedTurns,
   interrupts:pdlOpenPageFlipDebug().interruptedTurns
  }));
- const touchBook=await frame.locator('#pdl-opf-host .opf-book').boundingBox();
+ const touchBook=await frame.locator('#pdl-opf-host.opf-book').boundingBox();
  assert.ok(touchBook&&touchBook.width>200,'Touch swipe requires visible OpenPageFlip pages');
  const sx=touchBook.x+touchBook.width*0.82;
  const sy=touchBook.y+touchBook.height*0.55;
@@ -396,6 +396,56 @@ try{
  if(!hyphReflow.last)assert.ok(compareAnchor(hyphReflow.next,hyphBeforeReflow.anchor)>0,
   'Hyphenated reflow must keep the saved anchor on the restored page');
  console.log(`PASS hyphenated font reflow: ${hyphBeforeReflow.font} → ${hyphNextFont}; complete pages and source anchor retained`);
+ // 130% font-size regression with REAL el-polyton WASM. Previously the
+ // progressive paginator counted rows with a new line height while CSS
+ // columns on BODY and the visible OPF pages kept the old --pdl-grid-line.
+ const beforeSize=await hyphFrame.evaluate(()=>({
+  generation:pdlProgressStats().generation,
+  anchor:pdlPageAnchor(currentChapter,currentPage)
+ }));
+ await hyphFrame.evaluate(()=>applyFontSize(130));
+ await hyphFrame.waitForFunction(g=>pdlProgressStats().generation>g,beforeSize.generation,{timeout:30000});
+ await hyphFrame.waitForFunction(()=>{const s=pdlProgressStats();return s.complete||s.errors.length>0||s.fallback;},null,{timeout:180000});
+ await waitForOpfQuiet(hyphFrame,{timeout:30000});
+ const size130=await hyphFrame.evaluate(()=>{
+  const leaf=document.getElementById('page-content');
+  const paragraph=leaf.querySelector('p');
+  const opf=document.querySelector('#pdl-opf-host .pdl-opf-page p');
+  const probe=document.createElement('p');
+  probe.textContent='Δοκιμή διαστήματος';probe.style.setProperty('line-height','var(--pdl-grid-line)','important');
+  document.body.append(probe);
+  const lineBody=parseFloat(getComputedStyle(probe).lineHeight);
+  probe.remove();
+  const text=chapters.every((ch,ci)=>PDL_SOURCE[ci].blocks.map(b=>pdlPlain(b.text||'')).join('')===
+    ch.pages.flat().map(b=>pdlPlain(b.text||'')).join(''));
+  const start=pdlPageAnchor(currentChapter,currentPage),next=pdlPageAnchor(currentChapter,currentPage+1);
+  const renderedSize=parseFloat(getComputedStyle(paragraph).fontSize);
+  const expectedLine=Math.round(renderedSize*1.69*(innerWidth<=768?pdlMobileLineScale:1)*1000)/1000;
+  return {stats:pdlProgressStats(),fontPercent:currentFontSize,
+   configLine:expectedLine,gridRoot:parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--pdl-grid-line')),
+   gridViewport:parseFloat(getComputedStyle(document.getElementById('text-viewport')).getPropertyValue('--pdl-grid-line')),
+   lineVisible:parseFloat(getComputedStyle(paragraph).lineHeight),
+   lineOPF:opf?parseFloat(getComputedStyle(opf).lineHeight):null,
+   lineBody,text,start,next,last:currentPage+1>=chapters[currentChapter].pages.length,
+   opf:pdlOpenPageFlipDebug()};
+ });
+ const near=(a,b)=>Math.abs(a-b)<0.15;
+ assert.equal(size130.fontPercent,130,'The polytonic regression must actually use 130% font size');
+ assert.ok(size130.stats.complete&&!size130.stats.fallback&&!size130.stats.errors.length&&size130.text,
+  '130% real-WASM relayout must complete without text loss or fallback');
+ for(const [name,value] of Object.entries({root:size130.gridRoot,viewport:size130.gridViewport,
+  bodyMeasurer:size130.lineBody,visible:size130.lineVisible,openPageFlip:size130.lineOPF})){
+  assert.ok(Number.isFinite(value)&&near(value,size130.configLine),
+   '130% '+name+' line grid mismatch: '+value+' vs '+size130.configLine);
+ }
+ assert.ok(size130.opf.enabled&&!size130.opf.failed&&size130.opf.state==='read',
+  'OpenPageFlip must remain operational after 130% font reflow');
+ const anchorCompare=(a,b)=>a.index-b.index||(a.offset||0)-(b.offset||0);
+ assert.ok(anchorCompare(size130.start,beforeSize.anchor)<=0,
+  '130% relayout must preserve the same text location');
+ if(!size130.last)assert.ok(anchorCompare(size130.next,beforeSize.anchor)>0,
+  '130% relayout must not lose the saved anchor');
+ console.log('PASS polytonic 130% font reflow: measurable line grid synchronized in page, OPF and CSS-column measurer');
  const hyphReport=await hyphFrame.evaluate(()=>{ 
   const polyton={mode:PDL_HYPH.mode(),ready:PDL_HYPH.ready(),breaks:PDL_HYPH.tokenBreaks('παραδοσιακός')};
   PDL_HYPH.setMode('el-monoton');

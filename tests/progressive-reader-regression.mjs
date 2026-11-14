@@ -247,3 +247,37 @@ function opfNavigationHarness(flipResult){
 console.log('PASS OpenPageFlip adapter: mobile release animation, window boundaries, bounded retry, no static fallback');
 
 
+
+// Real pdlProgressConfig() geometry, isolated from the browser-only layout.
+// In v3.1.2 the CSS-column measurer is on BODY, not inside #text-viewport.
+// Both grid scopes must update together on EVERY font-size / line-scale change.
+const progressConfigSrc=shell.match(/function pdlProgressConfig\(\)\{[\s\S]*?\n\}/)?.[0];
+assert.ok(progressConfigSrc,'Progressive line geometry must be available');
+const styleWrites=[];
+const gridContext={
+ innerWidth:1200,pdlMobileLineScale:1,PDL_BOOK_EDITOR_SETTINGS:{hyphenation:'el-polyton'},
+ document:{
+  documentElement:{style:{setProperty:(name,value)=>styleWrites.push(['root',name,value])}},
+  body:{},
+  getElementById:id=>id==='page-content'?gridContext.leaf:
+   id==='text-viewport'?gridContext.viewport:null,
+  createElement:()=>({textContent:'',remove(){}})
+ },
+ leaf:{clientWidth:720,clientHeight:800,append(){ }},
+ viewport:{style:{setProperty:(name,value)=>styleWrites.push(['viewport',name,value])}},
+ getComputedStyle:el=>el===gridContext.leaf?{
+  paddingLeft:'40px',paddingRight:'40px',paddingTop:'24px',paddingBottom:'24px',fontFamily:'Barnebok Pontian'
+ }:{fontSize:gridContext.sampleSize+'px'},
+ sampleSize:22,localStorage:{getItem:()=>null}
+};
+runInNewContext(progressConfigSrc+';globalThis.getConfig=pdlProgressConfig;',gridContext);
+let gridConfig=gridContext.getConfig();
+assert.equal(gridConfig.line,37.18);
+assert.deepEqual(styleWrites.slice(-2),[['root','--pdl-grid-line','37.18px'],['viewport','--pdl-grid-line','37.18px']],
+ 'Progressive desktop font changes must sync both CSS grid scopes');
+gridContext.innerWidth=390;gridContext.pdlMobileLineScale=1.2;gridContext.sampleSize=26;
+gridConfig=gridContext.getConfig();
+assert.equal(gridConfig.line,52.728);
+assert.deepEqual(styleWrites.slice(-2),[['root','--pdl-grid-line','52.728px'],['viewport','--pdl-grid-line','52.728px']],
+ 'Progressive 130% mobile font and line-scale changes must sync both scopes');
+console.log('PASS progressive CSS line grid: body measurer, visible pages and OPF respond to font-size changes');
