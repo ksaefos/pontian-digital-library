@@ -160,3 +160,23 @@ assert.ok(!shell.includes('eval('),'Reader must not use eval');
 const buildScript=readFileSync(resolve(root,'scripts/build-assets.mjs'),'utf8');
 assert.ok(buildScript.includes('`pontian-digital-library-v${version}-${hash.digest'), 'Build must generate SW cache names matching the version test');
 console.log('PASS v3.1.2 progressive pagination, navigation, cancellation, cache, CI build and OPF boundaries');
+
+// Mobile navigation trial: presentation-only reuse of the existing controls.
+// Keep IDs/handlers stable: the progressive slider and chapter/bookmark/search
+// mechanisms remain owned by the baseline Reader.
+const mobileFooter=shell.match(/<div class="pdl-mobile-chrome bottom" id="pdl-mobile-bottom">([\s\S]*?)<div class="bottombar">/)?.[1];
+assert.ok(mobileFooter,'Mobile navigation footer must remain available');
+for(const marker of [
+ 'id="pdl-mobile-progress"', 'onchange="pdlCommitProgress(this.value)"',
+ 'oninput="pdlPreviewProgress(this.value)"', 'id="pdl-mobile-page-info"',
+ 'onclick="pdlShowChapters()"', 'onclick="pdlOpenMobileBookmarks()"',
+ 'id="pdl-mobile-search-action"', 'onclick="pdlMobileSearch()"'
+])assert.ok(mobileFooter.includes(marker),'Mobile trial must preserve the live control: '+marker);
+for(const id of ['pdl-mobile-progress','pdl-mobile-page-info','pdl-mobile-search-action']){
+ assert.equal(shell.split('id="'+id+'"').length-1,1,'Mobile UI control must have exactly one unique ID: '+id);
+}
+assert.ok(shell.includes('id="pdl-v312-navigation-trial"'),'Trial styles must be isolated and reversible');
+assert.ok(shell.includes('body:not(.immersive) #pdl-mobile-top,body:not(.immersive) #pdl-mobile-bottom{display:flex!important;}'),
+ 'Mobile navigation must respect the existing immersive/controls display model');
+console.log('PASS mobile navigation trial: stable slider, chapter/bookmark/search actions, unique IDs, immersive model');
+
