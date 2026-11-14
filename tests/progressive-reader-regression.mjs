@@ -180,3 +180,70 @@ assert.ok(shell.includes('body:not(.immersive) #pdl-mobile-top,body:not(.immersi
  'Mobile navigation must respect the existing immersive/controls display model');
 console.log('PASS mobile navigation trial: stable slider, chapter/bookmark/search actions, unique IDs, immersive model');
 
+// OpenPageFlip navigation regression: execute the actual adapter function with
+// controlled engine outcomes. Browser effects are covered separately by
+// progressive-browser.mjs; these checks prevent silent native-page jumps.
+const opfAdapter=shell.match(/<script id="pdl-openpageflip-adapter-v1940">([\s\S]*?)<\/script>/)?.[1];
+assert.ok(opfAdapter,'OpenPageFlip adapter must remain available');
+const navigateSrc=opfAdapter.match(/function navigate\(delta,retry=false\)\{[\s\S]*?\n\}/)?.[0];
+assert.ok(navigateSrc,'OpenPageFlip navigation must support a bounded retry');
+assert.ok(opfAdapter.includes('drag:innerWidth>768,swipe:true'),
+ 'Mobile must animate on release instead of distorting a live dragged fold');
+assert.ok(opfAdapter.includes('hover:false'),
+ 'Mobile fold hover must remain disabled');
+function opfNavigationHarness(flipResult){
+ const actions=[];
+ const engine={state:'read',flipNext:()=>{actions.push('flipNext');return Promise.resolve(flipResult);},
+   flipPrev:()=>{actions.push('flipPrev');return Promise.resolve(flipResult);}};
+ const ctx={enabled:true,failed:false,currentChapter:0,currentPage:10,
+   chapters:[{pages:Array.from({length:60},()=>[])}],innerWidth:390,
+   document:{body:{classList:{contains:()=>false}}},
+   engine,rebuilding:false,inFlip:false,pdlProgressTurnInFlight:false,
+   pdlOpfPendingTurn:null,needsBuild:false,pdlOpfBuiltSignature:'built',
+   windowStart:0,windowCount:24,
+   queueBuild:delay=>actions.push(['rebuild',delay]),
+   nativeRender:()=>actions.push('nativeRender'),
+   setStatus:message=>actions.push(['status',message]),fallback:error=>{throw error},
+   queueMicrotask:cb=>queueMicrotask(cb),console:{warn:message=>actions.push(['warn',message])}
+ };
+ runInNewContext(navigateSrc+';globalThis.navigateTest=navigate;',ctx);
+ return {ctx,actions};
+}
+{
+ const {ctx,actions}=opfNavigationHarness(true);
+ ctx.currentPage=23;
+ assert.equal(ctx.navigateTest(1),true);
+ assert.equal(ctx.currentPage,23,'Cross-window navigation must not advance instantly');
+ assert.ok(ctx.pdlOpfPendingTurn&&ctx.pdlOpfPendingTurn.delta===1,
+   'A page-window boundary must retain the requested animated turn');
+ assert.equal(ctx.needsBuild,true,'Cross-window navigation must rebuild the window');
+ assert.ok(actions.some(x=>Array.isArray(x)&&x[0]==='rebuild'));
+ assert.ok(!actions.includes('nativeRender'));
+}
+{
+ const {ctx,actions}=opfNavigationHarness(false);
+ assert.equal(ctx.navigateTest(1),true);
+ await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(ctx.currentPage,10,'A failed animation must not silently jump to the next page');
+ assert.equal(ctx.pdlOpfPendingTurn?.retry,true,'A failed turn should be retried only once after rebuilding');
+ assert.equal(ctx.pdlOpfBuiltSignature,'','A rejected turn must force a fresh page window');
+ assert.ok(!actions.includes('nativeRender'));
+ ctx.pdlOpfPendingTurn=null;
+ ctx.needsBuild=false;
+ ctx.navigateTest(1,true);
+ await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(ctx.currentPage,10,'A second rejected turn must still leave the page unchanged');
+ assert.equal(ctx.pdlOpfPendingTurn,null,'A second rejection must not loop forever');
+ assert.ok(actions.some(x=>Array.isArray(x)&&x[0]==='status'),
+   'A second rejected turn must expose a user-readable status');
+}
+{
+ const {ctx,actions}=opfNavigationHarness(true);
+ ctx.navigateTest(1);
+ await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(ctx.currentPage,11,'A completed animated turn may update the reading position');
+ assert.ok(actions.includes('nativeRender'));
+}
+console.log('PASS OpenPageFlip adapter: mobile release animation, window boundaries, bounded retry, no static fallback');
+
+

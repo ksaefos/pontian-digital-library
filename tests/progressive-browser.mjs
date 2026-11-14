@@ -216,6 +216,57 @@ try{
   return d.animatedTurns>v.turns&&d.state==='read'&&currentChapter===v.chapter&&currentPage===v.page+1;
  },preDrag,{timeout:15000});
  assert.ok(!errors.length,'Browser JS errors: '+errors.join(';'));
+ // Slow mobile swipe regression: a live folded page must not follow the
+ // finger through a deformed 3D geometry. The turn starts on touch release
+ // and is animated once. CDP sends real touch input (not synthetic JS events).
+ await frame.evaluate(()=>{
+  const ci=chapters.findIndex(ch=>ch.pages.length>=9);
+  if(ci<0)throw Error('No long chapter available for mobile swipe test');
+  pdlProgressGo(ci,3);
+ });
+ await waitForOpfQuiet(frame);
+ const swipeBefore=await frame.evaluate(()=>({
+  chapter:currentChapter,page:currentPage,
+  turns:pdlOpenPageFlipDebug().animatedTurns,
+  interrupts:pdlOpenPageFlipDebug().interruptedTurns
+ }));
+ const touchBook=await frame.locator('#pdl-opf-host .opf-book').boundingBox();
+ assert.ok(touchBook&&touchBook.width>200,'Touch swipe requires visible OpenPageFlip pages');
+ const sx=touchBook.x+touchBook.width*0.82;
+ const sy=touchBook.y+touchBook.height*0.55;
+ const dx=touchBook.width*0.58;
+ const client=await page.context().newCDPSession(page);
+ try{
+  await client.send('Emulation.setTouchEmulationEnabled',{enabled:true,maxTouchPoints:1});
+  await client.send('Input.dispatchTouchEvent',{
+   type:'touchStart',touchPoints:[{x:sx,y:sy,id:1}]
+  });
+  for(let j=1;j<=9;j++){
+   await client.send('Input.dispatchTouchEvent',{
+    type:'touchMove',touchPoints:[{x:sx-dx*j/9,y:sy,id:1}]
+   });
+   await page.waitForTimeout(32);
+  }
+  const mid=await frame.evaluate(()=>({state:pdlOpenPageFlipDebug().state,page:currentPage}));
+  assert.notEqual(mid.state,'user_fold',
+   'Touch dragging must not deform the live book before release');
+  assert.equal(mid.page,swipeBefore.page,
+   'A touch swipe must not jump pages before touch release');
+  await client.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+  await frame.waitForFunction(before=>{
+   const d=pdlOpenPageFlipDebug();
+   return currentChapter===before.chapter&&currentPage===before.page+1&&
+    d.state==='read'&&d.animatedTurns>before.turns;
+  },swipeBefore,{timeout:15000});
+  const afterSwipe=await frame.evaluate(()=>pdlOpenPageFlipDebug());
+  assert.equal(afterSwipe.interruptedTurns,swipeBefore.interrupts,
+   'Mobile swipe must not interrupt page-flip animation');
+ }finally{
+  await client.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]}).catch(()=>{});
+  await client.send('Emulation.setTouchEmulationEnabled',{enabled:false}).catch(()=>{});
+  await client.detach().catch(()=>{});
+ }
+ assert.ok(!errors.length,'Mobile touch JS errors: '+errors.join(';'));
  // A font change during a long book must not leave an obsolete page index
  // or silently lose the exact text anchor from which reflow began.
  const before=await frame.evaluate(()=>({generation:pdlProgressStats().generation,anchor:pdlPageAnchor(currentChapter,currentPage)}));
