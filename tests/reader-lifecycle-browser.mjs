@@ -29,6 +29,8 @@ async function open(page,id){
  await frame.waitForFunction(()=>pdlProgressStats().complete&&!pdlProgress.desired&&pdlProgress.absolute===null,null,{timeout:180000});
  // The library bridge restores saved progress after its initial 850 ms delay.
  await page.waitForTimeout(1000);
+ await frame.waitForFunction(()=>pdlProgressStats().complete&&!pdlProgress.desired&&pdlProgress.absolute===null,null,{timeout:180000});
+ await quiet(frame);
  return frame;
 }
 async function quiet(frame){
@@ -155,9 +157,13 @@ try{
   const polytonId=await page.evaluate(()=>libraryState.books.find(b=>b.hyphenation==='el-polyton').id);
   frame=await open(page,polytonId);
   await frame.evaluate(()=>pdlProgressGo(1,3));
+  await frame.waitForFunction(()=>currentChapter===1&&currentPage===3&&!pdlProgress.desired,null,{timeout:30000});
   const before=await location(frame);
-  await page.waitForFunction(({id,pg})=>JSON.parse(localStorage.getItem('pdl:v140:position:'+id))?.pg===pg,
-   {id:polytonId,pg:before.page});
+  await page.waitForFunction(({id,position})=>{
+   const saved=JSON.parse(localStorage.getItem('pdl:v140:position:'+id));
+   return saved?.ch===position.chapter&&saved.pg===position.page&&
+    saved.anchor?.index===position.start.index&&saved.anchor?.offset===position.start.offset;
+  },{id:polytonId,position:before});
   await page.evaluate(()=>{closeBook();localStorage.setItem('fontSize','130');});
   await page.setViewportSize({width:390,height:844});
   frame=await open(page,polytonId);
@@ -165,6 +171,27 @@ try{
   assert.equal(await frame.evaluate(()=>currentFontSize),130);
   assert.equal(await frame.evaluate(()=>pdlProgressStats().fallback),false);
   console.log('PASS real polytonic book resumes at its source anchor after viewport and 130% typography change');
+  // Startup can pass through multiple legacy/WASM layouts. Retain the exact
+  // requested source point, not the earlier start of each containing page.
+  await quiet(frame);
+  await frame.evaluate(()=>{pdlGridEnabled=false;pdlPaginate();render();});
+  await quiet(frame);contains(await location(frame),before.start);
+  await frame.evaluate(()=>{pdlGridEnabled=true;pdlPaginate();render();});
+  await frame.waitForFunction(()=>pdlProgressStats().complete&&!pdlProgress.desired,null,{timeout:180000});
+  await quiet(frame);contains(await location(frame),before.start);
+  await page.waitForFunction(({id,anchor})=>{
+   const p=JSON.parse(localStorage.getItem('pdl:v140:position:'+id));
+   return p?.anchor?.index===anchor.index&&p.anchor.offset===anchor.offset;
+  },{id:polytonId,anchor:before.start});
+  const current=await location(frame);
+  await frame.evaluate(()=>nextPage());
+  await frame.waitForFunction(pg=>currentPage===pg,current.page+1);await quiet(frame);
+  const advanced=await location(frame);
+  await page.waitForFunction(({id,anchor})=>{
+   const p=JSON.parse(localStorage.getItem('pdl:v140:position:'+id));
+   return p?.anchor?.index===anchor.index&&p.anchor.offset===anchor.offset;
+  },{id:polytonId,anchor:advanced.start});
+  console.log('PASS repeated legacy/progressive startup preserves the requested anchor; navigation releases it');
  }
  assert.deepEqual(errors,[],'Reader must not emit JavaScript errors');
  await page.close();
