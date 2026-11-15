@@ -65,6 +65,8 @@ try{
   await bookmark.tap();assert.equal(await f.evaluate(()=>loadBookmarks().length),0,'A subsequent short tap must still toggle normally');
   await bookmark.focus();await bookmark.press('Shift+F10');await f.locator('#pdl-mobile-bookmarks').waitFor({state:'visible'});
   await f.locator('#pdl-mobile-bookmarks .pdl-mobile-bookmarks-heading button').click();
+  await bookmark.press('Enter');assert.equal(await f.evaluate(()=>loadBookmarks().length),1,'Keyboard activation must work after closing the bookmark list');
+  await bookmark.press('Enter');assert.equal(await f.evaluate(()=>loadBookmarks().length),0);
   await client.detach();
   await f.locator('#pdl-mobile-search-action').tap();
   const input=f.locator('#text-search-input');await input.fill('Σωνίτσα');
