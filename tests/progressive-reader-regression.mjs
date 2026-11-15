@@ -169,9 +169,12 @@ assert.ok(mobileFooter,'Mobile navigation footer must remain available');
 for(const marker of [
  'id="pdl-mobile-progress"', 'onchange="pdlCommitProgress(this.value)"',
  'oninput="pdlPreviewProgress(this.value)"', 'id="pdl-mobile-page-info"',
- 'onclick="pdlShowChapters()"', 'onclick="pdlOpenMobileBookmarks()"',
+ 'onclick="pdlShowChapters()"', 'onclick="pdlToggleMobileBookmark()"',
+ 'id="pdl-mobile-bookmark-toggle"', 'aria-describedby="pdl-bookmark-help"',
  'id="pdl-mobile-search-action"', 'onclick="pdlMobileSearch()"'
 ])assert.ok(mobileFooter.includes(marker),'Mobile trial must preserve the live control: '+marker);
+assert.ok(shell.includes("bookmark.addEventListener('pointercancel'"),'Bookmark hold must support gesture cancellation');
+assert.ok(shell.includes("bookmark.addEventListener('contextmenu'"),'Bookmark list must remain accessible without a touch hold');
 for(const id of ['pdl-mobile-progress','pdl-mobile-page-info','pdl-mobile-search-action']){
  assert.equal(shell.split('id="'+id+'"').length-1,1,'Mobile UI control must have exactly one unique ID: '+id);
 }
