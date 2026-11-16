@@ -118,6 +118,11 @@ try{
   }),false,'The bottom line search match must remain clear of both toolbars');
   await f.locator('#pdl-search-query').click();await input.fill('ανύπαρκτηλέξηδοκιμής');
   assert.equal(await f.locator('#ts-count').textContent(),'Καμία');
+  // BFCache-style teardown/resume must reconnect parent viewport listeners.
+  await f.evaluate(()=>{
+   window.dispatchEvent(new PageTransitionEvent('pagehide',{persisted:true}));
+   window.dispatchEvent(new PageTransitionEvent('pageshow',{persisted:true}));
+  });
   // Model the top-level visual viewport shrinking for an on-screen keyboard.
   // The iframe viewport stays unchanged; the dock must use parent metrics.
   await page.evaluate(()=>{
