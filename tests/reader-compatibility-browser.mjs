@@ -64,7 +64,10 @@ try{
   for(const ch of PDL_SOURCE)for(const block of ch.blocks){const found=pdlPlain(block.text||'').match(/[\p{L}\p{M}]+[’']\s+[\p{L}\p{M}]+/u);if(found)return found[0].replaceAll('’',"'").normalize('NFD');}
  });assert.ok(phrase,'A real apostrophe phrase must exist in the fixture');await search(phrase);
  console.log('PASS '+engine+': complete source, graphemes, NFD Greek and apostrophe-phrase highlights');
+ // Firefox can still expose the old srcdoc globals until the close navigation
+ // commits. Wait for about:blank before recognizing the next Reader.
  await page.evaluate(()=>closeBook());
+ await page.waitForFunction(()=>document.getElementById('reader-frame').contentDocument?.URL==='about:blank');
  await page.evaluate(()=>openBook(libraryState.books.find(b=>b.hyphenation==='el-polyton').id));
  await page.waitForFunction(()=>typeof document.getElementById('reader-frame')?.contentWindow?.pdlProgressStats==='function');
  frame=page.frames().find(f=>f.url()==='about:srcdoc');await stable();await page.waitForTimeout(1000);await stable();
