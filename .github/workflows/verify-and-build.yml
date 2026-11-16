@@ -44,3 +44,27 @@ jobs:
             git commit -m 'Build verified local editor and hyphenation assets'
             git push
           fi
+  compatibility:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --no-audit --no-fund
+      - run: npm run build
+      - name: Install selected compatibility browser
+        run: npx playwright install --with-deps ${{ matrix.browser }}
+      - name: Reader compatibility
+        run: npm run test:compat
+        env:
+          PDL_BROWSER: ${{ matrix.browser }}
