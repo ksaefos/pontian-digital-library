@@ -5,7 +5,20 @@ import path from 'node:path';
 import {chromium} from 'playwright';
 const root=path.resolve(import.meta.dirname,'..');
 const types={'.html':'text/html; charset=utf-8','.js':'text/javascript','.css':'text/css','.json':'application/json','.wasm':'application/wasm','.svg':'image/svg+xml','.webp':'image/webp','.png':'image/png'};
-const server=createServer(async(req,res)=>{try{const file=path.resolve(root,'.'+new URL(req.url,'http://localhost').pathname);if(!file.startsWith(root+path.sep)||!(await stat(file)).isFile()){res.writeHead(404).end();return}res.writeHead(200,{'Content-Type':types[path.extname(file)]||'application/octet-stream'});res.end(await readFile(file));}catch{res.writeHead(404).end()}});
+const server=createServer(async(req,res)=>{try{
+ const file=path.resolve(root,'.'+new URL(req.url,'http://localhost').pathname);
+ if(!file.startsWith(root+path.sep)||!(await stat(file)).isFile()){res.writeHead(404).end();return;}
+ let data=await readFile(file);
+ if(file.endsWith('/index.html')){
+  const source=data.toString(),match=source.match(/<script id="pdl-reader-shell" type="application\/json">([\s\S]*?)<\/script>/),shell=JSON.parse(match[1]);
+  // Pause after the controls are parsed, before the main Reader script can
+  // initialize. This exposes a genuine opportunity to paint the initial UI.
+  const marker='<script>\nconst glossary = {};';assert.ok(shell.template.includes(marker));
+  shell.template=shell.template.replace(marker,'<script src="./__pdl_initial_ui_gate.js"></script>\n'+marker);
+  data=Buffer.from(source.replace(match[1],()=>JSON.stringify(shell).replaceAll('<','\\u003c')));
+ }
+ res.writeHead(200,{'Content-Type':types[path.extname(file)]||'application/octet-stream'});res.end(data);
+}catch{res.writeHead(404).end();}});
 await new Promise(r=>server.listen(0,'127.0.0.1',r));
 let browser;
 const allDocks=new Set();
@@ -17,12 +30,40 @@ try{
  for(const width of [390,320]){
   const context=await browser.newContext({viewport:{width,height:844},hasTouch:true,isMobile:true});
   const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(String(e)));
+  let releaseStartup;const startupGate=new Promise(resolve=>releaseStartup=resolve);
+  await page.route('**/__pdl_initial_ui_gate.js',async route=>{await startupGate;await route.fulfill({contentType:'text/javascript',body:''}).catch(()=>{});});
+  await page.addInitScript(()=>{
+   if(window===window.top)return;
+   const probe=window.__pdlBootControls={samples:0,flashes:[],stop:false};
+   function sample(){
+    if(document.getElementById('pdl-mobile-bottom')&&innerWidth<=768){
+     probe.samples++;
+     for(const el of document.querySelectorAll('#pdl-mobile-top,#pdl-mobile-bottom,.pdl-rail,.topbar,.bottombar')){
+      const rect=el.getBoundingClientRect();
+      if(el.checkVisibility({checkOpacity:true,checkVisibilityCSS:true})&&rect.width>0&&rect.height>0&&rect.bottom>0&&rect.top<innerHeight){
+       const label=el.id||el.className;if(!probe.flashes.includes(label))probe.flashes.push(label);
+      }
+     }
+    }
+    if(!probe.stop)requestAnimationFrame(sample);
+   }
+   requestAnimationFrame(sample);
+  });
   await page.goto(`http://127.0.0.1:${server.address().port}/index.html`);
   await page.waitForFunction(()=>libraryState.books.length===4);
   await page.evaluate(()=>openBook(libraryState.books.find(b=>b.title==='Η Σωνίτσα').id));
+  await page.waitForFunction(()=>!!document.getElementById('reader-frame')?.contentDocument?.getElementById('pdl-mobile-bottom'));
+  const openingFrame=page.frames().find(f=>f.url()==='about:srcdoc');
+  await openingFrame.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+  const initialUI=await openingFrame.evaluate(()=>window.__pdlBootControls);
+  releaseStartup();
+  assert.ok(initialUI.samples>0,'Initial parsed controls must be sampled before Reader initialization');
+  assert.deepEqual(initialUI.flashes,[],'Mobile controls must stay hidden before the main Reader script runs');
   await page.waitForFunction(()=>typeof document.getElementById('reader-frame')?.contentWindow?.pdlProgressStats==='function');
   const f=page.frames().find(f=>f.url()==='about:srcdoc');
   await f.waitForFunction(()=>pdlProgressStats().complete,null,{timeout:180000});await page.waitForTimeout(1000);await quiet(f);
+  const openingUI=await f.evaluate(()=>{window.__pdlBootControls.stop=true;return window.__pdlBootControls;});
+  assert.deepEqual(openingUI.flashes,[],'No toolbar may flash between initial parsing and verified rendering');
   const before=await location(f);
   const bounds=await f.locator('#pdl-opf-host').boundingBox();
   await page.touchscreen.tap(bounds.x+bounds.width/2,bounds.y+bounds.height*.35);
@@ -118,6 +159,11 @@ try{
   }),false,'The bottom line search match must remain clear of both toolbars');
   await f.locator('#pdl-search-query').click();await input.fill('ανύπαρκτηλέξηδοκιμής');
   assert.equal(await f.locator('#ts-count').textContent(),'Καμία');
+  // BFCache-style teardown/resume must reconnect parent viewport listeners.
+  await f.evaluate(()=>{
+   window.dispatchEvent(new PageTransitionEvent('pagehide',{persisted:true}));
+   window.dispatchEvent(new PageTransitionEvent('pageshow',{persisted:true}));
+  });
   // Model the top-level visual viewport shrinking for an on-screen keyboard.
   // The iframe viewport stays unchanged; the dock must use parent metrics.
   await page.evaluate(()=>{
@@ -141,7 +187,7 @@ try{
   if(process.env.PDL_CAPTURE_DIR)await page.screenshot({path:path.join(process.env.PDL_CAPTURE_DIR,`reader-mobile-${width}.png`)});
   await f.locator('#pdl-mobile-top .pdl-home-mobile').click();await page.waitForFunction(()=>activeBook===null);
   assert.deepEqual(errors,[]);
-  console.log(`PASS mobile ${width}px: toolbars, settings, contents, bookmark gestures, compact search, visible results and keyboard viewport; docks: ${[...docks].join(', ')}`);
+  console.log(`PASS mobile ${width}px: no initial toolbar flash, settings, contents, bookmark gestures, compact search, visible results and keyboard viewport; docks: ${[...docks].join(', ')}`);
   await context.close();
  }
  assert.deepEqual([...allDocks].sort(),['bottom','top'],'Real matches must exercise both dock positions');

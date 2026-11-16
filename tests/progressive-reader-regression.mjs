@@ -63,17 +63,21 @@ assert.ok(hyphenationCSS.includes('display:inline;'),
 const dispatcher=shell.match(/function pdlPaginate\(\)\{[\s\S]*?\n\}/)?.[0];
 assert.ok(dispatcher,'Active dispatcher must be available');
 const calls=[];
-const ctx={pdlGridEnabled:true,pdlProgressHyphenationFailed:false,
- PDL_HYPH:{mode:()=>ctx.mode,ready:()=>ctx.ready},mode:'off',ready:false,
- pdlProgressStart:()=>calls.push('progressive'),pdlLegacyPaginate:()=>calls.push('legacy')};
+const ctx={pdlGridEnabled:true,pdlProgressHyphenationFailed:false,pdlHyphenStartupWaiting:false,pdlProgress:{desired:null},
+ PDL_HYPH:{mode:()=>ctx.mode,ready:()=>ctx.ready,pending:()=>ctx.mode!=='off'&&!ctx.ready&&!ctx.failed},mode:'off',ready:false,failed:false,
+ pdlProgressStart:()=>calls.push('progressive'),pdlLegacyPaginate:()=>calls.push('legacy'),
+ pdlWaitForHyphenation:()=>{ctx.pdlHyphenStartupWaiting=true;calls.push('waiting');},pdlProgressNotify:()=>{}};
 runInNewContext(dispatcher+'; pdlPaginate();',ctx);
 assert.deepEqual(calls,['progressive'],'Hyphenation off must reach the progressive paginator');
 ctx.mode='el-polyton';runInNewContext('pdlPaginate();',ctx);
-assert.deepEqual(calls,['progressive','legacy'],'Hyphenated books must use legacy until WASM is ready');
+assert.deepEqual(calls,['progressive','waiting'],'Pending WASM must not trigger redundant full-book legacy pagination');
 ctx.ready=true;runInNewContext('pdlPaginate();',ctx);
-assert.deepEqual(calls,['progressive','legacy','progressive'],'Loaded polytonic patterns must reach progressive pagination');
+assert.deepEqual(calls,['progressive','waiting','progressive'],'Loaded polytonic patterns must reach progressive pagination');
 ctx.mode='el-monoton';runInNewContext('pdlPaginate();',ctx);
-assert.deepEqual(calls,['progressive','legacy','progressive','progressive'],'Monotonic patterns must also reach progressive pagination');
+assert.deepEqual(calls,['progressive','waiting','progressive','progressive'],'Monotonic patterns must also reach progressive pagination');
+ctx.ready=false;ctx.failed=true;runInNewContext('pdlPaginate();',ctx);
+assert.equal(calls.at(-1),'legacy','Missing/timed-out WASM must keep the legacy fallback reachable');
+ctx.ready=true;ctx.failed=false;
 ctx.pdlProgressHyphenationFailed=true;runInNewContext('pdlPaginate();',ctx);
 assert.equal(calls.at(-1),'legacy','A failed progressive validation must retain the safe legacy route');
 ctx.mode='off';ctx.pdlProgressHyphenationFailed=false;ctx.pdlGridEnabled=false;
@@ -106,7 +110,7 @@ const hyphContext={PDL_BOOK_EDITOR_SETTINGS:{hyphenation:'el-polyton'},
  window:{Hyphenopoly:{hyphenators:{'el-polyton':hyphenator,'el-monoton':hyphenator}}},
  document:{getElementById:()=>null,createTreeWalker:mockWalker},
  NodeFilter:{SHOW_TEXT:4},pdlLayoutInProgress:false,pdlScheduleRelayout:()=>{},
- setTimeout:()=>0,console};
+ setTimeout:()=>0,clearTimeout:()=>{},console};
 runInNewContext(hyphSrc+';globalThis.hyph=PDL_HYPH;',hyphContext);
 const hyph=hyphContext.hyph;
 await hyph.activate();
