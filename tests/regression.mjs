@@ -153,16 +153,28 @@ test('JS serialization safely escapes script breakers and separators',()=>{
  assert.ok(!out.includes('</script>'));
  assert.ok(out.includes('\\u2028')&&out.includes('\\u2029'));
 });
-test('glossary scoped to book provenance',()=>{
+test('shared glossary includes external and book-linked entries without changing metadata',()=>{
  const start=reader.indexOf('function pdlSeparateTerm(value){');
  const stop=reader.indexOf('function pdlParagraphs(text){',start);
- const funcs=reader.slice(start,stop);
- const esc= x=>String(x);
- const f=vm.runInNewContext(funcs+';({pdlGlossaryFromEntries})',{},{timeout:3000}).pdlGlossaryFromEntries;
- const book=data.books[0];const result=f(data.entries,book);
- assert.ok(Object.keys(result).length>0&&Object.keys(result).length<data.entries.length);
- const foreign=data.entries.find(e=>e.references?.length&&e.references.every(r=>String(r.bookId)!==String(book.id))&&!Object.hasOwn(result,e.term));
- assert.ok(foreign);
+ const f=vm.runInNewContext(reader.slice(start,stop)+';pdlGlossaryFromEntries',{},{timeout:3000});
+ const entries=[
+  {id:'a',term:'λέξη',definition:'πρώτη σημασία',etymology:'ετυμολογία Α',sources:['Βιβλίο Α'],references:[{bookId:'a',chapterId:'c'}]},
+  {id:'b',term:'αγιάζ’ (τουρκ. ayaz)',definition:'παγωνιά',sources:['Song_9537'],references:[]},
+  {id:'c',term:'λέξη',definition:'δεύτερη · τρίτη σημασία',etymology:'ετυμολογία Β',sources:[],references:[]},
+  {id:'d',term:'λέξη',definition:'δεύτερη · τρίτη σημασία',etymology:'ετυμολογία Β',sources:['Άλλη πηγή'],references:[]},
+  {id:'safe',term:'__proto__',definition:'ασφαλές κλειδί',sources:[]}
+ ];
+ const before=JSON.stringify(entries);
+ const freeze=value=>{if(value&&typeof value==='object'){Object.values(value).forEach(freeze);Object.freeze(value);}};freeze(entries);
+ const dictionary=f(entries,{id:'different',title:'Άλλο βιβλίο',chapters:[]});
+ assert.equal(dictionary['αγιάζ’'].def,'παγωνιά');
+ assert.equal(dictionary['αγιάζ’'].etymology,'τουρκ. ayaz');
+ assert.equal(dictionary['λέξη'].def,'πρώτη σημασία · δεύτερη · τρίτη σημασία');
+ assert.equal(dictionary['λέξη'].etymology,'ετυμολογία Α · ετυμολογία Β');
+ assert.equal(Object.getPrototypeOf(dictionary),null);
+ assert.equal(dictionary['__proto__'].def,'ασφαλές κλειδί');
+ assert.equal(JSON.stringify(entries),before,'IDs, definitions, etymologies, sources and references must remain unchanged');
+ assert.equal(JSON.stringify(dictionary),JSON.stringify(f(entries,{id:'a',title:'Βιβλίο Α'})),'Book identity must not filter the shared dictionary');
 });
 test('reference refresh retains textual variants but drops deleted chapters',()=>{
  const start=studio.indexOf('function updateGlossaryReferences(){');
@@ -180,20 +192,56 @@ test('reference refresh retains textual variants but drops deleted chapters',()=
  assert.ok(!state.entries[0].references.some(r=>r.chapterId==='chapter1'));
  assert.ok(state.entries[0].references.some(r=>r.chapterId==='chapter2'));
 });
-test('glossary source matching NFC apostrophes and section numbers',()=>{
- const start=reader.indexOf('function pdlSeparateTerm(value){');
- const stop=reader.indexOf('function pdlParagraphs(text){',start);
- const f=vm.runInNewContext(reader.slice(start,stop)+';pdlGlossaryFromEntries',{},{timeout:2000});
- const b={id:'b',title:"Αέρα σ' μαναχόν κανείται",chapters:[{id:'c'}]};
- const item={term:'δοκιμή',definition:'σημασία',sources:['Αέρα σ’ μαναχόν κανείται §1'],references:[]};
- assert.ok(Object.hasOwn(f([item],b),'δοκιμή'));
+test('shared glossary recognizes Unicode variants and preserves exact Pontic distinctions',()=>{
+ const start=reader.indexOf('function pdlSeparateTerm(value){'),stop=reader.indexOf('function pdlParagraphs(text){',start);
+ const build=vm.runInNewContext(reader.slice(start,stop)+';pdlGlossaryFromEntries',{}, {timeout:2000});
+ const entries=[
+  {term:'αγιάζ’',definition:'παγωνιά',sources:['Song_9537']},
+  {term:'αϊνι͜άν',definition:'καθρέπτη',sources:[]},
+  {term:'κι',definition:'απλή γραφή'},{term:'κ̆ι',definition:'ποντιακή γραφή'}
+ ];
+ const shell=JSON.parse(reader.match(/<script id="pdl-reader-shell" type="application\/json">([\s\S]*?)<\/script>/)[1]).template;
+ const lookup=shell.slice(shell.indexOf('function pdlKey(s){'),shell.indexOf('// Search is deliberately diacritic-insensitive.'));
+ const ctx={glossary:build(entries)};
+ const candidates=vm.runInNewContext(lookup+';pdlCandidates',ctx,{timeout:2000});
+ assert.equal(candidates("ΑΓΙΑΖ'")[0].def,'παγωνιά');
+ assert.equal(candidates('αϊνι͜άν'.normalize('NFD'))[0].def,'καθρέπτη');
+ assert.equal(candidates('κι').length,1);assert.equal(candidates('κι')[0].def,'απλή γραφή');
+ assert.equal(candidates('κ̆ι'.normalize('NFD')).length,1);assert.equal(candidates('κ̆ι')[0].def,'ποντιακή γραφή');
+ assert.equal(candidates('αγιαζλαεύουμε').length,0,'Recognition must not invent inflected forms');
+ assert.equal(candidates('παρακι').length,0,'A longer word must not match a substring headword');
 });
-test('every glossary entry can resolve to at least one source book',()=>{
- const start=reader.indexOf('function pdlSeparateTerm(value){');
- const stop=reader.indexOf('function pdlParagraphs(text){',start);
+test('every published glossary entry is available globally and structured citations remain valid',()=>{
+ const start=reader.indexOf('function pdlSeparateTerm(value){'),stop=reader.indexOf('function pdlParagraphs(text){',start);
  const f=vm.runInNewContext(reader.slice(start,stop)+';pdlGlossaryFromEntries',{},{timeout:2000});
- const unlinked=data.entries.filter(e=>!data.books.some(b=>Object.keys(f([e],b)).length));
- assert.equal(unlinked.length,0,'Unlinked: '+unlinked.slice(0,10).map(x=>x.term).join(', '));
+ const dictionary=f(data.entries),before=JSON.stringify(data.entries);
+ for(const entry of data.entries){
+  assert.equal(typeof entry.term,'string');assert.ok(entry.term.trim(),'Published headword must not be empty');
+  assert.equal(typeof entry.definition,'string');assert.ok(entry.definition.trim(),'Published definition must not be empty');
+  const single=f([entry]),terms=Object.keys(single);assert.equal(terms.length,1,'Unavailable shared entry: '+entry.id);
+  assert.ok(Object.hasOwn(dictionary,terms[0]));
+  assert.ok(dictionary[terms[0]].def.includes(entry.definition.trim()),'Definition omitted: '+entry.id);
+  if(entry.etymology)assert.ok(dictionary[terms[0]].etymology.includes(entry.etymology),'Etymology omitted: '+entry.id);
+  for(const ref of entry.references||[]){
+   assert.ok(data.books.some(b=>String(b.id)===String(ref.bookId)&&b.chapters.some(c=>String(c.id)===String(ref.chapterId))),
+    'Dangling structured citation: '+entry.id);
+  }
+ }
+ for(const book of data.books)assert.equal(JSON.stringify(f(data.entries,book)),JSON.stringify(dictionary));
+ assert.equal(JSON.stringify(data.entries),before);
+});
+test('external glossary sources publish without book-link warnings; missing documentation remains reviewable',()=>{
+ const start=studio.indexOf(' const undocumentedEntries='),stop=studio.indexOf(' const intentionalDeletions=',start);
+ assert.ok(start>0&&stop>start);
+ const code='(function(){'+studio.slice(start,stop)+'return true;})()';
+ const d={entries:[{term:'λέξη',definition:'σημασία',sources:['Song_9537'],references:[]}]};
+ const before=JSON.stringify(d);let confirmations=0,allow=false;
+ const ctx={d,confirm(message){confirmations++;assert.ok(message.includes('χωρίς δηλωμένη πηγή ή παραπομπή'));return allow;}};
+ assert.equal(vm.runInNewContext(code,ctx,{timeout:1000}),true);assert.equal(confirmations,0);
+ assert.equal(JSON.stringify(d),before);
+ d.entries.push({term:'άλλη',definition:'σημασία',sources:['  '],references:[]});
+ assert.equal(vm.runInNewContext(code,ctx,{timeout:1000}),undefined);assert.equal(confirmations,1);
+ allow=true;assert.equal(vm.runInNewContext(code,ctx,{timeout:1000}),true);
 });
 test('Content Security Policy pins inline admin scripts',()=>{
  assert.match(studio,/<meta http-equiv="Content-Security-Policy"/);
