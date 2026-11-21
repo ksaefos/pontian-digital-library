@@ -8,7 +8,7 @@ const references=html.slice(html.indexOf('function preserveReferences('),html.in
 const direct=html.slice(html.indexOf('function parseGlossaryTxt('),html.indexOf('async function importGlossaryFiles('));
 let serial=0;
 const ctx={state:{entries:[]},uid:()=>`new-${++serial}`};
-vm.createContext(ctx);vm.runInContext(first+references+direct+';globalThis.api={pdlSplitHeadwordEtymology,pdlParseGlossaryLine,pdlLexLine,parseTxt,parseGlossaryTxt,mergeEntries,pdlMergeEtymology};',ctx);
+vm.createContext(ctx);vm.runInContext(first+references+direct+';globalThis.api={pdlSplitHeadwordEtymology,pdlParseGlossaryLine,pdlLexLine,parseTxt,parseGlossaryTxt,mergeEntries,pdlMergeEtymology,pdlNormalizeGlossaryEntry};',ctx);
 const api=ctx.api,plain=v=>JSON.parse(JSON.stringify(v));
 const samples=[
  ['ακαΐρευτα (τουρκ. kayırmak): απροστάτευτα, χωρίς υποστήριξη','ακαΐρευτα','τουρκ. kayırmak','απροστάτευτα, χωρίς υποστήριξη'],
@@ -17,12 +17,11 @@ const samples=[
  ['μανουσ̌άκια (αρμεν./περσ. մանուշակ (manušak)<manafšak): μενεξέδες','μανουσ̌άκια','αρμεν./περσ. մանուշակ (manušak)<manafšak','μενεξέδες'],
  ['σαλαχανεύ’ (τουρκ./αραβ./περσ. τουρκ. salahana < salhane < αραβ.-περσ. selh-hâne, «salhane köpekleri: όπως τα σκυλιά»): τεμπελιάζει','σαλαχανεύ’','τουρκ./αραβ./περσ. τουρκ. salahana < salhane < αραβ.-περσ. selh-hâne, «salhane köpekleri: όπως τα σκυλιά»','τεμπελιάζει'],
  ['τεγμέ ( αγν. ετυμολ.): χάρισμα','τεγμέ','αγν. ετυμολ.','χάρισμα'],
- ['λέξη (πληθ.) (ρωσ. корень)： σημασία: με δεύτερη άνω-κάτω τελεία','λέξη (πληθ.)','ρωσ. корень','σημασία: με δεύτερη άνω-κάτω τελεία'],
- ['ας σα ( ασό σα (από τα)): απ’ τα','ας σα ( ασό σα (από τα))','','απ’ τα'],
- ['καλαμάρ’ ( κάλαμος): μελανοδοχείο','καλαμάρ’ ( κάλαμος)','','μελανοδοχείο'],
- ['λέξεις (πληθ.): σημασία','λέξεις (πληθ.)','','σημασία'],
- ['λέξη (τουρκ. kök: σημασία','λέξη (τουρκ. kök','','σημασία'],
- ['λέξη (τουρκ. kök) επιπλέον: σημασία','λέξη (τουρκ. kök) επιπλέον','','σημασία']
+ ['λέξη (πληθ.) (ρωσ. корень)： σημασία: με δεύτερη άνω-κάτω τελεία','λέξη','ρωσ. корень','(πληθ.) — σημασία: με δεύτερη άνω-κάτω τελεία'],
+ ['ας σα ( ασό σα (από τα)): απ’ τα','ας σα','','( ασό σα (από τα)) — απ’ τα'],
+ ['καλαμάρ’ ( κάλαμος): μελανοδοχείο','καλαμάρ’','κάλαμος','μελανοδοχείο'],
+ ['λέξεις (πληθ.): σημασία','λέξεις','','(πληθ.) — σημασία'],
+ ['λέξη (τουρκ. kök) επιπλέον: σημασία','λέξη  επιπλέον','τουρκ. kök','σημασία']
 ];
 for(const [line,term,etymology,definition] of samples){
  const direct=api.parseGlossaryTxt('\uFEFF'+line+'\r\n','Song_6002.txt');
@@ -33,6 +32,7 @@ for(const [line,term,etymology,definition] of samples){
  assert.ok(structured,'Etymology length must not disqualify a real headword');
  assert.equal(structured.term,term);assert.equal(structured.etymology||'',etymology);assert.equal(structured.definition,definition);
 }
+for(const bad of ['λέξη (τουρκ. kök: σημασία','λέξη ): σημασία','(πληθ.): σημασία'])assert.equal(api.parseGlossaryTxt(bad,'s.txt').entries.length,0);
 const narrative='Παράγραφος με πολυτονικά: τ͜σ, ὰ, ἅμα.\n\nΤο πρωτότυπο διατηρείται.';
 const structured=api.parseTxt('=== ΤΙΤΛΟΣ ===\nΒιβλίο\n=== ΚΕΦΑΛΑΙΟ 1 ===\n'+narrative+'\n=== ΓΛΩΣΣΑΡΙ ===\n'+samples[0][0]+'\n'+samples[4][0],'Book.txt');
 assert.equal(structured.book.chapters[0].text,narrative);assert.equal(structured.entries.length,2);assert.equal(structured.entries[1].etymology,samples[4][2]);
@@ -47,6 +47,14 @@ assert.equal(api.mergeEntries(parsed).added,0);assert.equal(ctx.state.entries.le
 const e=ctx.state.entries[0];assert.equal(e.id,'stable');assert.equal(e.term,'ὰμα');assert.equal(e.definition,'αλλά');assert.equal(e.privateNote,'keep');
 assert.deepEqual(plain(e.references),legacy.references);assert.deepEqual(plain(e.sources),['Παλιά πηγή','Song_6002']);
 assert.ok(e.etymology.includes('άλλη τεκμηρίωση'));assert.ok(e.etymology.includes('τουρκ./αραβ. ama/ammā'));
+const noteLegacy={id:'note-stable',term:'ας σα ( ασό σα (από τα))',definition:'απ’ τα',category:'word',sources:['πηγή'],references:[],privateNote:'keep'};
+const normalizedNote=plain(api.pdlNormalizeGlossaryEntry(noteLegacy));
+assert.equal(normalizedNote.term,'ας σα');assert.equal(normalizedNote.definition,'( ασό σα (από τα)) — απ’ τα');
+assert.equal(noteLegacy.term,'ας σα ( ασό σα (από τα))','Normalization must not mutate its input');
+const originalState=ctx.state;ctx.state={entries:[structuredClone(noteLegacy)]};
+assert.equal(api.mergeEntries(api.parseGlossaryTxt(samples[7][0],'s.txt').entries).added,0);
+assert.equal(ctx.state.entries[0].id,'note-stable');assert.equal(ctx.state.entries[0].definition,normalizedNote.definition);
+assert.equal(ctx.state.entries[0].privateNote,'keep');ctx.state=originalState;
 const snapshot=JSON.stringify(ctx.state);assert.equal(api.mergeEntries(parsed).added,0);assert.equal(JSON.stringify(ctx.state),snapshot,'Repeated import must be idempotent');
 assert.equal(api.pdlMergeEtymology('τουρκ. ama < αραβ. ammā','τουρκ./αραβ. ama/ammā'),'τουρκ. ama < αραβ. ammā');
 ctx.state={entries:[]};assert.equal(api.mergeEntries(api.parseGlossaryTxt(samples[0][0]+'\nακαΐρευτα (τουρκ. kayırmak): άλλη σημασία','s.txt').entries).added,2);

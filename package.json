@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "node scripts/build-assets.mjs",
-    "test": "node tests/regression.mjs && node tests/bookmark-regression.mjs && node tests/worker-regression.mjs && node tests/reader-security-regression.mjs && node tests/editorial-settings-regression.mjs && node tests/idb-recovery-regression.mjs && node tests/rate-limit-regression.mjs && node tests/progressive-reader-regression.mjs && node tests/txt-etymology-regression.mjs",
+    "test": "node tests/regression.mjs && node tests/bookmark-regression.mjs && node tests/worker-regression.mjs && node tests/reader-security-regression.mjs && node tests/editorial-settings-regression.mjs && node tests/idb-recovery-regression.mjs && node tests/rate-limit-regression.mjs && node tests/progressive-reader-regression.mjs && node tests/txt-etymology-regression.mjs && node tests/glossary-migration-regression.mjs",
     "test:browser": "node tests/browser-smoke.mjs && node tests/progressive-browser.mjs && node tests/reader-lifecycle-browser.mjs && node tests/pagination-fill-browser.mjs && node tests/mobile-controls-browser.mjs && node tests/hyphenation-startup-browser.mjs && node tests/reader-memory-browser.mjs && node tests/shared-glossary-browser.mjs && node tests/txt-etymology-browser.mjs",
     "test:compat": "node tests/reader-compatibility-browser.mjs",
     "test:glossary": "node tests/shared-glossary-browser.mjs",
