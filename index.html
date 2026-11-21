@@ -196,10 +196,10 @@ body.pdl-public-error #pdl-import-panel{display:block}
     <div class="pdl-help-step"><span class="pdl-help-icon" aria-hidden="true">☷</span><div><strong>Κεφάλαια</strong><p>Στην κάτω μπάρα πάτησε «Κεφάλαια». Το μενού δείχνει τον τίτλο του βιβλίου και τα περιεχόμενά του· επίλεξε το κεφάλαιο που θέλεις.</p></div></div>
     <div class="pdl-help-step"><span class="pdl-help-icon" aria-hidden="true">⌕</span><div><strong>Αναζήτηση</strong><p>Πάτησε «Αναζήτηση» στην κάτω μπάρα και γράψε μια λέξη ή φράση. Με Enter ή τα βέλη μετακινείσαι στα επισημασμένα ευρήματα και κλείνει το πληκτρολόγιο. Πάτησε ξανά τον όρο για να τον αλλάξεις.</p></div></div>
     <div class="pdl-help-step"><span class="pdl-help-icon" aria-hidden="true"><svg width="20" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 3h12v18l-6-4-6 4V3Z"/></svg></span><div><strong>Σελιδοδείκτες</strong><p>Με σύντομο πάτημα προσθέτεις ή αφαιρείς σελιδοδείκτη στην τρέχουσα θέση. Κράτησε πατημένο το κουμπί για να ανοίξεις τη λίστα όλων των σελιδοδεικτών. Με πληκτρολόγιο, χρησιμοποίησε Shift+F10 πάνω στο κουμπί.</p></div></div>
-    <div class="pdl-help-step"><span class="pdl-help-icon" aria-hidden="true">…</span><div><strong>Γλωσσάρι</strong><p>Κράτησε πατημένη μια λέξη για λίγο και άφησέ την, ώστε να εμφανιστεί η επεξήγησή της, εφόσον υπάρχει.</p></div></div>
+    <div class="pdl-help-step"><span class="pdl-help-icon" aria-hidden="true">…</span><div><strong>Γλωσσάρι</strong><p>Κράτησε πατημένη μια λέξη για λίγο και άφησέ την, ώστε να εμφανιστεί η επεξήγησή της από το ενιαίο γλωσσάρι, εφόσον υπάρχει καταχώριση.</p></div></div>
     <h3>Σε υπολογιστή ή μεγάλη οθόνη</h3>
     <div class="pdl-help-step"><span class="pdl-help-icon" aria-hidden="true">↔</span><div><strong>Σελίδες και εργαλεία</strong><p>Άλλαξε σελίδα με τα κουμπιά προηγούμενης/επόμενης σελίδας, τα βελάκια του πληκτρολογίου ή σύροντας τη σελίδα με το ποντίκι. Στην αριστερή μπάρα βρίσκεις τις ρυθμίσεις, την αναζήτηση και τους σελιδοδείκτες. Το λογότυπο επιστρέφει στη βιβλιοθήκη.</p></div></div>
-    <div class="pdl-help-step"><span class="pdl-help-icon" aria-hidden="true">…</span><div><strong>Γλωσσάρι</strong><p>Κάνε διπλό κλικ σε μια λέξη για να εμφανιστεί η ερμηνεία της, εφόσον υπάρχει στο γλωσσάρι.</p></div></div>
+    <div class="pdl-help-step"><span class="pdl-help-icon" aria-hidden="true">…</span><div><strong>Γλωσσάρι</strong><p>Κάνε διπλό κλικ σε μια λέξη για να εμφανιστεί η ερμηνεία της από το ενιαίο γλωσσάρι. Οι καταχωρίσεις αναγνωρίζονται σε όλα τα βιβλία, ανεξάρτητα από την πηγή τους.</p></div></div>
     <h3>Συνέχεια ανάγνωσης</h3>
     <p class="pdl-help-note">Η θέση ανάγνωσης και οι σελιδοδείκτες αποθηκεύονται στον ίδιο browser, στην ίδια συσκευή. Όταν ξανανοίξεις το βιβλίο, συνεχίζεις από το αποθηκευμένο σημείο.</p>
     <p class="pdl-help-note">Στην αρχή, το σύνολο των σελίδων μπορεί να ενημερώνεται όσο ετοιμάζεται το βιβλίο. Με διαφορετική γραμματοσειρά, μέγεθος ή προσανατολισμό αλλάζει η σελιδοποίηση, διατηρώντας το σημείο ανάγνωσης.</p>
@@ -304,33 +304,21 @@ function pdlSeparateTerm(value){
  }
  return depth===0?{term:term.slice(0,at).trim(),etymology:suffix.slice(1,-1).trim()}:{term,etymology:''};
 }
-function pdlSourceBookKey(value){
- return String(value||'').split(/\s*\|\s*/)[0].normalize('NFC')
-  .replace(/[’‘ʼ`΄´']/g,'’').replace(/\s*§\s*\d+(?:\s*,\s*\d+)*\s*$/u,'')
-  .toLocaleLowerCase('el').replace(/\s+/g,' ').trim();
-}
-function pdlGlossaryFromEntries(entries,book){
- const dictionary=Object.create(null);
- const bookId=String(book?.id||'').replace(/^studio:/,'');
- const title=pdlSourceBookKey(book?.title);
+function pdlGlossaryFromEntries(entries){
+ // One library-wide dictionary. Citations describe provenance, not where a
+ // headword is available. Group display values without changing source rows.
+ const dictionary=Object.create(null),groups=new Map();
  for(const row of entries){
-  // Prioritize explicit book/chapter provenance. Unreferenced entries use their
-  // declared source book, not an indiscriminate cross-book glossary.
-  const refs=Array.isArray(row?.references)?row.references:[];
-  if(refs.length){if(!refs.some(r=>String(r.bookId)===bookId&&book.chapters?.some(c=>String(c.id)===String(r.chapterId))))continue;}
-  else {
-    const sources=Array.isArray(row?.sources)?row.sources:[];
-    if(!sources.some(src=>pdlSourceBookKey(src)===title))continue;
-  }
-
   if(!row||typeof row.term!=='string'||typeof row.definition!=='string')continue;
   const part=pdlSeparateTerm(row.term),term=part.term.trim(),def=row.definition.trim(),etymology=String(row.etymology||part.etymology||'');
   if(!term||!def)continue;
-  if(!dictionary[term])dictionary[term]={term,def,definition:def,etymology};
-  else if(!dictionary[term].def.split(' · ').includes(def)){
-   dictionary[term].def+=' · '+def;dictionary[term].definition=dictionary[term].def;
-  }
-  if(etymology&&!dictionary[term].etymology)dictionary[term].etymology=etymology;
+  if(!groups.has(term))groups.set(term,{definitions:new Set(),etymologies:new Set()});
+  const group=groups.get(term);group.definitions.add(def);
+  if(etymology)group.etymologies.add(etymology);
+ }
+ for(const [term,group] of groups){
+  const def=[...group.definitions].join(' · ');
+  dictionary[term]={term,def,definition:def,etymology:[...group.etymologies].join(' · ')};
  }
  return dictionary;
 }
@@ -440,7 +428,7 @@ function pdlReplaceOnce(markup,needle,value){
 function buildImportedMarkup(book){
  let markup=readerShellTemplate;
  const rawChapters=book.chapters.map((c,i)=>({id:String(c.id||`legacy-${i}`),title:String(c.title||`Κεφάλαιο ${i+1}`),paragraphs:(pdlRichParagraphs(c.richHtml)||pdlParagraphs(c.text))}));
- const glossary=pdlGlossaryFromEntries(libraryState.entries,book);
+ const glossary=pdlGlossaryFromEntries(libraryState.entries);
  const pos=markup.indexOf('function buildChapters() {'),end=markup.indexOf('\n}\n',pos)+2;
  if(pos<0||end<=pos)throw Error('Αδυναμία προσαρμογής κεφαλαίων.');
  const chapterScript='const PDL_BOOK_EDITOR_SETTINGS = '+pdlSafeJS({showChapterTitles:book.showChapterTitles===true,dropCap:book.dropCap!==false,hyphenation:['el-polyton','el-monoton'].includes(book.hyphenation)?book.hyphenation:'off'})+';\n'+
