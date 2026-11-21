@@ -149574,13 +149574,19 @@
     },
     {
       "term": "πλαντάτσιας (ρωσ./γαλλ./λατ. плантация < plantation < plantare)",
-      "definition": "φυτείας, εκτεταμένης καλλιέργεια",
+      "definition": "φυτείες, εκτεταμένες καλλιέργειες",
       "category": "word",
       "sources": [
         "Song_11007"
       ],
       "id": "b0e29c41-86fe-41d2-990b-99bd254f426e",
-      "references": []
+      "references": [
+        {
+          "bookId": "48715ee4-83f2-40b9-85cd-468e9b67a948",
+          "chapterId": "8e6ae3a9-6bec-44f2-8eaa-0aff13d8b37c"
+        }
+      ],
+      "etymology": ""
     },
     {
       "term": "πλερωμή",
