@@ -27,7 +27,8 @@ test('glossary metadata unchanged on edit',()=>{
  const manuallyRemovedReferenceKeys=new Set();
  const referenceKey=(entryId,ref)=>String(entryId)+'|'+String(ref.bookId)+'|'+String(ref.chapterId);
  const $=key=>fields[key];const ctx={state,editingEntry:'test',$,draftEntryRefs,manuallyRemovedReferenceKeys,referenceKey,persist(){},renderLex(){},notify(){},uid(){return 'new'},mergeEntries(){throw Error('Editing must not merge/drop metadata')}};
- vm.runInNewContext(code,ctx,{timeout:1000});
+ const helpers=studio.slice(studio.indexOf('function norm(s){'),studio.indexOf('// An etymological/usage annotation'));
+ vm.runInNewContext(helpers+code,ctx,{timeout:1000});
  ctx.$('dlgSave').onclick();
  const next=state.entries[0];
  assert.equal(next.definition,'νέα σημασία');assert.equal(next.etymology,'αρχ. ελλ.');assert.equal(next.privateNote,'keep');
