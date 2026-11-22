@@ -184,7 +184,8 @@ test('reference refresh retains textual variants but drops deleted chapters',()=
  const state={books:[{id:'book1',title:'Βιβλίο',chapters:[{id:'chapter1',text:'άλλη λέξη'},{id:'chapter2',text:'σπίτι'}]}],entries:[{id:'entry1',term:'σπίτι',sources:['Βιβλίο'],references:[{bookId:'book1',chapterId:'chapter1'}]}]};
  const norm=x=>String(x||'').normalize('NFC').toLocaleLowerCase('el').trim();
  const ctx={state,searchNorm:norm,headwordOnly:x=>String(x).split('(')[0].trim()};
- const run=()=>vm.runInNewContext(fn+';updateGlossaryReferences();',ctx,{timeout:1000});
+ const helpers=studio.slice(studio.indexOf('function norm(s){'),studio.indexOf('function pdlParseGlossaryLine('));
+ const run=()=>vm.runInNewContext(helpers+fn+';updateGlossaryReferences();',ctx,{timeout:1000});
  run();assert.ok(state.entries[0].references.some(r=>r.chapterId==='chapter1'));
  assert.ok(state.entries[0].references.some(r=>r.chapterId==='chapter2'));
  state.books[0].chapters[0].text='αλλαγμένο';run();

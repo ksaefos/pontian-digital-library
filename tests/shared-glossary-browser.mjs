@@ -14,9 +14,10 @@ const {pdlSeparateTerm,pdlGlossaryFromEntries}=vm.runInNewContext(functions+';({
 const expected=Object.keys(pdlGlossaryFromEntries(data.entries)).length;
 const word='αγιάζ’',entry=data.entries.find(e=>pdlSeparateTerm(e.term).term===word);
 assert.ok(entry,'Real shared headword must exist');
-const external=data.entries.filter(e=>!e.references?.length&&e.sources?.some(s=>/^Song_/.test(s))).map(e=>({id:e.id,term:pdlSeparateTerm(e.term).term,definition:e.definition.trim()}));
-assert.ok(external.length>0,'Exercise external-source entries without book references');
-const phrase=data.entries.find(e=>!e.references?.length&&/\s/.test(pdlSeparateTerm(e.term).term));
+// Corpus indexing removes TXT filenames; entries with no occurrence still belong to the global dictionary.
+const external=data.entries.filter(e=>!e.references?.length).map(e=>({id:e.id,term:pdlSeparateTerm(e.term).term,definition:e.definition.trim()}));
+assert.ok(external.length>0,'Exercise all real entries without chapter occurrences or book references');
+const phrase=data.entries.find(e=>/\s/.test(pdlSeparateTerm(e.term).term));
 assert.ok(phrase,'A real shared expression must exist');
 const phraseTerm=pdlSeparateTerm(phrase.term).term;
 const types={'.html':'text/html; charset=utf-8','.js':'text/javascript','.css':'text/css','.json':'application/json','.wasm':'application/wasm','.svg':'image/svg+xml','.png':'image/png','.webp':'image/webp'};
@@ -63,8 +64,9 @@ try{
   await page.waitForFunction(()=>typeof document.getElementById('reader-frame')?.contentWindow?.pdlProgressStats==='function');
   const frame=page.frames().find(f=>f.url()==='about:srcdoc');await ready(frame);
   assert.equal(await frame.evaluate(()=>Object.keys(glossary).length),expected);
-  const missing=await frame.evaluate(rows=>rows.filter(row=>!pdlLookupDiagnostic(row.term).candidates.some(c=>c.definition.includes(row.definition))).map(row=>row.id),external);
-  assert.deepEqual(missing,[],'Every external-source entry must be available in every book');
+  const rowsToVerify=data.entries.map(e=>({id:e.id,term:pdlSeparateTerm(e.term).term,definition:e.definition.trim()}));
+  const missing=await frame.evaluate(rows=>rows.filter(row=>!pdlLookupDiagnostic(row.term).candidates.some(c=>c.definition.includes(row.definition))).map(row=>row.id),rowsToVerify);
+  assert.deepEqual(missing,[],'Every canonical entry, including all imported and unlinked records, must be available in every book');
   const diagnostics=await frame.evaluate(({word,phraseTerm})=>{
    const start=performance.now(),lookup=pdlLookupDiagnostic(word.normalize('NFD').replaceAll('’',"'"));
    const elapsed=performance.now()-start;
