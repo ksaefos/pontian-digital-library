@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import vm from 'node:vm';
+const html=readFileSync(new URL('../admin.html',import.meta.url),'utf8');
+const code=html.slice(html.indexOf('function pdlGroupGlossaryRows('),html.indexOf('function renderLex(){'));
+const context={};vm.createContext(context);
+vm.runInContext(html.slice(html.indexOf('function norm(s){'),html.indexOf('// Normalizes only explicit'))+code,context);
+const data=JSON.parse(readFileSync(new URL('../library-data.json',import.meta.url),'utf8')),snapshot=JSON.stringify(data);
+const grouped=context.pdlGroupGlossaryRows(data.entries);
+assert.equal(grouped.length,new Set(data.entries.map(e=>context.norm(e.term))).size);
+assert.equal(grouped.flatMap(g=>g.entries).length,data.entries.length);
+assert.deepEqual(new Set(grouped.flatMap(g=>g.entries.map(e=>e.id))),new Set(data.entries.map(e=>e.id)));
+assert.equal(JSON.stringify(data),snapshot,'Grouping must not mutate library data');
+const fixtures=[{id:'a',term:'λέξη',definition:'μία'},{id:'b',term:'λέξη',definition:'δύο',etymology:'άλλη'},{id:'c',term:'ὰ',definition:'τόνος'},{id:'d',term:'α',definition:'χωρίς τόνο'},{id:'e',term:'τ͜σ',definition:'ποντιακά'},{id:'f',term:'τσ',definition:'άλλος τύπος'},{id:'g',term:'λέξη',definition:'NFD'}];
+const result=context.pdlGroupGlossaryRows(fixtures);assert.equal(result.length,5);assert.equal(result[0].entries.length,3);
+assert.equal(result[0].entries[1].etymology,'άλλη');assert.equal(result[0].entries[0],fixtures[0]);
+console.log('PASS Studio glossary grouping: one row per NFC headword, all IDs/meanings/etymologies preserved, exact Pontic distinctions, no source mutations; '+grouped.length+' groups / '+data.entries.length+' records');
