@@ -39,6 +39,12 @@ for(const fake of [{...a,definition:'άλλη'},{...a,category:'place'},{...a,et
 const terms=['κι','κ̆ι','τ͜σ','τσ','λέξη','λέξη κι','αγιάζ’'].map(ctx.pdlCitationKey),chapters=fixture.books.flatMap(b=>b.chapters.map(ch=>({...ch,text:ctx.pdlCitationKey(ch.text)})));
 const trie=ctx.pdlCorpusMatches(terms,chapters);
 for(const term of terms)assert.deepEqual(plain(trie.get(term).map(ch=>ch.id)),chapters.filter(ch=>ctx.pdlCitationContains(ch.text,term)).map(ch=>ch.id),'Trie must match the independent boundary matcher');
+assert.equal(ctx.pdlCitationKey('κουρφίζει͜ ατο'),ctx.pdlCitationKey('κουρφίζει ατο'),'Inter-word U+035C must not hide a headword');
+assert.equal(ctx.pdlCitationKey('γομαρι͜άζει͜ ατα'),ctx.pdlCitationKey('γομαρι͜άζει ατα'),'Only the final synizesis mark is ignored');
+assert.notEqual(ctx.pdlCitationKey('γομαρι͜άζει'),ctx.pdlCitationKey('γομαριάζει'),'The internal tie remains significant');
+assert.notEqual(ctx.pdlCitationKey('τ͜σ'),ctx.pdlCitationKey('τσ'));
+assert.equal(ctx.pdlCitationContains(ctx.pdlCitationKey('κουρφίζει͜ ατο'),ctx.pdlCitationKey('κουρφίζει')),true);
+assert.equal(ctx.pdlCitationContains(ctx.pdlCitationKey('κουρφίζει͜ατο'),ctx.pdlCitationKey('κουρφίζει')),false,'Without a word boundary, do not invent a separate word');
 assert.equal(ctx.pdlCitationContains(ctx.pdlCitationKey('κ̆ι'),ctx.pdlCitationKey('κι')),false);
 assert.equal(ctx.pdlCitationContains(ctx.pdlCitationKey('τ͜σ'),ctx.pdlCitationKey('τσ')),false);
 assert.equal(ctx.pdlCitationContains(ctx.pdlCitationKey('παραλέξη'),ctx.pdlCitationKey('λέξη')),false);

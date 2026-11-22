@@ -2590,7 +2590,9 @@
       "etymology": "",
       "definition": "(προστ.) περιμένετε",
       "category": "word",
-      "sources": [],
+      "sources": [
+        "Το Καλαντόνερον §1"
+      ],
       "references": [
         {
           "bookId": "48715ee4-83f2-40b9-85cd-468e9b67a948",
@@ -2665,7 +2667,9 @@
       "etymology": "",
       "definition": "ξεχνάει",
       "category": "word",
-      "sources": [],
+      "sources": [
+        "Το Καλαντόνερον §1"
+      ],
       "references": [
         {
           "bookId": "48715ee4-83f2-40b9-85cd-468e9b67a948",
@@ -15975,7 +15979,9 @@
       "etymology": "",
       "definition": "εξηγεί",
       "category": "word",
-      "sources": [],
+      "sources": [
+        "Το Καλαντόνερον §1"
+      ],
       "references": [
         {
           "bookId": "48715ee4-83f2-40b9-85cd-468e9b67a948",
@@ -47916,6 +47922,7 @@
       "definition": "βγήκαμε, ανεβήκαμε",
       "category": "word",
       "sources": [
+        "Το Καλαντόνερον §2",
         "Το ψωμίν §1,3"
       ],
       "references": [
@@ -51096,7 +51103,10 @@
       "etymology": "",
       "definition": "παίρνει",
       "category": "word",
-      "sources": [],
+      "sources": [
+        "Το Καλαντόνερον §2",
+        "Η Σωνίτσα §2,3,4,5,6"
+      ],
       "references": [
         {
           "bookId": "48715ee4-83f2-40b9-85cd-468e9b67a948",
@@ -65716,7 +65726,9 @@
       "etymology": "",
       "definition": "κόβει",
       "category": "word",
-      "sources": [],
+      "sources": [
+        "Το Καλαντόνερον §4"
+      ],
       "references": [
         {
           "bookId": "48715ee4-83f2-40b9-85cd-468e9b67a948",
@@ -77395,7 +77407,7 @@
       "definition": "βρίσκει",
       "category": "word",
       "sources": [
-        "Η Σωνίτσα §4"
+        "Η Σωνίτσα §1,4"
       ],
       "references": [
         {
@@ -78474,7 +78486,9 @@
       "etymology": "",
       "definition": "παινεύει",
       "category": "word",
-      "sources": [],
+      "sources": [
+        "Η Σωνίτσα §1,2"
+      ],
       "references": [
         {
           "bookId": "99a52ef1-f5a7-4894-826c-577ea0d2148e",
@@ -78578,7 +78592,7 @@
       "definition": "(ελέπει) βλέπει",
       "category": "word",
       "sources": [
-        "Η Σωνίτσα §4,5"
+        "Η Σωνίτσα §1,4,5"
       ],
       "references": [
         {
@@ -80281,7 +80295,9 @@
       "etymology": "τουρκ. danışmak",
       "definition": "συμβουλεύεται",
       "category": "word",
-      "sources": [],
+      "sources": [
+        "Η Σωνίτσα §1"
+      ],
       "references": [
         {
           "bookId": "99a52ef1-f5a7-4894-826c-577ea0d2148e",
@@ -81929,7 +81945,9 @@
       "etymology": "",
       "definition": "(ευρήκει) βρίσκει",
       "category": "word",
-      "sources": [],
+      "sources": [
+        "Η Σωνίτσα §2,3"
+      ],
       "references": [
         {
           "bookId": "99a52ef1-f5a7-4894-826c-577ea0d2148e",
@@ -86166,7 +86184,9 @@
       "etymology": "",
       "definition": "σηκώνει",
       "category": "word",
-      "sources": [],
+      "sources": [
+        "Η Σωνίτσα §2"
+      ],
       "references": [
         {
           "bookId": "99a52ef1-f5a7-4894-826c-577ea0d2148e",
@@ -86704,7 +86724,9 @@
       "etymology": "",
       "definition": "ρουφάει",
       "category": "word",
-      "sources": [],
+      "sources": [
+        "Η Σωνίτσα §2"
+      ],
       "references": [
         {
           "bookId": "99a52ef1-f5a7-4894-826c-577ea0d2148e",
@@ -86867,7 +86889,9 @@
       "etymology": "",
       "definition": "πνίγει",
       "category": "word",
-      "sources": [],
+      "sources": [
+        "Η Σωνίτσα §2"
+      ],
       "references": [
         {
           "bookId": "99a52ef1-f5a7-4894-826c-577ea0d2148e",
@@ -91670,7 +91694,8 @@
       "definition": "(προστ.) κοιτάξτε",
       "category": "word",
       "sources": [
-        "Η Σωνίτσα §3,5"
+        "Η Σωνίτσα §3,5",
+        "Το ψωμίν §3"
       ],
       "references": [
         {
@@ -96711,7 +96736,9 @@
       "etymology": "αρχ.ελλ. χλίω/χλιαίνω",
       "definition": "ζεσταίνει, θερμαίνει",
       "category": "word",
-      "sources": [],
+      "sources": [
+        "Η Σωνίτσα §4"
+      ],
       "references": [
         {
           "bookId": "99a52ef1-f5a7-4894-826c-577ea0d2148e",
@@ -97255,7 +97282,9 @@
       "etymology": "τουρκ. arlanmak",
       "definition": "σε πιάνει το παράπονο",
       "category": "word",
-      "sources": [],
+      "sources": [
+        "Η Σωνίτσα §5"
+      ],
       "references": [
         {
           "bookId": "99a52ef1-f5a7-4894-826c-577ea0d2148e",
@@ -97690,7 +97719,9 @@
       "etymology": "τουρκ. kurtarmak",
       "definition": "γλυτώνει κτ/κπ από, διασώζει",
       "category": "word",
-      "sources": [],
+      "sources": [
+        "Η Σωνίτσα §5"
+      ],
       "references": [
         {
           "bookId": "99a52ef1-f5a7-4894-826c-577ea0d2148e",
@@ -97808,7 +97839,9 @@
       "etymology": "",
       "definition": "δίνει",
       "category": "word",
-      "sources": [],
+      "sources": [
+        "Η Σωνίτσα §5"
+      ],
       "references": [
         {
           "bookId": "99a52ef1-f5a7-4894-826c-577ea0d2148e",
@@ -98722,7 +98755,10 @@
       "etymology": "",
       "definition": "βλέπει",
       "category": "word",
-      "sources": [],
+      "sources": [
+        "Η Σωνίτσα §5,6",
+        "Το ψωμίν §1"
+      ],
       "references": [
         {
           "bookId": "99a52ef1-f5a7-4894-826c-577ea0d2148e",
@@ -101356,7 +101392,9 @@
       "etymology": "",
       "definition": "μαθαίνει",
       "category": "word",
-      "sources": [],
+      "sources": [
+        "Η Σωνίτσα §5"
+      ],
       "references": [
         {
           "bookId": "99a52ef1-f5a7-4894-826c-577ea0d2148e",
@@ -105930,7 +105968,9 @@
       "etymology": "τουρκ. keleci=καλός λόγος (Παλαιά Τουρκική Ανατολίας)",
       "definition": "μιλάει, συνομιλεί, συζητάει",
       "category": "word",
-      "sources": [],
+      "sources": [
+        "Η Σωνίτσα §6"
+      ],
       "references": [
         {
           "bookId": "99a52ef1-f5a7-4894-826c-577ea0d2148e",
@@ -107653,7 +107693,9 @@
       "etymology": "",
       "definition": "στήνει κτ όρθιο, εμποδίζει κτ να προχωρήσει, σταματάει",
       "category": "word",
-      "sources": [],
+      "sources": [
+        "Η Σωνίτσα §6"
+      ],
       "references": [
         {
           "bookId": "99a52ef1-f5a7-4894-826c-577ea0d2148e",
@@ -107699,7 +107741,9 @@
       "etymology": "",
       "definition": "παρατηρεί, προσέχει, επισημαίνει",
       "category": "word",
-      "sources": [],
+      "sources": [
+        "Η Σωνίτσα §6"
+      ],
       "references": [
         {
           "bookId": "99a52ef1-f5a7-4894-826c-577ea0d2148e",
@@ -115594,7 +115638,9 @@
       "etymology": "τουρκ. inanmak",
       "definition": "πιστέψατε, εμπιστευτήκατε",
       "category": "word",
-      "sources": [],
+      "sources": [
+        "Το ψωμίν §3"
+      ],
       "references": [
         {
           "bookId": "542bc75a-8f1e-4d95-8cf5-ba70154df062",
@@ -141153,9 +141199,16 @@
       "term": "τσακώνει",
       "definition": "σπάει, θραύει, τσακίζει",
       "category": "word",
-      "sources": [],
+      "sources": [
+        "Το Καλαντόνερον §1"
+      ],
       "id": "7030614f-ba5c-4955-ac8a-83e2a314966f",
-      "references": []
+      "references": [
+        {
+          "bookId": "48715ee4-83f2-40b9-85cd-468e9b67a948",
+          "chapterId": "a1340ea9-12be-47a9-a8f0-0d5d68fa67b6"
+        }
+      ]
     },
     {
       "term": "τσαλιμένεν",
@@ -142418,9 +142471,16 @@
       "term": "γομαρι͜άζει",
       "definition": "φορτώνει, δένει σε δέμα φορτίο",
       "category": "word",
-      "sources": [],
+      "sources": [
+        "Το Καλαντόνερον §2"
+      ],
       "id": "555a1e51-cd7f-407f-a076-ba0cf96e7cbb",
-      "references": []
+      "references": [
+        {
+          "bookId": "48715ee4-83f2-40b9-85cd-468e9b67a948",
+          "chapterId": "1791ae39-82da-477f-980e-0ad8daba98e5"
+        }
+      ]
     },
     {
       "term": "γύρι͜ος",
@@ -147840,9 +147900,16 @@
       "term": "αργάτοι",
       "definition": "εργάτες",
       "category": "word",
-      "sources": [],
+      "sources": [
+        "Το Καλαντόνερον §4"
+      ],
       "id": "d8efc100-5ba2-4fe4-a413-75ed524b64d6",
-      "references": []
+      "references": [
+        {
+          "bookId": "48715ee4-83f2-40b9-85cd-468e9b67a948",
+          "chapterId": "8e6ae3a9-6bec-44f2-8eaa-0aff13d8b37c"
+        }
+      ]
     },
     {
       "term": "αρτουρεύ’ν’",
@@ -150376,18 +150443,32 @@
       "term": "παταχώνει",
       "definition": "χαντακώνει",
       "category": "word",
-      "sources": [],
+      "sources": [
+        "Το Καλαντόνερον §4"
+      ],
       "id": "f0746436-ef53-4ace-a907-9092ec5546cc",
-      "references": [],
+      "references": [
+        {
+          "bookId": "48715ee4-83f2-40b9-85cd-468e9b67a948",
+          "chapterId": "8e6ae3a9-6bec-44f2-8eaa-0aff13d8b37c"
+        }
+      ],
       "etymology": "αγν.ετυμ."
     },
     {
       "term": "πατριώτοι",
       "definition": "πατριώτες",
       "category": "word",
-      "sources": [],
+      "sources": [
+        "Το Καλαντόνερον §4"
+      ],
       "id": "a4327d15-a862-4616-aac2-d15c8064dbd3",
-      "references": []
+      "references": [
+        {
+          "bookId": "48715ee4-83f2-40b9-85cd-468e9b67a948",
+          "chapterId": "8e6ae3a9-6bec-44f2-8eaa-0aff13d8b37c"
+        }
+      ]
     },
     {
       "term": "παχτσ̌ούσ̌ι͜α",

@@ -1,16 +1,16 @@
 {
   "schema": 1,
   "inputSHA256": "08958a65691eb335613859329b23c0beedba93ef8ebb3aaa864d3a584ab46ea8",
-  "outputSHA256": "b18d365e102f5c4737e98403f57362916e92ae1e46bdcfa2c97d4aa1cd2f55a9",
+  "outputSHA256": "0bf673f9624ecdc906e114cca5cf997fa20024a6c8e1f285efdf678b44735611",
   "beforeEntries": 7073,
   "afterEntries": 6448,
   "mergedRecords": 625,
   "mergeGroups": 614,
-  "entriesWithCorpusSources": 6421,
-  "entriesWithoutCorpusMatch": 27,
+  "entriesWithCorpusSources": 6447,
+  "entriesWithoutCorpusMatch": 1,
   "referenceCountBefore": 15824,
-  "referenceCountAfter": 17407,
-  "elapsedMs": 1405,
+  "referenceCountAfter": 17412,
+  "elapsedMs": 1613,
   "checks": {
     "booksUnchanged": true,
     "allIdsRetainedAsCanonicalOrAliases": true,
@@ -35584,7 +35584,9 @@
         ]
       },
       "after": {
-        "sources": [],
+        "sources": [
+          "Το Καλαντόνερον §1"
+        ],
         "references": [
           {
             "bookId": "48715ee4-83f2-40b9-85cd-468e9b67a948",
@@ -35716,7 +35718,9 @@
         ]
       },
       "after": {
-        "sources": [],
+        "sources": [
+          "Το Καλαντόνερον §1"
+        ],
         "references": [
           {
             "bookId": "48715ee4-83f2-40b9-85cd-468e9b67a948",
@@ -59848,7 +59852,9 @@
         ]
       },
       "after": {
-        "sources": [],
+        "sources": [
+          "Το Καλαντόνερον §1"
+        ],
         "references": [
           {
             "bookId": "48715ee4-83f2-40b9-85cd-468e9b67a948",
@@ -116795,6 +116801,7 @@
       },
       "after": {
         "sources": [
+          "Το Καλαντόνερον §2",
           "Το ψωμίν §1,3"
         ],
         "references": [
@@ -122452,7 +122459,10 @@
         ]
       },
       "after": {
-        "sources": [],
+        "sources": [
+          "Το Καλαντόνερον §2",
+          "Η Σωνίτσα §2,3,4,5,6"
+        ],
         "references": [
           {
             "bookId": "48715ee4-83f2-40b9-85cd-468e9b67a948",
@@ -147451,7 +147461,9 @@
         ]
       },
       "after": {
-        "sources": [],
+        "sources": [
+          "Το Καλαντόνερον §4"
+        ],
         "references": [
           {
             "bookId": "48715ee4-83f2-40b9-85cd-468e9b67a948",
@@ -167095,7 +167107,7 @@
       },
       "after": {
         "sources": [
-          "Η Σωνίτσα §4"
+          "Η Σωνίτσα §1,4"
         ],
         "references": [
           {
@@ -168863,7 +168875,9 @@
         ]
       },
       "after": {
-        "sources": [],
+        "sources": [
+          "Η Σωνίτσα §1,2"
+        ],
         "references": [
           {
             "bookId": "99a52ef1-f5a7-4894-826c-577ea0d2148e",
@@ -169040,7 +169054,7 @@
       },
       "after": {
         "sources": [
-          "Η Σωνίτσα §4,5"
+          "Η Σωνίτσα §1,4,5"
         ],
         "references": [
           {
@@ -171884,7 +171898,9 @@
         ]
       },
       "after": {
-        "sources": [],
+        "sources": [
+          "Η Σωνίτσα §1"
+        ],
         "references": [
           {
             "bookId": "99a52ef1-f5a7-4894-826c-577ea0d2148e",
@@ -174584,7 +174600,9 @@
         ]
       },
       "after": {
-        "sources": [],
+        "sources": [
+          "Η Σωνίτσα §2,3"
+        ],
         "references": [
           {
             "bookId": "99a52ef1-f5a7-4894-826c-577ea0d2148e",
@@ -181644,7 +181662,9 @@
         ]
       },
       "after": {
-        "sources": [],
+        "sources": [
+          "Η Σωνίτσα §2"
+        ],
         "references": [
           {
             "bookId": "99a52ef1-f5a7-4894-826c-577ea0d2148e",
@@ -182538,7 +182558,9 @@
         ]
       },
       "after": {
-        "sources": [],
+        "sources": [
+          "Η Σωνίτσα §2"
+        ],
         "references": [
           {
             "bookId": "99a52ef1-f5a7-4894-826c-577ea0d2148e",
@@ -182806,7 +182828,9 @@
         ]
       },
       "after": {
-        "sources": [],
+        "sources": [
+          "Η Σωνίτσα §2"
+        ],
         "references": [
           {
             "bookId": "99a52ef1-f5a7-4894-826c-577ea0d2148e",
@@ -190727,7 +190751,8 @@
       },
       "after": {
         "sources": [
-          "Η Σωνίτσα §3,5"
+          "Η Σωνίτσα §3,5",
+          "Το ψωμίν §3"
         ],
         "references": [
           {
@@ -199019,7 +199044,9 @@
         ]
       },
       "after": {
-        "sources": [],
+        "sources": [
+          "Η Σωνίτσα §4"
+        ],
         "references": [
           {
             "bookId": "99a52ef1-f5a7-4894-826c-577ea0d2148e",
@@ -199900,7 +199927,9 @@
         ]
       },
       "after": {
-        "sources": [],
+        "sources": [
+          "Η Σωνίτσα §5"
+        ],
         "references": [
           {
             "bookId": "99a52ef1-f5a7-4894-826c-577ea0d2148e",
@@ -200605,7 +200634,9 @@
         ]
       },
       "after": {
-        "sources": [],
+        "sources": [
+          "Η Σωνίτσα §5"
+        ],
         "references": [
           {
             "bookId": "99a52ef1-f5a7-4894-826c-577ea0d2148e",
@@ -200801,7 +200832,9 @@
         ]
       },
       "after": {
-        "sources": [],
+        "sources": [
+          "Η Σωνίτσα §5"
+        ],
         "references": [
           {
             "bookId": "99a52ef1-f5a7-4894-826c-577ea0d2148e",
@@ -202318,7 +202351,10 @@
         ]
       },
       "after": {
-        "sources": [],
+        "sources": [
+          "Η Σωνίτσα §5,6",
+          "Το ψωμίν §1"
+        ],
         "references": [
           {
             "bookId": "99a52ef1-f5a7-4894-826c-577ea0d2148e",
@@ -206650,7 +206686,9 @@
         ]
       },
       "after": {
-        "sources": [],
+        "sources": [
+          "Η Σωνίτσα §5"
+        ],
         "references": [
           {
             "bookId": "99a52ef1-f5a7-4894-826c-577ea0d2148e",
@@ -214081,7 +214119,9 @@
         ]
       },
       "after": {
-        "sources": [],
+        "sources": [
+          "Η Σωνίτσα §6"
+        ],
         "references": [
           {
             "bookId": "99a52ef1-f5a7-4894-826c-577ea0d2148e",
@@ -216882,7 +216922,9 @@
         ]
       },
       "after": {
-        "sources": [],
+        "sources": [
+          "Η Σωνίτσα §6"
+        ],
         "references": [
           {
             "bookId": "99a52ef1-f5a7-4894-826c-577ea0d2148e",
@@ -216958,7 +217000,9 @@
         ]
       },
       "after": {
-        "sources": [],
+        "sources": [
+          "Η Σωνίτσα §6"
+        ],
         "references": [
           {
             "bookId": "99a52ef1-f5a7-4894-826c-577ea0d2148e",
@@ -229759,7 +229803,9 @@
         ]
       },
       "after": {
-        "sources": [],
+        "sources": [
+          "Το ψωμίν §3"
+        ],
         "references": [
           {
             "bookId": "542bc75a-8f1e-4d95-8cf5-ba70154df062",
@@ -271507,8 +271553,15 @@
         "references": []
       },
       "after": {
-        "sources": [],
-        "references": []
+        "sources": [
+          "Το Καλαντόνερον §1"
+        ],
+        "references": [
+          {
+            "bookId": "48715ee4-83f2-40b9-85cd-468e9b67a948",
+            "chapterId": "a1340ea9-12be-47a9-a8f0-0d5d68fa67b6"
+          }
+        ]
       }
     },
     {
@@ -273220,8 +273273,15 @@
         "references": []
       },
       "after": {
-        "sources": [],
-        "references": []
+        "sources": [
+          "Το Καλαντόνερον §2"
+        ],
+        "references": [
+          {
+            "bookId": "48715ee4-83f2-40b9-85cd-468e9b67a948",
+            "chapterId": "1791ae39-82da-477f-980e-0ad8daba98e5"
+          }
+        ]
       }
     },
     {
@@ -280469,8 +280529,15 @@
         "references": []
       },
       "after": {
-        "sources": [],
-        "references": []
+        "sources": [
+          "Το Καλαντόνερον §4"
+        ],
+        "references": [
+          {
+            "bookId": "48715ee4-83f2-40b9-85cd-468e9b67a948",
+            "chapterId": "8e6ae3a9-6bec-44f2-8eaa-0aff13d8b37c"
+          }
+        ]
       }
     },
     {
@@ -283907,8 +283974,15 @@
         "references": []
       },
       "after": {
-        "sources": [],
-        "references": []
+        "sources": [
+          "Το Καλαντόνερον §4"
+        ],
+        "references": [
+          {
+            "bookId": "48715ee4-83f2-40b9-85cd-468e9b67a948",
+            "chapterId": "8e6ae3a9-6bec-44f2-8eaa-0aff13d8b37c"
+          }
+        ]
       }
     },
     {
@@ -283921,8 +283995,15 @@
         "references": []
       },
       "after": {
-        "sources": [],
-        "references": []
+        "sources": [
+          "Το Καλαντόνερον §4"
+        ],
+        "references": [
+          {
+            "bookId": "48715ee4-83f2-40b9-85cd-468e9b67a948",
+            "chapterId": "8e6ae3a9-6bec-44f2-8eaa-0aff13d8b37c"
+          }
+        ]
       }
     },
     {
