@@ -76,7 +76,37 @@ try{
  assert.deepEqual(exported.data.entries,result.entries,'Actual JSON export must contain separate headword and etymology fields');
  assert.equal(requests,1,'Import, edit and backup must not call remote publication');assert.deepEqual(errors,[]);
  if(input)assert.ok((await readFile(input)).equals(buffer),'Original uploaded TXT must remain byte-identical');
+ // Reproduce the reported Studio duplicates using the actual published corpus.
+ const corpus=JSON.parse(await readFile(path.join(root,'library-data.json'),'utf8'));
+ const grouped=await page.evaluate(entries=>{
+  state.entries=entries;migrateEntries();const before=JSON.stringify(state.entries);
+  selectedLetter='';lexPage=1;document.getElementById('lexFilter').value='';document.getElementById('lexSearch').value='';renderLex();
+  return {before,groups:pdlGroupGlossaryRows(state.entries).length,entries:state.entries.length};
+ },corpus.entries);
+ assert.equal(grouped.groups,new Set(corpus.entries.map(e=>e.term.normalize('NFC').trim().replace(/\s+/g,' ').toLocaleLowerCase('el'))).size);
+ const repeated=corpus.entries.filter(e=>e.term==='κεμεντζ̌έν');assert.ok(repeated.length>1);
+ await page.locator('#lexSearch').fill('κεμεντζ̌έν');
+ const exact=page.locator('#lexList > tr').filter({has:page.locator('td:first-child',{hasText:/^κεμεντζ̌έν$/})});
+ assert.equal(await exact.count(),1,'Repeated headwords must have one visible row');
+ await exact.locator('summary').click();assert.equal(await exact.locator('.lex-record').count(),repeated.length);
+ const ids=await exact.locator('.lex-record').evaluateAll(rows=>rows.map(row=>row.dataset.entryId));
+ assert.deepEqual(ids,repeated.map(e=>e.id));
+ for(const e of repeated){
+  const record=exact.locator('.lex-record').filter({has:page.locator('button')}).nth(repeated.indexOf(e));
+  await record.locator('button').click();assert.equal(await page.locator('#dlgTerm').inputValue(),e.term);
+  assert.equal(await page.locator('#dlgEtymology').inputValue(),e.etymology||'');await page.locator('#dlgCancel').click();
+ }
+ assert.equal(await page.evaluate(()=>JSON.stringify(state.entries)),grouped.before,'Grouping, filtering, expansion and editor cancel must preserve every original record');
+ await page.locator('#lexSearch').fill('');
+ const firstPage=await page.locator('#lexList > tr').evaluateAll(rows=>rows.map(row=>row.dataset.headword));
+ assert.equal(new Set(firstPage).size,firstPage.length);assert.equal(firstPage.length,50);
+ await page.locator('#lexNext').click();
+ const secondPage=await page.locator('#lexList > tr').evaluateAll(rows=>rows.map(row=>row.dataset.headword));assert.ok(secondPage.every(term=>!firstPage.includes(term)),'Groups must not repeat across pages');
+ assert.deepEqual(errors,[]);assert.equal(requests,1);
+ console.log(JSON.stringify({result:'PASS',engine,studioGroupedHeadwords:grouped.groups,preservedRecords:grouped.entries,individualEditors:true,paginationWithoutDuplicates:true,sourceDataUnchanged:true}));
  if(process.env.PDL_CAPTURE_DIR){
+  await page.locator('#lexSearch').fill('κεμεντζ̌έν');await page.locator('#lexList summary').first().click();
+  await page.screenshot({path:path.join(process.env.PDL_CAPTURE_DIR,`studio-grouped-glossary-${engine}.png`)});
   await page.evaluate(()=>openEntry(state.entries.find(e=>e.term==='ὰμα').id));
   await page.screenshot({path:path.join(process.env.PDL_CAPTURE_DIR,`txt-etymology-${engine}.png`)});
  }
