@@ -78,11 +78,11 @@ try{
  if(input)assert.ok((await readFile(input)).equals(buffer),'Original uploaded TXT must remain byte-identical');
  // Reproduce the reported Studio duplicates using the actual published corpus.
  const corpus=JSON.parse(await readFile(path.join(root,'library-data.json'),'utf8'));
- const grouped=await page.evaluate(entries=>{
-  state.entries=entries;migrateEntries();const before=JSON.stringify(state.entries);
+ const grouped=await page.evaluate(library=>{
+  state.entries=library.entries;state.books=library.books;migrateEntries();const before=JSON.stringify(state.entries);
   selectedLetter='';lexPage=1;document.getElementById('lexFilter').value='';document.getElementById('lexSearch').value='';renderLex();
   return {before,groups:pdlGroupGlossaryRows(state.entries).length,entries:state.entries.length};
- },corpus.entries);
+ },corpus);
  assert.equal(grouped.groups,new Set(corpus.entries.map(e=>e.term.normalize('NFC').trim().replace(/\s+/g,' ').toLocaleLowerCase('el'))).size);
  const repeated=corpus.entries.filter(e=>e.term==='κεμεντζ̌έν');assert.ok(repeated.length>1);
  await page.locator('#lexSearch').fill('κεμεντζ̌έν');
@@ -91,6 +91,9 @@ try{
  await exact.locator('summary').click();assert.equal(await exact.locator('.lex-record').count(),repeated.length);
  const ids=await exact.locator('.lex-record').evaluateAll(rows=>rows.map(row=>row.dataset.entryId));
  assert.deepEqual(ids,repeated.map(e=>e.id));
+ const citedBooks=new Set(repeated.flatMap(e=>(e.references||[]).map(r=>r.bookId)));
+ for(const bookId of citedBooks){const book=corpus.books.find(b=>b.id===bookId);assert.ok((await exact.locator('td').nth(3).textContent()).includes(book.title),'Grouped citation must include each original book');}
+
  for(const e of repeated){
   const record=exact.locator('.lex-record').filter({has:page.locator('button')}).nth(repeated.indexOf(e));
   await record.locator('button').click();assert.equal(await page.locator('#dlgTerm').inputValue(),e.term);
