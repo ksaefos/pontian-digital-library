@@ -27,7 +27,7 @@ for(const [line,term,etymology,definition] of samples){
  const direct=api.parseGlossaryTxt('\uFEFF'+line+'\r\n','Song_6002.txt');
  assert.equal(direct.ignored.length,0);assert.equal(direct.entries.length,1);
  const e=direct.entries[0];assert.equal(e.term,term);assert.equal(e.etymology||'',etymology);assert.equal(e.definition,definition);
- assert.deepEqual(plain(e.sources),['Song_6002']);
+ assert.deepEqual(plain(e.sources),[],'TXT filename must never become a source');
  const structured=api.pdlLexLine(line,'word','Βιβλίο');
  assert.ok(structured,'Etymology length must not disqualify a real headword');
  assert.equal(structured.term,term);assert.equal(structured.etymology||'',etymology);assert.equal(structured.definition,definition);
@@ -45,7 +45,7 @@ ctx.state={entries:[structuredClone(legacy)]};
 const parsed=api.parseGlossaryTxt(samples[1][0],'Song_6002.txt').entries;
 assert.equal(api.mergeEntries(parsed).added,0);assert.equal(ctx.state.entries.length,1);
 const e=ctx.state.entries[0];assert.equal(e.id,'stable');assert.equal(e.term,'ὰμα');assert.equal(e.definition,'αλλά');assert.equal(e.privateNote,'keep');
-assert.deepEqual(plain(e.references),legacy.references);assert.deepEqual(plain(e.sources),['Παλιά πηγή','Song_6002']);
+assert.deepEqual(plain(e.references),legacy.references);assert.deepEqual(plain(e.sources),['Παλιά πηγή']);
 assert.ok(e.etymology.includes('άλλη τεκμηρίωση'));assert.ok(e.etymology.includes('τουρκ./αραβ. ama/ammā'));
 const noteLegacy={id:'note-stable',term:'ας σα ( ασό σα (από τα))',definition:'απ’ τα',category:'word',sources:['πηγή'],references:[],privateNote:'keep'};
 const normalizedNote=plain(api.pdlNormalizeGlossaryEntry(noteLegacy));
