@@ -21,7 +21,7 @@ export function consolidate(input){
   if(old.etymology)assert.ok(String(fresh.etymology).includes(old.etymology),'Lost etymology '+old.id);
   if(old.id!==fresh.id)assert.ok(ctx.pdlCanRepresentMergedEntry(fresh,old),'Unsafe merge '+old.id);
   for(const [field,value] of Object.entries(old)){
-   if(['id','term','definition','category','sources','references','etymology','mergedIds','mergedMetadata','termVariants','definitionVariants'].includes(field))continue;
+   if(['id','term','definition','category','sources','references','etymology','mergedIds','mergedMetadata','termVariants','definitionVariants','categoryVariants'].includes(field))continue;
    assert.ok(JSON.stringify(fresh[field])===JSON.stringify(value)||(fresh.mergedMetadata||[]).some(m=>m.id===old.id&&m.field===field&&JSON.stringify(m.value)===JSON.stringify(value)),'Lost metadata '+old.id+':'+field);
   }
   const refs=new Set(fresh.references.map(r=>r.bookId+'|'+r.chapterId));

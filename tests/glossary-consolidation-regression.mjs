@@ -29,6 +29,9 @@ assert.deepEqual(after.entries.find(e=>e.id==='i').sources,[],'No occurrence mus
 assert.deepEqual(after.entries.find(e=>e.id==='e').sources,['Πρώτο §1'],'Pontic mark must distinguish its own occurrence');
 assert.deepEqual(after.entries.find(e=>e.id==='g').sources,['Δεύτερο §1'],'Do not strip the Pontic tie mark');
 assert.deepEqual(after.entries.find(e=>e.id==='h').sources,['Δεύτερο §1'],'Recognize authored apostrophe variants');
+const categories=plain(ctx.pdlConsolidateEntries([{id:'cat-a',term:'χαΐρ-χαπέρ’',definition:'τι νέα;',category:'expression'},{id:'cat-b',term:'χαΐρ-χαπέρ’',definition:'τι νέα;',category:'word'}]));
+assert.equal(categories.length,1);assert.equal(categories[0].category,'expression');assert.deepEqual(categories[0].categoryVariants,['word']);
+assert.ok(ctx.pdlCanRepresentMergedEntry(categories[0],{id:'cat-b',term:'χαΐρ-χαπέρ’',definition:'τι νέα;',category:'word'}));
 assert.equal(consolidate(output).output,output,'Second conversion must preserve bytes');
 assert.equal(JSON.stringify(fixture),original);assert.equal(report.mergedRecords,1);
 assert.ok(ctx.pdlCanRepresentMergedEntry(a,fixture.entries[1]));

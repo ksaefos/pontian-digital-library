@@ -136248,7 +136248,7 @@
       "term": "χαΐρ-χαπέρ’",
       "definition": "τι συμβαίνει; τί νέα;",
       "category": "expression",
-      "etymology": "(τουρκ. hayır haber)",
+      "etymology": "(τουρκ. hayır haber) · τουρκ. hayır haber",
       "sources": [
         "Το Καλαντόνερον §1",
         "Η Σωνίτσα §4"
@@ -136262,6 +136262,12 @@
           "bookId": "48715ee4-83f2-40b9-85cd-468e9b67a948",
           "chapterId": "a1340ea9-12be-47a9-a8f0-0d5d68fa67b6"
         }
+      ],
+      "categoryVariants": [
+        "word"
+      ],
+      "mergedIds": [
+        "75d20fb0-1c8e-4849-99c7-ebdc87bb6644"
       ]
     },
     {
@@ -141618,27 +141624,6 @@
         }
       ],
       "etymology": "τουρκ. hain < αραβ. ḫāʾin"
-    },
-    {
-      "term": "χαΐρ-χαπέρ’",
-      "definition": "τι συμβαίνει; τί νέα;",
-      "category": "word",
-      "sources": [
-        "Το Καλαντόνερον §1",
-        "Η Σωνίτσα §4"
-      ],
-      "id": "75d20fb0-1c8e-4849-99c7-ebdc87bb6644",
-      "references": [
-        {
-          "bookId": "48715ee4-83f2-40b9-85cd-468e9b67a948",
-          "chapterId": "a1340ea9-12be-47a9-a8f0-0d5d68fa67b6"
-        },
-        {
-          "bookId": "99a52ef1-f5a7-4894-826c-577ea0d2148e",
-          "chapterId": "c32e6e2a-f736-4525-96b9-71b7611426f1"
-        }
-      ],
-      "etymology": "τουρκ. hayır haber"
     },
     {
       "term": "χαλαλοήν",

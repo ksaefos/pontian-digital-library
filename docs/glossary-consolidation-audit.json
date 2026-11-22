@@ -1,16 +1,16 @@
 {
   "schema": 1,
   "inputSHA256": "08958a65691eb335613859329b23c0beedba93ef8ebb3aaa864d3a584ab46ea8",
-  "outputSHA256": "8e2805b802d25755e5e5da345ab6f40bb37996c32e44a31f1589ffb4f78b296e",
+  "outputSHA256": "b18d365e102f5c4737e98403f57362916e92ae1e46bdcfa2c97d4aa1cd2f55a9",
   "beforeEntries": 7073,
-  "afterEntries": 6449,
-  "mergedRecords": 624,
-  "mergeGroups": 613,
-  "entriesWithCorpusSources": 6422,
+  "afterEntries": 6448,
+  "mergedRecords": 625,
+  "mergeGroups": 614,
+  "entriesWithCorpusSources": 6421,
   "entriesWithoutCorpusMatch": 27,
   "referenceCountBefore": 15824,
-  "referenceCountAfter": 17409,
-  "elapsedMs": 1572,
+  "referenceCountAfter": 17407,
+  "elapsedMs": 1405,
   "checks": {
     "booksUnchanged": true,
     "allIdsRetainedAsCanonicalOrAliases": true,
@@ -31641,6 +31641,48 @@
             }
           ],
           "etymology": "τουρκ. para < περσ. pāre"
+        }
+      ]
+    },
+    {
+      "canonicalId": "cadceb9c-13dc-46e6-8b61-39930b2c9605",
+      "mergedIds": [
+        "75d20fb0-1c8e-4849-99c7-ebdc87bb6644"
+      ],
+      "term": "χαΐρ-χαπέρ’",
+      "definition": "τι συμβαίνει; τί νέα;",
+      "etymology": "(τουρκ. hayır haber) · τουρκ. hayır haber",
+      "originalRecords": [
+        {
+          "id": "cadceb9c-13dc-46e6-8b61-39930b2c9605",
+          "term": "χαΐρ-χαπέρ’",
+          "definition": "τι συμβαίνει; τί νέα;",
+          "category": "expression",
+          "etymology": "(τουρκ. hayır haber)",
+          "sources": [
+            "Η Σωνίτσα"
+          ],
+          "references": [
+            {
+              "bookId": "99a52ef1-f5a7-4894-826c-577ea0d2148e",
+              "chapterId": "c32e6e2a-f736-4525-96b9-71b7611426f1"
+            },
+            {
+              "bookId": "48715ee4-83f2-40b9-85cd-468e9b67a948",
+              "chapterId": "a1340ea9-12be-47a9-a8f0-0d5d68fa67b6"
+            }
+          ]
+        },
+        {
+          "term": "χαΐρ-χαπέρ’",
+          "definition": "τι συμβαίνει; τί νέα;",
+          "category": "word",
+          "sources": [
+            "Song_9537"
+          ],
+          "id": "75d20fb0-1c8e-4849-99c7-ebdc87bb6644",
+          "references": [],
+          "etymology": "τουρκ. hayır haber"
         }
       ]
     }
@@ -272103,32 +272145,6 @@
           {
             "bookId": "48715ee4-83f2-40b9-85cd-468e9b67a948",
             "chapterId": "a1340ea9-12be-47a9-a8f0-0d5d68fa67b6"
-          }
-        ]
-      }
-    },
-    {
-      "id": "75d20fb0-1c8e-4849-99c7-ebdc87bb6644",
-      "term": "χαΐρ-χαπέρ’",
-      "before": {
-        "sources": [
-          "Song_9537"
-        ],
-        "references": []
-      },
-      "after": {
-        "sources": [
-          "Το Καλαντόνερον §1",
-          "Η Σωνίτσα §4"
-        ],
-        "references": [
-          {
-            "bookId": "48715ee4-83f2-40b9-85cd-468e9b67a948",
-            "chapterId": "a1340ea9-12be-47a9-a8f0-0d5d68fa67b6"
-          },
-          {
-            "bookId": "99a52ef1-f5a7-4894-826c-577ea0d2148e",
-            "chapterId": "c32e6e2a-f736-4525-96b9-71b7611426f1"
           }
         ]
       }
