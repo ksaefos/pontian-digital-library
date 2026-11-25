@@ -11,7 +11,7 @@ export function publicDataset(data){
   if(image)cover=put('covers/cover',Buffer.from(image[2],'base64'),image[1].replace('jpeg','jpg'));
   const {chapters,cover:originalCover,...metadata}=book;
   const url=put('books/book',{...book,cover});
-  return {...metadata,cover,chapters:chapters.map(({id,title})=>({id,title})),url};
+  return {...metadata,cover,chapters:chapters.map((chapter,i)=>({id:String(chapter.id||`legacy-${i}`),title:String(chapter.title||`Κεφάλαιο ${i+1}`)})),url};
  });
  // Reader receives the complete shared dictionary, without Studio-only provenance.
  const glossary=put('glossary',data.entries.map(({term,definition,etymology})=>({term,definition,...(etymology?{etymology}:{})})));
@@ -22,17 +22,28 @@ export function buildPublic(){
  const dist=path.join(root,'dist');rmSync(dist,{recursive:true,force:true});mkdirSync(dist,{recursive:true});
  const write=(file,content)=>{const dest=path.join(dist,file);mkdirSync(path.dirname(dest),{recursive:true});writeFileSync(dest,content);};
  for(const file of ['admin.html','library-data.json','manifest.webmanifest','PontianDL_Logo.svg','assets','icons','vendor','catalog'])cpSync(path.join(root,file),path.join(dist,file),{recursive:true});
+ const catalogScripts=new Map();
+ for(const name of ['reader-session','library','offline','help']){
+  const source=readFileSync(path.join(root,'catalog',name+'.js'));
+  const file='catalog/'+name+'.'+hash(source)+'.js';write(file,source);catalogScripts.set('./catalog/'+name+'.js','./'+file);
+ }
+ for(const directory of ['reader/media','catalog/media'])for(const file of readdirSync(path.join(root,directory))){
+  const prefix=file.split('.')[0],actual=createHash('sha256').update(readFileSync(path.join(root,directory,file))).digest('hex');
+  if(!actual.startsWith(prefix))throw Error('Content-addressed media changed without a new filename: '+directory+'/'+file);
+ }
  const template=readerSource(),templatePath=`reader/template.${hash(template)}.html`;
  write(templatePath,template);cpSync(path.join(root,'reader/media'),path.join(dist,'reader/media'),{recursive:true});
  const readerAssets=['./vendor/openpageflip/0.7.0/index.iife.js','./vendor/openpageflip/0.7.0/styles.css','./vendor/hyphenopoly/6.1.0/Hyphenopoly_Loader.js','./vendor/hyphenopoly/6.1.0/Hyphenopoly.js','./vendor/hyphenopoly/6.1.0/patterns/el-polyton.wasm','./vendor/hyphenopoly/6.1.0/patterns/el-monoton.wasm','./'+templatePath,...readdirSync(path.join(root,'reader/media')).map(file=>'./reader/media/'+file)];
  const {files,catalog}=publicDataset(JSON.parse(readFileSync(path.join(root,'library-data.json'),'utf8')));
  for(const [file,content] of files)write(file,content);
  write('public-data/catalog.json',JSON.stringify(catalog));
- write('index.html',readFileSync(path.join(root,'index.html'),'utf8').replace('__PDL_RUNTIME_CONFIG__',JSON.stringify({template:'./'+templatePath,readerAssets}).replaceAll('<','\\u003c')));
+ let index=readFileSync(path.join(root,'index.html'),'utf8').replace('__PDL_RUNTIME_CONFIG__',JSON.stringify({template:'./'+templatePath,readerAssets}).replaceAll('<','\\u003c'));
+ for(const [original,hashed] of catalogScripts)index=index.replaceAll(original,hashed);write('index.html',index);
  // Cache identity follows application code AND data. Immutable data URLs remain
  // revision-specific; an offline catalog cannot silently load another revision.
  const revision=hash(readFileSync(path.join(dist,'index.html'))+template+JSON.stringify(catalog)+readFileSync(path.join(root,'sw.js'),'utf8')+['reader-session','library','offline','help'].map(n=>readFileSync(path.join(root,'catalog',n+'.js'),'utf8')).join(''));
- write('sw.js',readFileSync(path.join(root,'sw.js'),'utf8').replace("'./catalog/help.js'","'./catalog/help.js',"+readdirSync(path.join(root,'catalog/media')).map(file=>JSON.stringify('./catalog/media/'+file)).join(',' )).replace(/const CACHE='[^']+';/,`const CACHE='pontian-digital-library-v${JSON.parse(readFileSync(path.join(root,'package.json'))).version}-${revision}';`));
+ let worker=readFileSync(path.join(root,'sw.js'),'utf8').replace("'./catalog/help.js'","'./catalog/help.js',"+readdirSync(path.join(root,'catalog/media')).map(file=>JSON.stringify('./catalog/media/'+file)).join(',' )).replace(/const CACHE='[^']+';/,`const CACHE='pontian-digital-library-v${JSON.parse(readFileSync(path.join(root,'package.json'))).version}-${revision}';`);
+ for(const [original,hashed] of catalogScripts)worker=worker.replaceAll(original,hashed);write('sw.js',worker);
  console.log(`Public build: ${Buffer.byteLength(readFileSync(path.join(dist,'index.html')))} B index, ${Buffer.byteLength(JSON.stringify(catalog))} B catalog; ${booksLength(catalog)} books loaded on demand.`);
  return {dist,catalog,readerAssets};
 }

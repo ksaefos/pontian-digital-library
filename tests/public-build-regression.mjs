@@ -20,6 +20,7 @@ assert.deepEqual(glossary,data.entries.map(({term,definition,etymology})=>({term
 assert.ok(glossary.every(e=>!('references'in e)&&!('sources'in e)),'Global lookup must not depend on Studio provenance');
 const html=readFileSync(path.join(root,'dist/index.html'),'utf8');assert.ok(Buffer.byteLength(html)<40000);
 assert.ok(!html.includes('pdl-reader-shell')&&!html.includes('data:font'));
+for(const match of html.matchAll(/<script[^>]+src="\.\/(catalog\/[^"]+)"/g)){assert.match(match[1],/\.[a-f0-9]{20}\.js$/);assert.ok(readFileSync(path.join(root,'dist',match[1])).length);}
 const config=JSON.parse(html.match(/<script id="pdl-runtime-config" type="application\/json">([\s\S]*?)<\/script>/)[1]);
 assert.equal(readFileSync(path.join(root,'dist',config.template.slice(2)),'utf8'),readerSource());
 assert.ok(!readerSource().includes('data:font'));
@@ -31,3 +32,8 @@ assert.notEqual(next.catalog.books[0].url,catalog.books[0].url);assert.notEqual(
 assert.equal(next.catalog.books[1].url,catalog.books[1].url,'Unchanged books retain their cacheable URL');
 assert.equal(next.catalog.books[0].id,catalog.books[0].id);
 console.log('PASS data-only publication regenerates changed shards while preserving IDs and unchanged asset hashes');
+
+const legacy=publicDataset({books:[{id:'old-book',title:'Παλιό',chapters:[{text:'Πολυτονικό ὰ τ͜σ'}]}],entries:[]});
+assert.deepEqual(legacy.catalog.books[0].chapters,[{id:'legacy-0',title:'Κεφάλαιο 1'}]);
+assert.deepEqual(JSON.parse(legacy.files.get(legacy.catalog.books[0].url.slice(2))).chapters,[{text:'Πολυτονικό ὰ τ͜σ'}]);
+console.log('PASS legacy chapter metadata uses the existing Reader fallback without rewriting original chapter data');

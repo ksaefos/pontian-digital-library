@@ -237,7 +237,7 @@ async function pdlLoadBook(id){
  if(!pdlBookPromises.has(key))pdlBookPromises.set(key,pdlFetchText(book.url).then(raw=>{
   if(generation!==pdlDatasetGeneration)throw Error('Η βιβλιοθήκη άλλαξε.');
   const full=JSON.parse(raw);pdlValidateImport({format:'pontian-digital-library',books:[full],entries:[]});
-  if(String(full.id)!==String(id).replace(/^studio:/,''))throw Error('Ασυμβατότητα βιβλίου.');
+  if(String(full.id).replace(/^studio:/,'')!==String(id).replace(/^studio:/,''))throw Error('Ασυμβατότητα βιβλίου.');
   const result={...book,...full,id};importedBooks[id]=result;const at=libraryState.books.findIndex(b=>b.id===id);if(at>=0)libraryState.books[at]=result;return result;
  }).catch(error=>{pdlBookPromises.delete(key);throw error;}));return pdlBookPromises.get(key);
 }
