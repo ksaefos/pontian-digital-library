@@ -1,3 +1,4 @@
+import {publicDataset} from '../scripts/build-public.mjs';
 import assert from 'node:assert/strict';
 import {createServer} from 'node:http';
 import {readFileSync} from 'node:fs';
@@ -49,16 +50,14 @@ const types={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=
  '.mjs':'text/javascript; charset=utf-8','.webmanifest':'application/manifest+json',
  '.svg':'image/svg+xml','.wasm':'application/wasm','.webp':'image/webp',
  '.woff2':'font/woff2','.otf':'font/otf','.png':'image/png'};
+const fixturePublic=publicDataset(JSON.parse(fixtureJSON));
 const server=createServer(async(req,res)=>{
  try{
   const pathname=decodeURIComponent(new URL(req.url,'http://localhost').pathname);
-  if(pathname==='/library-data.json'){
-   res.writeHead(200,{'Content-Type':'application/json; charset=utf-8',
-    'Content-Length':String(fixtureJSON.length),'Cache-Control':'no-store'});
-   res.end(fixtureJSON);return;
-  }
-  const filename=resolve(root,'.'+pathname);
-  if(filename!==root&&!filename.startsWith(root+path.sep)){
+  if(pathname==='/public-data/catalog.json'){res.writeHead(200,{'Content-Type':'application/json'});res.end(JSON.stringify(fixturePublic.catalog));return;}
+  if(fixturePublic.files.has(pathname.slice(1))){res.writeHead(200,{'Content-Type':'application/json'});res.end(fixturePublic.files.get(pathname.slice(1)));return;}
+  const filename=resolve(root,'dist','.'+pathname);
+  if(filename!==root&&!filename.startsWith(path.join(root,'dist')+path.sep)){
    res.writeHead(403).end();return;
   }
   const s=await stat(filename);
@@ -86,7 +85,7 @@ const diagnostics=async()=>{
 try{
  browser=await chromium.launch({headless:true,
   ...(process.env.PDL_CHROMIUM_EXECUTABLE?{executablePath:process.env.PDL_CHROMIUM_EXECUTABLE}:{})});
- page=await browser.newPage({viewport:{width:390,height:844}});
+ page=await browser.newPage({serviceWorkers:'block',viewport:{width:390,height:844}});
  page.on('pageerror',error=>errors.push(String(error)));
  page.on('console',message=>{
   if(message.type()==='error'||message.type()==='warning')warnings.push(message.text());

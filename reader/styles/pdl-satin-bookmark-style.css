@@ -1,0 +1,29 @@
+
+/* PDL satin bookmark ribbon: visual-only, no changes to persistence. */
+#pdl-satin-ribbon{
+ position:absolute;top:0;right:clamp(7px,2.2vw,25px);width:32px;height:63px;
+ z-index:99999;pointer-events:none;opacity:0;
+ transform:translateY(-110%);transform-origin:50% 0;
+ transition:transform 350ms cubic-bezier(.2,.75,.3,1),opacity 250ms ease;
+ filter:drop-shadow(1px 3px 3px rgba(30,0,15,.24));
+}
+#pdl-satin-ribbon::before{
+ content:"";position:absolute;inset:0;
+ clip-path:polygon(0 0,100% 0,100% 100%,50% 77%,0 100%);
+ background:linear-gradient(100deg,#4d061b 0%,#7b1737 18%,#b54b69 38%,#8c183c 52%,#57071f 80%,#370411 100%);
+ border-left:1px solid rgba(253,195,207,.35);
+ border-right:1px solid rgba(39,0,13,.45);
+}
+#pdl-satin-ribbon::after{
+ content:"";position:absolute;top:0;left:5px;width:5px;height:87%;
+ background:linear-gradient(90deg,rgba(255,240,239,.28),rgba(255,255,255,0));
+ transform:skewX(-6deg);clip-path:polygon(0 0,100% 0,100% 100%,0 100%);
+}
+#pdl-satin-ribbon.is-saved{opacity:1;transform:translateY(0)}
+#pdl-satin-ribbon.is-entering{animation:pdlRibbonDrop 580ms cubic-bezier(.22,.8,.26,1.08) both}
+@keyframes pdlRibbonDrop{0%{opacity:.45;transform:translateY(-115%)}65%{opacity:1;transform:translateY(7px)}84%{transform:translateY(-2px)}100%{opacity:1;transform:translateY(0)}}
+#pdl-rail-bookmark.pdl-bookmarked{color:#8d2142!important;background:rgba(133,23,60,.12)!important}
+.pdl-mobile-bookmark-toggle.is-bookmarked{color:#8d2142!important;background:rgba(133,23,60,.12)!important}
+.pdl-mobile-bookmark-toggle.is-bookmarked svg{fill:#8d2142!important;filter:drop-shadow(0 1px 2px rgba(84,0,30,.25))}
+@media(max-width:768px){#pdl-satin-ribbon{right:6px;width:24px;height:49px}}
+@media(prefers-reduced-motion:reduce){#pdl-satin-ribbon{transition:none!important}#pdl-satin-ribbon.is-entering{animation:none!important}}

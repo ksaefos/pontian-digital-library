@@ -1,0 +1,39 @@
+
+/* No paper framing in mobile immersive reading. The controls mode retains
+   its existing .86 scale and the desktop layout remains untouched. */
+@media (max-width: 768px) {
+  html, body, .reader-shell, .main-area, #text-viewport {
+    background-color: var(--pdl-page) !important;
+  }
+  .reader-shell, .main-area, #text-viewport {
+    border: 0 !important;
+    box-shadow: none !important;
+  }
+  body.immersive .main-area > #text-viewport {
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    transform: none !important;
+  }
+  body.immersive #page-content,
+  body.immersive #pdl-second-page,
+  body.immersive #pdl-opf-host .pdl-opf-page {
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    outline: none !important;
+    background-color: var(--pdl-page) !important;
+  }
+  body.immersive #page-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 12px 17px 16px !important;
+  }
+  body.immersive #pdl-opf-host {
+    border: 0 !important;
+    box-shadow: none !important;
+  }
+  /* Disable decorative inset edge in both OpenPageFlip and native pages. */
+  #pdl-opf-host .pdl-opf-page { box-shadow: none !important; }
+}

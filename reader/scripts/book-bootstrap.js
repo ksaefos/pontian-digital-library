@@ -1,0 +1,7 @@
+const PDL_BOOK_PAYLOAD=JSON.parse(document.getElementById('pdl-book-payload').textContent);
+const PDL_IMPORTED_CHAPTERS=PDL_BOOK_PAYLOAD.chapters;
+const PDL_IMPORTED_GLOSSARY=PDL_BOOK_PAYLOAD.glossary;
+const PDL_BOOK_EDITOR_SETTINGS=PDL_BOOK_PAYLOAD.settings;
+const PDL_IMPORTED_BOOK_ID=PDL_BOOK_PAYLOAD.bookId;
+const PDL_IMPORTED_BOOKMARK_KEY='pdl:bookmarks:'+PDL_IMPORTED_BOOK_ID;
+const PDL_INITIAL_POSITION=PDL_BOOK_PAYLOAD.position;

@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+
+<html lang="el">
+<head>
+<!--PDL_BOOK_PAYLOAD-->
+<script data-source="scripts/book-bootstrap.js"></script>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Pontian Digital Library · __PDL_BOOK_TITLE__</title>
+
+
+
+
+<style data-source="styles/base-0.css"></style>
+
+<style id="pdl-142-cleanup" data-source="styles/pdl-142-cleanup.css"></style><style id="pdl-144-layout" data-source="styles/pdl-144-layout.css"></style><style id="pdl-v151-ui" data-source="styles/pdl-v151-ui.css"></style><style id="pdl-v153-pagination" data-source="styles/pdl-v153-pagination.css"></style>
+<style id="pdl-v154-typography" data-source="styles/pdl-v154-typography.css"></style>
+<style id="pdl-v155-paragraph-typography" data-source="styles/pdl-v155-paragraph-typography.css"></style>
+<style id="pdl-v156-justification" data-source="styles/pdl-v156-justification.css"></style>
+
+<style id="pdl-v159-logo-theme" data-source="styles/pdl-v159-logo-theme.css"></style><style id="pdl-v1510-typography" data-source="styles/pdl-v1510-typography.css"></style>
+
+<style id="pdl-bookmark-desktop-v1931" data-source="styles/pdl-bookmark-desktop-v1931.css"></style>
+
+<style id="pdl-opf-bridge-style" data-source="styles/pdl-opf-bridge-style.css"></style>
+<link rel="stylesheet" href="vendor/openpageflip/0.7.0/styles.css">
+<script src="vendor/openpageflip/0.7.0/index.iife.js"></script>
+
+<!-- Hyphenopoly 6.1.0: page text is never changed in the JSON source. -->
+<script src="./vendor/hyphenopoly/6.1.0/Hyphenopoly_Loader.js" onerror="window.__pdlHyphenopolyLoaderError=true"></script>
+<script data-source="scripts/hyphenation-loader.js"></script>
+<style id="pdl-220-hyphenation" data-source="styles/pdl-220-hyphenation.css"></style>
+
+<style id="pdl-230-grid-and-richtext" data-source="styles/pdl-230-grid-and-richtext.css"></style>
+<style id="pdl-rich-v231" data-source="styles/pdl-rich-v231.css"></style>
+<style id="pdl-satin-bookmark-style" data-source="styles/pdl-satin-bookmark-style.css"></style>
+<style id="pdl-grid-pagination-v1" data-source="styles/pdl-grid-pagination-v1.css"></style>
+
+<style id="pdl-rich-reader-fidelity-grid" data-source="styles/pdl-rich-reader-fidelity-grid.css"></style>
+
+<style id="pdl-v31-reader-editorial" data-source="styles/pdl-v31-reader-editorial.css"></style>
+
+
+<style id="pdl-v311-md3-search" data-source="styles/pdl-v311-md3-search.css"></style>
+<style id="pdl-v312-progressive-status" data-source="styles/pdl-v312-progressive-status.css"></style>
+</head>
+<body>
+<script id="pdl-initial-reading-mode" data-source="scripts/initial-reading-mode.js"></script>
+<span lang="el-polyton" class="pdl-hyphen-probe" hidden>κατασκευασμένος</span><span lang="el-monoton" class="pdl-hyphen-probe" hidden>κατασκευασμένος</span>
+<nav aria-label="Εργαλεία ανάγνωσης" class="pdl-rail"><button aria-label="Επιστροφή στη βιβλιοθήκη" class="pdl-mark pdl-logo-mark pdl-home-desktop" onclick="pdlReturnToLibrary()" title="Επιστροφή στη βιβλιοθήκη" type="button"><img class="pdl-logo-svg" alt="Λογότυπο Pontian Digital Library" src="./PontianDL_Logo.svg#svgView(viewBox(128,37,586,474))" /></button>
+<button aria-controls="sidebar" aria-expanded="false" aria-label="Ρυθμίσεις, περιεχόμενα και γλωσσάρι" class="pdl-rail-main" id="pdl-drawer-toggle" onclick="pdlToggleDrawer()" title="Άνοιγμα ρυθμίσεων, περιεχομένων και γλωσσαρίου"><svg fill="currentColor" height="24px" viewbox="0 -960 960 960" width="24px" xmlns="http://www.w3.org/2000/svg"><path d="m370-80-16-128q-13-5-24.5-12T307-235l-119 50L78-375l103-78q-1-7-1-13.5v-27q0-6.5 1-13.5L78-585l110-190 119 50q11-8 23-15t24-12l16-128h220l16 128q13 5 24.5 12t22.5 15l119-50 110 190-103 78q1 7 1 13.5v27q0 6.5-2 13.5l103 78-110 190-118-50q-11 8-23 15t-24 12L590-80H370Zm70-80h79l14-106q31-8 57.5-23.5T639-327l99 41 39-68-86-65q5-14 7-29.5t2-31.5q0-16-2-31.5t-7-29.5l86-65-39-68-99 42q-22-23-48.5-38.5T533-694l-13-106h-79l-14 106q-31 8-57.5 23.5T321-633l-99-41-39 68 86 64q-5 15-7 30t-2 32q0 16 2 31t7 30l-86 65 39 68 99-42q22 23 48.5 38.5T427-266l13 106Zm42-180q58 0 99-41t41-99q0-58-41-99t-99-41q-59 0-99.5 41T342-480q0 58 40.5 99t99.5 41Zm-2-140Z"></path></svg></button>
+<button aria-label="Αναζήτηση" id="pdl-rail-search" onclick="toggleTextSearch()" title="Αναζήτηση στο κείμενο"><svg aria-hidden="true" class="pdl-action-icon" fill="currentColor" focusable="false" height="24px" viewbox="0 -960 960 960" width="24px" xmlns="http://www.w3.org/2000/svg"><path d="m590-160 80 80H240q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h360l200 240v480q0 20-8.5 36.5T768-96L560-302q-17 11-37 16.5t-43 5.5q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 23-5.5 43T618-360l102 104v-356L562-800H240v640h350Zm-53.5-223.5Q560-407 560-440t-23.5-56.5Q513-520 480-520t-56.5 23.5Q400-473 400-440t23.5 56.5Q447-360 480-360t56.5-23.5ZM480-440Zm0 0Z"></path></svg></button>
+<button id="pdl-rail-bookmark" type="button" onclick="addBookmark()" aria-label="Προσθήκη σελιδοδείκτη" aria-pressed="false" title="Προσθήκη σελιδοδείκτη"><svg id="pdl-rail-bookmark-icon" aria-hidden="true" focusable="false" width="25" height="25" viewBox="0 -960 960 960" fill="currentColor"><path d="M200-120v-640q0-33 23.5-56.5T280-840h240v80H280v518l200-86 200 86v-278h80v400L480-240 200-120Zm80-640h240-240Zm400 160v-80h-80v-80h80v-80h80v80h80v80h-80v80h-80Z"/></svg></button></nav>
+<button aria-controls="sidebar" aria-expanded="false" aria-label="Άνοιγμα μενού ανάγνωσης" class="pdl-mobile-menu-button" id="pdl-mobile-menu-button" onclick="pdlMobileToggleMenu()" type="button"><svg fill="none" height="22" stroke="currentColor" stroke-linecap="round" stroke-width="1.8" viewbox="0 0 24 24" width="22" xmlns="http://www.w3.org/2000/svg"><path d="M4 7h16M4 12h16M4 17h16"></path></svg></button>
+<div class="reader-shell">
+<aside class="sidebar" id="sidebar">
+<div class="sidebar-header">
+<div class="sidebar-header-row">
+<div>
+<div class="book-title">PontianScripts</div>
+<div class="chapter-label" id="sb-chapter-label">Κεφάλαιο Α΄</div>
+</div>
+<button class="font-upload-btn" id="font-upload-btn" onclick="document.getElementById('font-file-input').click()" title="Φόρτωση γραμματοσειράς">
+<span id="font-upload-icon"><svg fill="currentColor" height="24px" viewbox="0 -960 960 960" width="24px" xmlns="http://www.w3.org/2000/svg"><path d="m819-28-52-52H160q-33 0-56.5-23.5T80-160v-607l-53-53 57-57L876-85l-57 57ZM160-160h527L160-687v527Zm720-35-80-80v-525H275l-80-80h605q33 0 56.5 23.5T880-800v605ZM624-451 502-573l-20-57h-4l-9 24-54-54 23-60h84l102 269Zm-200 27Zm114-114Zm82 298-57-158 131 131 10 27h-84Zm-364 0 128-337 56 56-32 89h121l70 70H384l-44 122h-84Z"></path></svg></span>
+</button>
+<input accept=".ttf,.otf,.woff,.woff2" id="font-file-input" onchange="loadCustomFont(this)" style="display:none" type="file"/>
+</div>
+</div>
+<div aria-label="Μενού ανάγνωσης" class="pdl-mobile-actions">
+<div class="pdl-mobile-actions-heading">Πλοήγηση</div>
+<button onclick="pdlMobilePage(-1)" type="button">← Προηγούμενη</button>
+<button onclick="pdlMobilePage(1)" type="button">Επόμενη →</button>
+<button onclick="pdlMobileSearch()" type="button">Αναζήτηση κειμένου</button>
+<button onclick="addBookmark()" type="button">Προσθήκη σελιδοδείκτη</button>
+<div class="pdl-mobile-actions-heading">Εμφάνιση &amp; γλωσσάρι</div>
+</div>
+<div class="toc-section">
+<span class="section-label">Περιεχόμενα</span>
+<ul class="toc-list">
+<li><button class="active" id="toc-0" onclick="gotoChapter(0)">1ο Κεφάλαιο</button></li>
+<li><button id="toc-1" onclick="gotoChapter(1)">2ο Κεφάλαιο</button></li>
+<li><button id="toc-2" onclick="gotoChapter(2)">3ο Κεφάλαιο</button></li>
+<li><button id="toc-3" onclick="gotoChapter(3)">4ο Κεφάλαιο</button></li>
+<li><button id="toc-4" onclick="gotoChapter(4)">5ο Κεφάλαιο</button></li>
+<li><button id="toc-5" onclick="gotoChapter(5)">6ο Κεφάλαιο</button></li>
+</ul>
+</div>
+<section aria-label="Ρυθμίσεις ανάγνωσης" class="pdl-reading-panel">
+<label for="pdl-font-select">Γραμματοσειρά</label>
+<select id="pdl-font-select" onchange="pdlSetFont(this.value)">
+<option value="Barnebok Pontian">Barnebok Pontian</option><option value="GFS Galatea Pontian">GFS Galatea Pontian</option><option value="Miasma Pontian">Miasma Pontian</option><option value="Nobilis Text Pontian">Nobilis Text Pontian</option><option value="Calibri">Calibri</option>
+</select>
+
+<label>Χρωματικό θέμα</label>
+<div aria-label="Χρωματικό θέμα" class="pdl-theme-tabs" role="group"><button data-pdl-theme="light" onclick="pdlSetTheme('light')">Φωτεινό</button><button data-pdl-theme="sepia" onclick="pdlSetTheme('sepia')">Sepia</button><button data-pdl-theme="dark" onclick="pdlSetTheme('dark')">Νυχτερινό</button></div>
+<label class="pdl-desktop-only">Διάταξη βιβλίου</label>
+<div aria-label="Διάταξη" class="pdl-layout-tabs" role="group"><button data-pdl-layout="single" onclick="pdlSetLayout('single')"><svg aria-hidden="true" class="pdl-action-icon" fill="currentColor" focusable="false" height="24px" viewbox="0 -960 960 960" width="24px" xmlns="http://www.w3.org/2000/svg"><path d="M280-280h280v-80H280v80Zm0-160h400v-80H280v80Zm0-160h400v-80H280v80Zm-80 480q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm0-560v560-560Z"></path></svg><span>Μονή σελίδα</span></button><button data-pdl-layout="double" onclick="pdlSetLayout('double')"><svg aria-hidden="true" class="pdl-action-icon" fill="currentColor" focusable="false" height="24px" viewbox="0 -960 960 960" width="24px" xmlns="http://www.w3.org/2000/svg"><path d="M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h640q33 0 56.5 23.5T880-720v480q0 33-23.5 56.5T800-160H160Zm0-80h280v-480H160v480Zm360 0h280v-480H520v480Zm-320-80h200v-80H200v80Zm0-120h200v-80H200v80Zm0-120h200v-80H200v80Zm360 240h200v-80H560v80Zm0-120h200v-80H560v80Zm0-120h200v-80H560v80ZM440-240v-480 480Z"></path></svg><span>Διπλή σελίδα</span></button></div>
+<div id="pdl-opf-status" role="status" aria-live="polite"></div><div class="pdl-reading-help">Προσωπική γραμματοσειρά: Alt+1. Η επιλογή δεν εμφανίζεται δημόσια στα μενού.</div>
+</section>
+<div class="fontsize-section">
+<span class="section-label">Μέγεθος γραμμάτων</span>
+<div class="fontsize-row">
+<button aria-label="Μείωση μεγέθους γραμμάτων" class="fontsize-btn fontsize-decrease" onclick="changeFontSize(-1)" title="Μείωση μεγέθους γραμμάτων" type="button"><svg aria-hidden="true" fill="currentColor" focusable="false" height="24px" viewbox="0 -960 960 960" width="24px" xmlns="http://www.w3.org/2000/svg"><path d="m40-200 210-560h100l210 560h-96l-51-143H187l-51 143H40Zm176-224h168l-82-232h-4l-82 232Zm384-16v-80h320v80H600Z"></path></svg></button>
+<button aria-label="Αύξηση μεγέθους γραμμάτων" class="fontsize-btn fontsize-increase" onclick="changeFontSize(1)" title="Αύξηση μεγέθους γραμμάτων" type="button"><svg aria-hidden="true" fill="currentColor" focusable="false" height="24px" viewbox="0 -960 960 960" width="24px" xmlns="http://www.w3.org/2000/svg"><path d="m40-200 210-560h100l210 560h-96l-51-143H187l-51 143H40Zm176-224h168l-82-232h-4l-82 232Zm504 104v-120H600v-80h120v-120h80v120h120v80H800v120h-80Z"></path></svg></button>
+<span class="fontsize-value" id="fontsize-value">100%</span>
+</div>
+</div>
+<div class="search-section">
+<input class="search-input" id="gloss-search" oninput="searchGlossary(this.value)" placeholder="Αναζήτηση στο γλωσσάρι…" type="text">
+</input></div>
+<div class="bookmark-section" id="bookmark-section">
+<span class="section-label">Σελιδοδείκτες</span>
+<ul class="bookmark-list" id="bookmark-list">
+<li><span class="bookmark-empty">Δεν υπάρχουν σελιδοδείκτες.</span></li>
+</ul>
+</div>
+<div class="glossary-section">
+<div class="glossary-title">Γλωσσάρι</div>
+<div id="glossary-content">
+<p class="glossary-empty" id="glossary-hint">Διπλό κλικ σε οποιαδήποτε λέξη για αναζήτηση στο γλωσσάρι.</p>
+</div>
+</div>
+</aside>
+<div class="main-area">
+<div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+<div class="topbar"><div class="pdl-desk-title"><strong>__PDL_BOOK_TITLE__</strong><small>Ποντιακή ψηφιακή βιβλιοθήκη</small></div>
+<button class="sidebar-toggle" onclick="toggleSidebar()" title="Γλωσσάρι"><svg aria-hidden="true" class="pdl-menu-book-icon" fill="currentColor" focusable="false" height="24px" viewbox="0 -960 960 960" width="24px" xmlns="http://www.w3.org/2000/svg"><path d="M560-564v-68q33-14 67.5-21t72.5-7q26 0 51 4t49 10v64q-24-9-48.5-13.5T700-600q-38 0-73 9.5T560-564Zm0 220v-68q33-14 67.5-21t72.5-7q26 0 51 4t49 10v64q-24-9-48.5-13.5T700-380q-38 0-73 9t-67 27Zm0-110v-68q33-14 67.5-21t72.5-7q26 0 51 4t49 10v64q-24-9-48.5-13.5T700-490q-38 0-73 9.5T560-454ZM260-320q47 0 91.5 10.5T440-278v-394q-41-24-87-36t-93-12q-36 0-71.5 7T120-692v396q35-12 69.5-18t70.5-6Zm260 42q44-21 88.5-31.5T700-320q36 0 70.5 6t69.5 18v-396q-33-14-68.5-21t-71.5-7q-47 0-93 12t-87 36v394Zm-40 118q-48-38-104-59t-116-21q-42 0-82.5 11T100-198q-21 11-40.5-1T40-234v-482q0-11 5.5-21T62-752q46-24 96-36t102-12q58 0 113.5 15T480-740q51-30 106.5-45T700-800q52 0 102 12t96 36q11 5 16.5 15t5.5 21v482q0 23-19.5 35t-40.5 1q-37-20-77.5-31T700-240q-60 0-116 21t-104 59ZM280-494Z"></path></svg></button><button class="search-icon-btn" id="text-search-toggle" onclick="toggleTextSearch()" title="Αναζήτηση στο κείμενο"><svg aria-hidden="true" class="pdl-action-icon" fill="currentColor" focusable="false" height="24px" viewbox="0 -960 960 960" width="24px" xmlns="http://www.w3.org/2000/svg"><path d="m590-160 80 80H240q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h360l200 240v480q0 20-8.5 36.5T768-96L560-302q-17 11-37 16.5t-43 5.5q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 23-5.5 43T618-360l102 104v-356L562-800H240v640h350Zm-53.5-223.5Q560-407 560-440t-23.5-56.5Q513-520 480-520t-56.5 23.5Q400-473 400-440t23.5 56.5Q447-360 480-360t56.5-23.5ZM480-440Zm0 0Z"></path></svg></button><button class="search-icon-btn" id="bookmark-btn" onclick="addBookmark()" title="Προσθήκη σελιδοδείκτη"><svg aria-hidden="true" class="pdl-action-icon" fill="currentColor" focusable="false" height="24px" id="bookmark-icon" viewbox="0 -960 960 960" width="24px" xmlns="http://www.w3.org/2000/svg"><path d="M200-120v-640q0-33 23.5-56.5T280-840h240v80H280v518l200-86 200 86v-278h80v400L480-240 200-120Zm80-640h240-240Zm400 160v-80h-80v-80h80v-80h80v80h80v80h-80v80h-80Z"></path></svg></button>
+<div class="topbar-title">Pontian Digital Library · __PDL_BOOK_TITLE__</div>
+<div class="topbar-chapter" id="tb-chapter">Κεφάλαιο Α΄</div>
+<div class="topbar-right">
+<div class="night-toggle" onclick="toggleNight()" title="Εναλλαγή night mode">
+<span class="material-symbols-outlined night-toggle-icon" style="font-size:1rem">light_mode</span>
+<div class="night-toggle-track"><div class="night-toggle-thumb"></div></div>
+<span class="material-symbols-outlined night-toggle-icon" style="font-size:1rem">dark_mode</span>
+</div>
+</div>
+</div>
+<nav aria-label="Εργαλεία ανάγνωσης" class="pdl-mobile-chrome top" id="pdl-mobile-top">
+<button type="button" id="pdl-mobile-font-action" class="pdl-chrome-action pdl-mobile-action" onclick="pdlOpenAppearance('text')" aria-label="Γραμματοσειρά" aria-haspopup="dialog" aria-controls="pdl-appearance"><span class="pdl-aa-button" aria-hidden="true">Aa</span><span>Γραμματοσειρά</span></button>
+<button type="button" class="pdl-chrome-action pdl-mobile-action pdl-home-mobile" onclick="pdlReturnToLibrary()" aria-label="Επιστροφή στη βιβλιοθήκη" title="Επιστροφή στη βιβλιοθήκη"><img class="pdl-mobile-home-logo" alt="" src="./PontianDL_Logo.svg#svgView(viewBox(128,37,586,474))" /></button>
+<button type="button" id="pdl-mobile-light-action" class="pdl-chrome-action pdl-mobile-action" onclick="pdlOpenAppearance('light')" aria-label="Φωτισμός" aria-haspopup="dialog" aria-controls="pdl-appearance"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg><span>Φωτισμός</span></button>
+</nav>
+<div class="text-viewport" id="text-viewport"><div id="pdl-progress-status" role="status" aria-live="polite" aria-hidden="true" hidden></div>
+<div id="pdl-satin-ribbon" aria-hidden="true"></div>
+<div class="page-content" id="page-content"></div><div aria-label="Δεξιά σελίδα" class="pdl-second-page" id="pdl-second-page"></div>
+</div>
+<div class="text-search-bar hidden" id="text-search-bar" role="search" aria-label="Αναζήτηση στο κείμενο">
+<button type="button" id="pdl-search-query" class="pdl-mobile-search-query" onclick="pdlEditMobileSearch()" aria-label="Αλλαγή αναζήτησης"><span id="pdl-search-query-text">Αναζήτηση</span></button>
+<div class="pdl-search-field"><svg class="pdl-search-leading" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.8" cy="10.8" r="7"/><path d="m16.1 16.1 4.4 4.4"/></svg><input class="text-search-input" id="text-search-input" oninput="onTextSearch(this.value)" onkeydown="onTextSearchKey(event)" placeholder="Αναζήτηση στο βιβλίο" type="search" autocomplete="off" aria-label="Αναζήτηση στο βιβλίο"/><button type="button" class="pdl-search-clear" id="ts-clear" onclick="pdlClearSearchQuery()" aria-label="Εκκαθάριση πεδίου" title="Εκκαθάριση"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><path d="M6.5 6.5 17.5 17.5M17.5 6.5 6.5 17.5"/></svg></button></div>
+<div class="text-search-nav" id="ts-nav">
+<button class="text-search-btn" disabled="" id="ts-prev" onclick="textSearchNav(-1)" title="Προηγούμενο"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5m-7 7 7-7 7 7"/></svg></button>
+<span class="text-search-count" id="ts-count"></span>
+<button class="text-search-btn" disabled="" id="ts-next" onclick="textSearchNav(1)" title="Επόμενο"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14m-7-7 7 7 7-7"/></svg></button>
+</div>
+<button type="button" class="text-search-close" onclick="closeTextSearch()" aria-label="Κλείσιμο της κάτω μπάρας αναζήτησης" title="Κλείσιμο μπάρας"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 9 7 7 7-7"/></svg></button>
+</div>
+<div class="pdl-mobile-chrome bottom" id="pdl-mobile-bottom">
+ <div class="pdl-trial-progress" role="group" aria-label="Πρόοδος ανάγνωσης">
+  <span class="pdl-trial-progress-label">Σελίδα</span>
+  <input aria-label="Μετάβαση σε σελίδα" class="pdl-mobile-progress" id="pdl-mobile-progress" max="1" min="1" onchange="pdlCommitProgress(this.value)" oninput="pdlPreviewProgress(this.value)" type="range" value="1"/>
+  <span class="pdl-mobile-counter" id="pdl-mobile-page-info">1 / 1</span>
+ </div>
+ <nav class="pdl-trial-actions" aria-label="Πλοήγηση και εργαλεία ανάγνωσης">
+  <button type="button" class="pdl-trial-action" onclick="pdlShowChapters()" aria-label="Περιεχόμενα και κεφάλαια">
+   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6.5h16M4 12h16M4 17.5h16"/><circle cx="2" cy="6.5" r=".3"/></svg>
+   <span>Κεφάλαια</span>
+  </button>
+  <button type="button" class="pdl-trial-action pdl-mobile-search-action" id="pdl-mobile-search-action" onclick="pdlMobileSearch()" aria-label="Αναζήτηση στο κείμενο" aria-controls="text-search-bar" aria-expanded="false" title="Αναζήτηση στο κείμενο">
+   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.9"/><path d="m16.1 16.1 5 5"/></svg>
+   <span>Αναζήτηση</span>
+  </button>
+  <button type="button" class="pdl-trial-action pdl-mobile-bookmark-toggle" id="pdl-mobile-bookmark-toggle" onclick="pdlToggleMobileBookmark()" aria-label="Προσθήκη σελιδοδείκτη" aria-pressed="false" aria-haspopup="dialog" aria-controls="pdl-mobile-bookmarks" aria-expanded="false" aria-describedby="pdl-bookmark-help" title="Πάτημα: προσθήκη ή αφαίρεση · Παρατεταμένο πάτημα: όλοι οι σελιδοδείκτες">
+   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 4.5h12v15l-6-4-6 4v-15Z"/></svg>
+   <span>Σελιδοδείκτες</span>
+  </button>
+ </nav>
+</div>
+<span class="pdl-control-hint" id="pdl-bookmark-help">Πάτημα για προσθήκη ή αφαίρεση. Παρατεταμένο πάτημα ή Shift+F10 για όλους τους σελιδοδείκτες.</span>
+<div class="bottombar">
+<button class="nav-btn" id="btn-prev" onclick="prevPage()">‹ Προηγ.</button>
+<div class="pagination-info" id="page-info">Σελίδα 1 από 1</div>
+<button class="nav-btn" id="btn-next" onclick="nextPage()">Επόμ. ›</button>
+</div>
+</div>
+</div>
+<div class="toast" id="toast"></div>
+<div class="mobile-gloss-popup" id="mobile-gloss-popup">
+<span class="mgp-close" onclick="closeMobileGloss()">✕</span>
+<div class="mgp-term" id="mgp-term"></div>
+<div class="mgp-def" id="mgp-def"></div>
+</div>
+<div class="pdl-appearance-backdrop" hidden="" id="pdl-appearance-backdrop" onclick="pdlCloseAppearance()"></div>
+<section aria-labelledby="pdl-appearance-title" aria-modal="true" class="pdl-appearance" hidden="" id="pdl-appearance" role="dialog">
+<header><h2 id="pdl-appearance-title">Γραμματοσειρά</h2><button type="button" aria-label="Κλείσιμο" class="pdl-appearance-close" onclick="pdlCloseAppearance()">✕</button></header>
+<div class="pdl-appearance-body" id="pdl-appearance-text">
+<div class="pdl-font-options" id="pdl-mobile-fonts"></div>
+<div aria-label="Ρυθμίσεις μεγέθους και διάστιχου" class="pdl-adjust-grid" role="group"><span class="pdl-adjust-label">Μέγεθος</span><button aria-label="Μείωση μεγέθους" onclick="changeFontSize(-1);pdlUpdateAppearance()" type="button"><img alt="" aria-hidden="true" class="pdl-custom-icon pdl-icon-smaller" draggable="false" src="./reader/media/586020edc275d239.svg"/></button><output class="pdl-adjust-value" id="pdl-mobile-font-size">100%</output><button aria-label="Αύξηση μεγέθους" onclick="changeFontSize(1);pdlUpdateAppearance()" type="button"><img alt="" aria-hidden="true" class="pdl-custom-icon pdl-icon-larger" draggable="false" src="./reader/media/586020edc275d239.svg"/></button><span class="pdl-adjust-label">Διάστιχο</span><button aria-label="Μείωση διάστιχου" onclick="pdlLineHeight(-1)" type="button"><img alt="" aria-hidden="true" class="pdl-custom-icon" draggable="false" src="./reader/media/0c56f8897d42e614.svg"/></button><output class="pdl-adjust-value" id="pdl-line-value">100%</output><button aria-label="Αύξηση διάστιχου" onclick="pdlLineHeight(1)" type="button"><img alt="" aria-hidden="true" class="pdl-custom-icon" draggable="false" src="./reader/media/a6070f65fb83d32d.svg"/></button></div>
+
+</div>
+<div class="pdl-appearance-body" hidden="" id="pdl-appearance-light"><div class="pdl-theme-choices"><button data-mobile-theme="light" onclick="pdlSetTheme('light');pdlUpdateAppearance()">Φωτεινό</button><button data-mobile-theme="sepia" onclick="pdlSetTheme('sepia');pdlUpdateAppearance()">Sepia</button><button data-mobile-theme="dark" onclick="pdlSetTheme('dark');pdlUpdateAppearance()">Νυχτερινό</button></div></div>
+</section>
+<div class="pdl-mobile-bookmarks-backdrop" hidden="" id="pdl-mobile-bookmarks-backdrop" onclick="pdlCloseMobileBookmarks()"></div>
+<section aria-label="Οι σελιδοδείκτες μου" aria-modal="true" class="pdl-mobile-bookmarks" hidden="" id="pdl-mobile-bookmarks" role="dialog">
+<div class="pdl-mobile-bookmarks-heading"><strong>Οι σελιδοδείκτες μου</strong><button aria-label="Κλείσιμο σελιδοδεικτών" onclick="pdlCloseMobileBookmarks()">✕</button></div>
+<div id="pdl-mobile-bookmarks-list"></div>
+</section>
+<div class="expr-tooltip" id="expr-tooltip"></div>
+<script data-sources="scripts/core/dictionary.js,scripts/core/text-search.js,scripts/core/bookmarks.js,scripts/core/reading-interactions.js,scripts/core/pagination-layout.js,scripts/core/progressive-pagination.js"></script>
+<script data-source="scripts/immersive-controls.js"></script>
+<script data-source="scripts/mobile-navigation.js"></script>
+<script data-source="scripts/mobile-appearance.js"></script>
+<!-- Shared Reader template · published content injected at open -->
+<script data-source="scripts/desktop-navigation.js"></script>
+<style id="pdl-v1315-style" data-source="styles/pdl-v1315-style.css"></style>
+<script id="pdl-v1315-script" data-source="scripts/desktop-sidebar.js"></script>
+<script id="pdl-library-bridge" data-source="scripts/position-bridge.js"></script>
+<style id="pdl-home-return-v143" data-source="styles/pdl-home-return-v143.css"></style>
+<script id="pdl-home-return-v143-script" data-source="scripts/return-library.js"></script>
+<script id="pdl-144-reflow" data-source="scripts/viewport-reflow.js"></script><script id="pdl-clean-copy-v157" data-source="scripts/clean-copy.js"></script>
+<!-- PDL v1.8.0 Desktop interaction fixes -->
+<style id="pdl-desktop-fixes-v171" data-source="styles/pdl-desktop-fixes-v171.css"></style>
+
+<style id="pdl-v172-desktop-style" data-source="styles/pdl-v172-desktop-style.css"></style>
+
+
+
+<style id="pdl-stability-182" data-source="styles/pdl-stability-182.css"></style>
+<!-- v2.0.0: high-contrast glossary popup in Night theme only -->
+
+<style id="pdl-v203-gloss-timeout" data-source="styles/pdl-v203-gloss-timeout.css"></style>
+<style id="pdl-v1932-night-popup" data-source="styles/pdl-v1932-night-popup.css"></style>
+<script id="pdl-gloss-controller-v193" data-source="scripts/glossary-controller.js"></script>
+
+<script id="pdl-v205-search-reflow" data-source="scripts/search-reflow.js"></script>
+<script id="pdl-openpageflip-adapter-v1940" data-source="scripts/openpageflip-adapter.js"></script>
+
+<style id="pdl-v201-search-and-mobile-focus" data-source="styles/pdl-v201-search-and-mobile-focus.css"></style>
+
+
+<style id="pdl-v202-mobile-zoom-fixes" data-source="styles/pdl-v202-mobile-zoom-fixes.css"></style>
+
+<style id="pdl-v205-desktop-search-dock" data-source="styles/pdl-v205-desktop-search-dock.css"></style>
+
+
+
+<style id="pdl-v212-mobile-edge-to-edge" data-source="styles/pdl-v212-mobile-edge-to-edge.css"></style>
+
+<div class="pdl-chapters-backdrop" id="pdl-chapters-backdrop" hidden onclick="pdlHideChapters()"></div>
+<section class="pdl-chapters-sheet" id="pdl-chapters-sheet" role="dialog" aria-modal="true" aria-labelledby="pdl-chapters-heading" aria-describedby="pdl-contents-book-title" hidden>
+ <header><div><p id="pdl-contents-book-title">__PDL_BOOK_TITLE__</p><h2 id="pdl-chapters-heading">Περιεχόμενα</h2></div><button id="pdl-chapters-close" type="button" onclick="pdlHideChapters()" aria-label="Κλείσιμο περιεχομένων">✕</button></header>
+ <div id="pdl-chapters-list" class="pdl-chapters-list"></div>
+</section>
+<style id="pdl-v214-reader-css" data-source="styles/pdl-v214-reader-css.css"></style>
+<script id="pdl-v214-chapter-nav" data-source="scripts/chapter-navigation.js"></script>
+<style id="pdl-v312-navigation-trial" data-source="styles/pdl-v312-navigation-trial.css"></style>
+<script id="pdl-v312-progress-navigation" data-source="scripts/progress-navigation.js"></script>
+<script id="pdl-mobile-controls" data-source="scripts/mobile-controls.js"></script>
+</body>
+</html>
+<!-- Pontian Digital Library Reader v1.3.5: accurate typography, taller pages, mouse wheel navigation -->

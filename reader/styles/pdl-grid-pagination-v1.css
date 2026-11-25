@@ -1,0 +1,71 @@
+
+/* Production grid-engine geometry: the browser column flow is authoritative. */
+:root{--pdl-grid-line:32.68px;--pdl-grid-used:100%;}
+#page-content p,.pdl-second-page p,#pdl-opf-host .pdl-opf-page p,
+#text-viewport .pdl-measure p{
+ margin:0!important;padding:0!important;
+ line-height:var(--pdl-grid-line)!important;
+ text-align:justify!important;text-align-last:left!important;
+ text-indent:1.22em!important;
+ hyphens:none!important;overflow-wrap:normal!important;word-break:normal!important;
+ letter-spacing:normal!important;
+ orphans:1;widows:1;
+}
+#page-content p.pdl-continuation,.pdl-second-page p.pdl-continuation,
+#pdl-opf-host .pdl-opf-page p.pdl-continuation{text-indent:0!important;}
+#page-content p.pdl-fragment-continues,.pdl-second-page p.pdl-fragment-continues,
+#pdl-opf-host .pdl-opf-page p.pdl-fragment-continues{text-align-last:justify!important;}
+#page-content p.pdl-chapter-opening::first-letter,.pdl-second-page p.pdl-chapter-opening::first-letter,
+#pdl-opf-host .pdl-opf-page p.pdl-chapter-opening::first-letter{
+ font-size:inherit!important;font-weight:inherit!important;float:none!important;line-height:inherit!important;
+ padding:0!important;margin:0!important;color:inherit!important;
+}
+#page-content .chapter-heading,.pdl-second-page .chapter-heading,#pdl-opf-host .chapter-heading{
+ height:calc(2 * var(--pdl-grid-line))!important;min-height:0!important;
+ margin:0!important;padding:0!important;display:flex!important;align-items:flex-start!important;
+ break-inside:avoid!important;
+}
+#page-content .chapter-number,.pdl-second-page .chapter-number,#pdl-opf-host .chapter-number{
+ line-height:var(--pdl-grid-line)!important;margin:0!important;font-size:1em!important;
+}
+#page-content .section-divider,.pdl-second-page .section-divider,#pdl-opf-host .section-divider{
+ line-height:var(--pdl-grid-line)!important;height:var(--pdl-grid-line)!important;min-height:0!important;
+ margin:0!important;padding:0!important;
+}
+#page-content .telos,.pdl-second-page .telos,#pdl-opf-host .telos{
+ line-height:var(--pdl-grid-line)!important;margin:0!important;
+}
+#page-content .pdl-rich-heading,.pdl-second-page .pdl-rich-heading,#pdl-opf-host .pdl-rich-heading{
+ margin:0!important;line-height:var(--pdl-grid-line)!important;
+}
+#pdl-grid-column-measurer{
+ position:fixed!important;left:-100000px!important;top:0!important;z-index:-10!important;
+ box-sizing:border-box!important;pointer-events:none!important;visibility:hidden!important;
+ column-fill:auto!important;column-count:auto!important;overflow:visible!important;
+ text-indent:0!important;font-weight:400!important;letter-spacing:normal!important;
+ hyphens:none!important;word-break:normal!important;overflow-wrap:normal!important;
+}
+#pdl-grid-column-measurer .pdl-grid-word{display:inline;white-space:nowrap!important;}
+/* When Hyphenopoly is ready, use approved discretionary cut points in the
+   progressive CSS-column measurer. Each word fragment remains unbreakable;
+   only the explicit U+00AD separators can cross a page/column boundary. */
+#pdl-grid-column-measurer.pdl-progress-hyphenated p{
+ -webkit-hyphens:manual!important;hyphens:manual!important;
+}
+#pdl-grid-column-measurer p{
+ margin:0!important;padding:0!important;border:0!important;
+ font:inherit!important;line-height:var(--pdl-grid-line)!important;
+ color:inherit!important;text-align:justify!important;text-align-last:left!important;
+ text-indent:1.22em!important;orphans:1;widows:1;
+ hyphens:none!important;overflow-wrap:normal!important;word-break:normal!important;
+}
+#pdl-grid-column-measurer p:first-of-type{text-indent:1.22em!important;}
+#pdl-grid-column-measurer p.dialogue{font-style:italic!important;}
+#pdl-grid-column-measurer p.pdl-rich-heading{font-weight:700!important;text-indent:0!important;}
+#pdl-grid-column-measurer .chapter-heading{height:calc(2 * var(--pdl-grid-line))!important;margin:0!important;padding:0!important;break-inside:avoid!important;}
+#pdl-grid-column-measurer .chapter-number{line-height:var(--pdl-grid-line)!important;margin:0!important;font-size:1em!important;}
+#pdl-grid-column-measurer .section-divider{height:var(--pdl-grid-line)!important;line-height:var(--pdl-grid-line)!important;margin:0!important;padding:0!important;break-inside:avoid!important;text-align:center!important;}
+#pdl-grid-column-measurer .telos{line-height:var(--pdl-grid-line)!important;margin:0!important;break-inside:avoid!important;}
+#pdl-grid-column-measurer .pdl-rich-table-wrap,
+#pdl-grid-column-measurer .pdl-rich-image-wrap{break-inside:avoid!important;max-width:100%!important;}
+#pdl-grid-column-measurer img,#pdl-grid-column-measurer table{max-width:100%!important;}

@@ -1,0 +1,27 @@
+
+/* Three asterisks are an in-flow decorative pause, never a chapter. */
+#page-content .section-divider,.pdl-second-page .section-divider,#pdl-opf-host .pdl-opf-page .section-divider{
+ display:block;text-align:center!important;margin:1.4em 0 1.55em!important;padding:0!important;
+ text-indent:0!important;letter-spacing:.36em!important;font-size:.86em!important;
+ font-weight:400!important;color:var(--md-outline);break-before:auto;break-after:auto;
+}
+#pdl-chapters-backdrop[hidden],#pdl-chapters-sheet[hidden]{display:none!important}
+@media(max-width:768px){
+ .pdl-mobile-chrome .pdl-chapters-action{width:auto!important;min-width:62px!important;
+  padding:0 5px!important;font:600 12px/1.1 system-ui,sans-serif!important;white-space:nowrap}
+ #pdl-chapters-backdrop{position:fixed;inset:0;z-index:1000;background:rgba(14,15,17,.44)}
+ #pdl-chapters-sheet{position:fixed;z-index:1001;bottom:0;left:0;right:0;max-height:75dvh;
+  background:var(--md-surface,#fffaf3);color:var(--md-on-surface,#212121);
+  border-radius:20px 20px 0 0;box-shadow:0 -12px 32px #0003;overflow:hidden;
+  display:flex;flex-direction:column;padding:0 0 max(18px,env(safe-area-inset-bottom))}
+ #pdl-chapters-sheet header{display:flex;justify-content:space-between;align-items:center;
+  padding:18px 20px;border-bottom:1px solid var(--md-outline-var,#ddd)}
+ #pdl-chapters-sheet h2{font:600 19px/1.2 system-ui,sans-serif;margin:0}
+ #pdl-chapters-close{border:0;background:transparent;color:inherit;font-size:22px;min-width:44px;min-height:44px}
+ #pdl-chapters-list{overflow-y:auto;overscroll-behavior:contain;padding:8px 12px 12px;display:grid;gap:6px}
+ #pdl-chapters-list button{min-height:48px;text-align:left;background:transparent;color:inherit;
+  border:1px solid var(--md-outline-var,#ddd);border-radius:12px;padding:11px 14px;
+  font:500 15px/1.2 system-ui,sans-serif}
+ #pdl-chapters-list button[aria-current="true"]{background:var(--md-primary-container,#ebe1d5);
+  border-color:var(--md-primary,#8b624f);font-weight:700}
+}

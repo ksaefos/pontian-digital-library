@@ -1,0 +1,87 @@
+
+/* v3.1 — the native leaf, paired leaf, OpenPageFlip and CSS-column meter
+   share the same first-letter geometry. The editor decides whether to render it. */
+#page-content p.pdl-chapter-opening::first-letter,
+.pdl-second-page p.pdl-chapter-opening::first-letter,
+#pdl-opf-host .pdl-opf-page p.pdl-chapter-opening::first-letter,
+#pdl-grid-column-measurer p.pdl-chapter-opening::first-letter,
+#text-viewport .pdl-measure p.pdl-chapter-opening::first-letter{
+ font-size:2.6em!important;font-weight:700!important;float:left!important;
+ line-height:.82!important;padding-right:.075em!important;margin:.065em 0 0!important;
+ color:var(--md-primary)!important;
+}
+/* Only administrator-selected hyphenation can use discretionary line cuts. */
+body.pdl-editor-hyphenation #page-content p,
+body.pdl-editor-hyphenation .pdl-second-page p,
+body.pdl-editor-hyphenation #pdl-opf-host .pdl-opf-page p,
+body.pdl-editor-hyphenation #text-viewport .pdl-measure p{
+ -webkit-hyphens:manual!important;hyphens:manual!important;
+}
+/* Clear query and dismiss panel are different controls. */
+#text-search-bar .pdl-search-field{position:relative;display:flex;align-items:center;
+ flex:1 1 240px;min-width:0;max-width:min(660px,100%);}
+#text-search-bar .pdl-search-field .text-search-input{
+ padding-right:49px!important;box-sizing:border-box!important;}
+#text-search-bar .pdl-search-clear{
+ position:absolute;right:5px;top:50%;transform:translateY(-50%);
+ align-items:center;justify-content:center;
+ width:35px!important;height:35px!important;min-width:35px!important;min-height:35px!important;
+ border:2px solid var(--md-outline)!important;
+ background:var(--md-surface)!important;color:var(--md-on-surface)!important;
+ font:700 25px/1 system-ui,sans-serif!important;cursor:pointer;
+}
+#text-search-bar .pdl-search-clear:hover{border-color:var(--md-primary)!important;color:var(--md-primary)!important;}
+#text-search-bar .pdl-search-clear:focus-visible{outline:3px solid var(--md-primary)!important;outline-offset:2px;}
+#text-search-bar .text-search-close{border:1.5px solid var(--md-outline)!important;
+ width:38px!important;height:38px!important;flex:0 0 38px!important;
+ color:var(--md-on-surface)!important;
+ font:600 23px/1 system-ui,sans-serif!important;cursor:pointer;}
+@media(min-width:769px){
+ #text-search-bar.nav-hidden .text-search-nav{display:none!important;}
+ /* Search opens in the lower footer region, BELOW the viewport. No content is obscured. */
+ .main-area > #text-search-bar:not(.hidden){
+   position:relative!important;inset:auto!important;order:3!important;
+   left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;
+   flex:0 0 auto!important;max-width:100%!important;width:100%!important;
+   padding:9px 18px!important;border-top:1px solid var(--md-outline-var)!important;
+   border-bottom:0!important;box-shadow:0 -2px 9px var(--md-shadow)!important;
+   gap:8px!important;justify-content:center!important;
+ }
+ body.pdl-drawer-open .main-area > #text-search-bar:not(.hidden),
+ body:has(#sidebar.open) .main-area > #text-search-bar:not(.hidden){padding-left:18px!important;}
+ .main-area > .bottombar{order:4!important;}
+}
+@media(max-width:768px){
+ #pdl-mobile-top.pdl-mobile-chrome.top{gap:6px!important;}
+ #pdl-mobile-bottom.pdl-mobile-chrome.bottom{min-height:calc(57px + env(safe-area-inset-bottom))!important;
+  gap:7px!important;padding:4px 8px calc(5px + env(safe-area-inset-bottom))!important;}
+ #pdl-mobile-bottom .pdl-chrome-action{width:46px!important;height:46px!important;
+  min-width:46px!important;min-height:46px!important;flex:0 0 46px!important;}
+ #pdl-mobile-bottom .pdl-mobile-search-action{border:1.5px solid var(--md-outline-var)!important;
+  border-radius:50%!important;background:var(--md-surface)!important;}
+ #pdl-mobile-bottom .pdl-mobile-search-action svg{width:30px!important;height:30px!important;
+  fill:none!important;stroke:currentColor!important;}
+ #pdl-mobile-bottom .pdl-mobile-progress{flex:1 1 auto!important;min-width:45px!important;}
+ #pdl-mobile-bottom .pdl-mobile-counter{flex:0 0 auto;white-space:nowrap;font-size:11px!important;}
+ #text-search-bar:not(.hidden){position:fixed!important;
+  top:auto!important;bottom:calc(58px + env(safe-area-inset-bottom))!important;
+  left:6px!important;right:6px!important;width:auto!important;max-width:none!important;
+  z-index:280!important;border-radius:15px 15px 5px 5px!important;
+  border:1px solid var(--md-outline-var)!important;padding:10px 8px!important;
+  box-shadow:0 -8px 24px var(--md-shadow)!important;gap:6px!important;
+  flex-wrap:wrap!important;justify-content:stretch!important;
+ }
+ #text-search-bar .pdl-search-field{flex:1 1 calc(100% - 54px)!important;min-width:0!important;max-width:none!important;}
+ #text-search-bar .pdl-search-field .text-search-input{min-width:0!important;font-size:15px!important;}
+ #text-search-bar .pdl-search-clear{width:40px!important;height:40px!important;
+  min-width:40px!important;min-height:40px!important;}
+ #text-search-bar .text-search-nav{gap:6px!important;flex:1 1 100%!important;width:100%!important;min-width:0!important;justify-content:center!important;order:3!important;}
+ #text-search-bar .text-search-btn{min-width:38px!important;min-height:40px!important;flex:0 0 38px!important;}
+ #text-search-bar .text-search-close{width:40px!important;height:40px!important;flex:0 0 40px!important;}
+ /* Overlay the footer only; do not change the measured text viewport. */
+ .main-area > #text-viewport{padding-top:inherit;}
+}
+@media(max-width:370px){
+ #text-search-bar .pdl-search-field{min-width:0!important;}
+ #text-search-bar .text-search-nav{margin-inline:auto;}
+}

@@ -1,0 +1,17 @@
+
+/* PDL v1.5.1 — mobile UI refinements */
+@media(max-width:768px){
+ .pdl-mobile-chrome.top{min-height:calc(46px + env(safe-area-inset-top))!important;padding:calc(3px + env(safe-area-inset-top)) 10px 3px!important;gap:4px!important}
+ .pdl-mobile-chrome.bottom{min-height:calc(45px + env(safe-area-inset-bottom))!important;padding:4px 10px calc(4px + env(safe-area-inset-bottom))!important;gap:8px!important}
+ .pdl-mobile-chrome .pdl-chrome-action{min-width:40px!important;min-height:40px!important;width:40px;height:40px;border-radius:10px!important;font-size:24px!important}
+ .pdl-mobile-chrome .pdl-chrome-action svg{height:24px!important;width:24px!important}
+ .pdl-mobile-chrome .pdl-aa-button{font-size:20px!important}
+ #pdl-appearance-text .pdl-adjust-grid{display:grid;grid-template-columns:minmax(0,1fr) 44px minmax(55px,auto) 44px;grid-template-rows:auto auto;align-items:center;column-gap:9px;row-gap:12px;margin:14px 0 4px;}
+ #pdl-appearance-text .pdl-adjust-grid .pdl-adjust-label{font-size:13px;min-width:0;white-space:nowrap;font-weight:500;}
+ #pdl-appearance-text .pdl-adjust-grid .pdl-adjust-value{font-variant-numeric:tabular-nums;text-align:center;font-size:13px;min-width:55px;}
+ #pdl-appearance-text .pdl-adjust-grid button{display:flex;justify-content:center;align-items:center;width:44px!important;height:44px!important;min-width:44px!important;min-height:44px!important;padding:8px;border:1px solid var(--md-outline);border-radius:10px;background:var(--md-surface);color:var(--md-on-surface);box-sizing:border-box;}
+ #pdl-appearance-text .pdl-adjust-grid button .pdl-custom-icon{width:25px;height:25px;object-fit:contain;display:block;filter:brightness(0) saturate(100%);}
+ body.night #pdl-appearance-text .pdl-adjust-grid button .pdl-custom-icon,body[data-theme="night"] #pdl-appearance-text .pdl-adjust-grid button .pdl-custom-icon{filter:brightness(0) invert(1)}
+ #pdl-appearance-text .pdl-adjust-grid button .pdl-icon-smaller{width:17px;height:17px}
+ #pdl-appearance-text .pdl-adjust-grid button .pdl-icon-larger{width:25px;height:25px}
+}

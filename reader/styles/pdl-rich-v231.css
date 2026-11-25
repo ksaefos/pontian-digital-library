@@ -1,0 +1,12 @@
+
+ #page-content .pdl-rich-h1,.pdl-second-page .pdl-rich-h1,#pdl-opf-host .pdl-rich-h1,.pdl-measure .pdl-rich-h1{font-size:1.5em!important;line-height:1.4!important;font-weight:700!important;margin:.5em 0 .35em!important;}
+ #page-content .pdl-rich-h2,.pdl-second-page .pdl-rich-h2,#pdl-opf-host .pdl-rich-h2,.pdl-measure .pdl-rich-h2{font-size:1.29em!important;line-height:1.4!important;font-weight:700!important;margin:.45em 0 .3em!important;}
+ #page-content .pdl-rich-h3,.pdl-second-page .pdl-rich-h3,#pdl-opf-host .pdl-rich-h3,.pdl-measure .pdl-rich-h3{font-size:1.13em!important;line-height:1.5!important;font-weight:700!important;margin:.4em 0 .25em!important;}
+ .pdl-rich-list-item{padding-left:1.15em!important;text-indent:-.75em!important;}
+ .pdl-rich-quote{padding-left:1em!important;border-left:2px solid currentColor!important;font-style:italic;}
+ .pdl-rich-table-wrap{max-width:100%;overflow:auto;font-size:.72em;line-height:1.3;}
+ .pdl-rich-table-wrap table{width:100%;border-collapse:collapse;table-layout:fixed;}
+ .pdl-rich-table-wrap th,.pdl-rich-table-wrap td{border:1px solid currentColor;padding:.3em;vertical-align:top;overflow-wrap:anywhere;}
+ .pdl-rich-image-wrap{text-align:center;max-width:100%;}
+ .pdl-rich-image-wrap img{max-width:100%;max-height:38vh;width:auto;height:auto;object-fit:contain;}
+ #page-content a,.pdl-second-page a,#pdl-opf-host a{color:inherit;text-decoration:underline;}

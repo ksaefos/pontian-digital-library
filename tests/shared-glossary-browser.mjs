@@ -1,3 +1,5 @@
+import {publicDataset} from '../scripts/build-public.mjs';
+import {readerSource,publicSource} from '../scripts/reader-source.mjs';
 import assert from 'node:assert/strict';
 import {createServer} from 'node:http';
 import {readFile,stat} from 'node:fs/promises';
@@ -8,7 +10,7 @@ const root=path.resolve(import.meta.dirname,'..');
 const engine=process.env.PDL_BROWSER||'chromium',type={chromium,firefox,webkit}[engine];
 assert.ok(type,'Unknown browser engine');
 const original=await readFile(path.join(root,'library-data.json')),data=JSON.parse(original);
-const index=await readFile(path.join(root,'index.html'),'utf8');
+const index=publicSource();
 const functions=index.slice(index.indexOf('function pdlSeparateTerm(value){'),index.indexOf('function pdlParagraphs(text){'));
 const {pdlSeparateTerm,pdlGlossaryFromEntries}=vm.runInNewContext(functions+';({pdlSeparateTerm,pdlGlossaryFromEntries})',{}, {timeout:3000});
 const expected=Object.keys(pdlGlossaryFromEntries(data.entries)).length;
@@ -24,9 +26,13 @@ const phrase=data.entries.find(e=>/\s/.test(pdlSeparateTerm(e.term).term));
 assert.ok(phrase,'A real shared expression must exist');
 const phraseTerm=pdlSeparateTerm(phrase.term).term;
 const types={'.html':'text/html; charset=utf-8','.js':'text/javascript','.css':'text/css','.json':'application/json','.wasm':'application/wasm','.svg':'image/svg+xml','.png':'image/png','.webp':'image/webp'};
+const fixturePublic=publicDataset(unlinkedFixture);
 const server=createServer(async(req,res)=>{try{
- const file=path.resolve(root,'.'+new URL(req.url,'http://localhost').pathname);
- if(!file.startsWith(root+path.sep)||!(await stat(file)).isFile()){res.writeHead(404).end();return;}
+ const pathname=new URL(req.url,'http://localhost').pathname;
+ if(pathname==='/public-data/catalog.json'){res.writeHead(200,{'Content-Type':'application/json'});res.end(JSON.stringify(fixturePublic.catalog));return;}
+ if(fixturePublic.files.has(pathname.slice(1))){res.writeHead(200,{'Content-Type':'application/json'});res.end(fixturePublic.files.get(pathname.slice(1)));return;}
+ const file=path.resolve(root,'dist','.'+new URL(req.url,'http://localhost').pathname);
+ if(!file.startsWith(path.join(root,'dist')+path.sep)||!(await stat(file)).isFile()){res.writeHead(404).end();return;}
  res.writeHead(200,{'Content-Type':types[path.extname(file)]||'application/octet-stream'});res.end(path.basename(file)==='library-data.json'?JSON.stringify(unlinkedFixture):await readFile(file));
 }catch{res.writeHead(404).end();}});
 await new Promise(r=>server.listen(0,'127.0.0.1',r));
@@ -60,7 +66,7 @@ try{
  const cases=[{id:'48715ee4-83f2-40b9-85cd-468e9b67a948',mobile:false},{id:'99a52ef1-f5a7-4894-826c-577ea0d2148e',mobile:false}];
  if(engine==='chromium')cases.push({id:cases[0].id,mobile:true},{id:cases[1].id,mobile:true});
  for(const scenario of cases){
-  const context=await browser.newContext(scenario.mobile?{viewport:{width:390,height:844},hasTouch:true,isMobile:true}:{viewport:{width:1100,height:900}});
+  const context=await browser.newContext({serviceWorkers:'block',...(scenario.mobile?{viewport:{width:390,height:844},hasTouch:true,isMobile:true}:{viewport:{width:1100,height:900}})});
   const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(String(e)));
   await page.goto(`http://127.0.0.1:${server.address().port}/index.html`);await page.waitForFunction(()=>libraryState.books.length>0);
   await page.evaluate(id=>{const book=libraryState.books.find(b=>String(b.id).replace(/^studio:/,'')===id);if(!book)throw Error('Book not found');openBook(book.id);},scenario.id);

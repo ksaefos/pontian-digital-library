@@ -1,9 +1,10 @@
+import {inspectionSource,readerSource} from './reader-source.mjs';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {resolve} from 'node:path';
 import {runInNewContext} from 'node:vm';
 const root=resolve(import.meta.dirname,'..');
-const index=readFileSync(resolve(root,'index.html'),'utf8');
+const index=inspectionSource();
 const packageData=JSON.parse(readFileSync(resolve(root,'package.json'),'utf8'));
 const match=index.match(/<script id="pdl-reader-shell" type="application\/json">([\s\S]*?)<\/script>/);
 assert.ok(match,'Embedded Reader shell must exist');

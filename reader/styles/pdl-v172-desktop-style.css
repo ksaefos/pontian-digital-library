@@ -1,0 +1,4 @@
+
+.text-search-bar .text-search-btn svg,.text-search-bar .text-search-close svg{display:block!important;min-width:22px;min-height:22px;width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.text-search-bar .text-search-btn,.text-search-bar .text-search-close{font-family:inherit!important;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;overflow:hidden;flex:0 0 36px}
+.text-search-bar .text-search-nav{display:inline-flex;align-items:center;gap:8px;flex-shrink:0}

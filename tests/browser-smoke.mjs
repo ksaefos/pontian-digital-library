@@ -6,8 +6,8 @@ import path from 'node:path';
 const root=path.resolve(import.meta.dirname,'..');
 const types={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json; charset=utf-8','.svg':'image/svg+xml','.wasm':'application/wasm','.hpb':'application/octet-stream','.webp':'image/webp','.png':'image/png'};
 const server=createServer(async(req,res)=>{
- try{const pathname=decodeURIComponent(new URL(req.url,'http://localhost').pathname);const filename=path.resolve(root,'.'+pathname);
- if(!filename.startsWith(root+path.sep)&&filename!==root){res.writeHead(403).end();return;}
+ try{const pathname=decodeURIComponent(new URL(req.url,'http://localhost').pathname);const filename=path.resolve(root,'dist','.'+pathname);
+ if(!filename.startsWith(path.join(root,'dist')+path.sep)&&filename!==root){res.writeHead(403).end();return;}
  const s=await stat(filename);if(s.isDirectory()){res.writeHead(302,{Location:'/index.html'}).end();return;}
  res.writeHead(200,{'Content-Type':types[path.extname(filename)]||'application/octet-stream'});res.end(await readFile(filename));
  }catch(err){res.writeHead(404).end('Not Found');}
@@ -18,7 +18,7 @@ let browser;
 try{
  browser=await chromium.launch({headless:true,
   ...(process.env.PDL_CHROMIUM_EXECUTABLE?{executablePath:process.env.PDL_CHROMIUM_EXECUTABLE}:{})});
- const page=await browser.newPage();const errors=[];page.on('pageerror',err=>errors.push(String(err)));
+ const page=await browser.newPage({serviceWorkers:'block'});const errors=[];page.on('pageerror',err=>errors.push(String(err)));
  // Studio requires an authenticated Worker GET before editing. Mock only the
  // network boundary: the actual login dialog, access gate and editor all run
  // unmodified. No GitHub write, real credential or production account involved.
@@ -94,7 +94,7 @@ try{
   'Manual export must capture unsaved book changes');
  assert.equal(workerGetCount,1,'Manual backup must not call remote publish');
  console.log('PASS Studio manual JSON backup: visible, authenticated, captures unsaved edits');
- const page2=await browser.newPage({viewport:{width:390,height:844}});const errors2=[];page2.on('pageerror',err=>errors2.push(String(err)));
+ const page2=await browser.newPage({serviceWorkers:'block',viewport:{width:390,height:844}});const errors2=[];page2.on('pageerror',err=>errors2.push(String(err)));
  await page2.goto(url+'/index.html',{waitUntil:'domcontentloaded'});
  await page2.waitForFunction(()=>document.querySelector('#pdl-import-status')?.textContent&&!document.querySelector('#pdl-import-status').textContent.includes('Φόρτωση'),null,{timeout:30000});
  if(errors2.length)throw new Error('Reader JS errors: '+errors2.join('; '));

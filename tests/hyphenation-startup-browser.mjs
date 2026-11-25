@@ -6,11 +6,11 @@ import {chromium} from 'playwright';
 const root=path.resolve(import.meta.dirname,'..');
 const types={'.html':'text/html; charset=utf-8','.js':'text/javascript','.css':'text/css','.json':'application/json','.wasm':'application/wasm','.svg':'image/svg+xml','.webp':'image/webp','.png':'image/png'};
 const server=createServer(async(req,res)=>{try{
- const file=path.resolve(root,'.'+new URL(req.url,'http://localhost').pathname);
- if(!file.startsWith(root+path.sep)||!(await stat(file)).isFile()){res.writeHead(404).end();return;}
+ const file=path.resolve(root,'dist','.'+new URL(req.url,'http://localhost').pathname);
+ if(!file.startsWith(path.join(root,'dist')+path.sep)||!(await stat(file)).isFile()){res.writeHead(404).end();return;}
  let data=await readFile(file);
- if(file.endsWith('/index.html')){
-  const source=data.toString(),match=source.match(/<script id="pdl-reader-shell" type="application\/json">([\s\S]*?)<\/script>/),shell=JSON.parse(match[1]);
+ if(/\/reader\/template\.[a-f0-9]+\.html$/.test(file)){
+  const source=data.toString(),shell={template:source};
   const marker='pdlPaginate();\nPDL_HYPH.activate();';assert.ok(shell.template.includes(marker));
   shell.template=shell.template.replace(marker,`window.startupAudit={started:performance.now(),legacy:[],firstVisibleMs:null,firstVerifiedMs:null};
 const measuredLegacy=pdlLegacyPaginate;
@@ -19,7 +19,7 @@ const measuredRender=render;
 render=function(){const out=measuredRender.apply(this,arguments);if(startupAudit.firstVisibleMs===null&&document.getElementById('page-content').textContent.trim()){startupAudit.firstVisibleMs=performance.now()-startupAudit.started;startupAudit.firstVisibleHyphenated=PDL_HYPH.ready()}return out};
 window.addEventListener('pdl-progress-pages',()=>{if(startupAudit.firstVerifiedMs===null)startupAudit.firstVerifiedMs=performance.now()-startupAudit.started});
 ${marker}`);
-  data=Buffer.from(source.replace(match[1],()=>JSON.stringify(shell).replaceAll('<','\\u003c')));
+  data=Buffer.from(shell.template);
  }
  res.writeHead(200,{'Content-Type':types[path.extname(file)]||'application/octet-stream'});res.end(data);
 }catch(e){res.writeHead(404).end(String(e));}});
@@ -51,7 +51,7 @@ try{
  const benchmark=process.env.PDL_STARTUP_BENCHMARK==='1';
  const scenarios=benchmark?['healthy','healthy','healthy']:['healthy','delayed','resume-pending','timeout','loader-error','grid-off'];
  for(const scenario of scenarios){
-  const context=await browser.newContext({viewport:{width:390,height:844}}),page=await context.newPage(),errors=[];
+  const context=await browser.newContext({serviceWorkers:'block',viewport:{width:390,height:844}}),page=await context.newPage(),errors=[];
   page.on('pageerror',e=>errors.push(String(e)));
   let release;const gate=new Promise(r=>release=r);
   if(['delayed','resume-pending','timeout'].includes(scenario))await page.route('**/patterns/*.wasm',async route=>{await gate;await route.continue().catch(()=>{});});

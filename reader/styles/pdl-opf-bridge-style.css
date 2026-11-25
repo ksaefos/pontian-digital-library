@@ -1,0 +1,15 @@
+
+/* OpenPageFlip is a separately positioned, fully interactive reading layer. */
+#text-viewport { position:relative; }
+#text-viewport.pdl-opf-active > #page-content,
+#text-viewport.pdl-opf-active > #pdl-second-page { visibility:hidden!important; }
+#pdl-opf-host { position:absolute;z-index:6;overflow:visible;pointer-events:auto;contain:layout; }
+#pdl-opf-host .opf-book { width:100%;height:100%; }
+#pdl-opf-host .pdl-opf-page { box-sizing:border-box;overflow:hidden;background:var(--pdl-page);color:var(--pdl-page-ink);box-shadow:inset 0 0 1px var(--pdl-edge);padding:var(--pdl-opf-pad-top) var(--pdl-opf-pad-right) var(--pdl-opf-pad-bottom) var(--pdl-opf-pad-left);font-family:var(--pdl-font,var(--font-body)); }
+#pdl-opf-host .pdl-opf-page p { margin:0 0 var(--pdl-opf-margin-bottom);font-family:inherit;font-size:var(--pdl-opf-font-size);line-height:var(--pdl-opf-line-height);font-weight:var(--pdl-opf-font-weight);letter-spacing:var(--pdl-opf-letter-spacing);text-align:justify;text-align-last:auto;hyphens:auto;overflow-wrap:break-word;color:inherit; }
+#pdl-opf-host .pdl-opf-page p.dialogue {font-style:italic;}
+#pdl-opf-host .pdl-opf-page p.pdl-continuation:first-of-type::first-letter {float:none;font-size:inherit;line-height:inherit;padding:0;margin:0;}
+#pdl-opf-host .pdl-opf-page .chapter-heading {margin-bottom:1.35em;}
+#pdl-opf-host .pdl-opf-page p.pdl-chapter-opening::first-letter {font-size:2.6em;float:left;line-height:.85;padding-right:.07em;font-weight:700;}
+#pdl-opf-status {font-size:12px;opacity:.8;margin-top:5px;min-height:16px;}
+@media(max-width:768px){#pdl-opf-host{max-width:100%;}#pdl-opf-host .pdl-opf-page{padding:var(--pdl-opf-pad-top) var(--pdl-opf-pad-right) var(--pdl-opf-pad-bottom) var(--pdl-opf-pad-left);}}

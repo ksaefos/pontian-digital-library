@@ -10,8 +10,8 @@ const types={'.html':'text/html; charset=utf-8','.js':'text/javascript',
  '.svg':'image/svg+xml','.png':'image/png','.webp':'image/webp'};
 const server=createServer(async(req,res)=>{
  try{
-  const file=path.resolve(root,'.'+new URL(req.url,'http://localhost').pathname);
-  if(!file.startsWith(root+path.sep)||!(await stat(file)).isFile()){
+  const file=path.resolve(root,'dist','.'+new URL(req.url,'http://localhost').pathname);
+  if(!file.startsWith(path.join(root,'dist')+path.sep)||!(await stat(file)).isFile()){
    res.writeHead(404).end();return;
   }
   res.writeHead(200,{'Content-Type':types[path.extname(file)]||'application/octet-stream'});
@@ -50,7 +50,7 @@ function contains(position,anchor){
 try{
  browser=await chromium.launch({headless:true,
   ...(process.env.PDL_CHROMIUM_EXECUTABLE?{executablePath:process.env.PDL_CHROMIUM_EXECUTABLE}:{})});
- const page=await browser.newPage({viewport:{width:390,height:844}});
+ const page=await browser.newPage({serviceWorkers:'block',viewport:{width:390,height:844}});
  page.on('pageerror',e=>errors.push(String(e)));
  await page.goto(url);
  await page.waitForFunction(()=>libraryState.books.length>0);

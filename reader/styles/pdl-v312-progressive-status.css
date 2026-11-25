@@ -1,0 +1,10 @@
+
+#text-viewport #pdl-progress-status{position:absolute;z-index:35;left:50%;top:14px;
+ transform:translateX(-50%);max-width:calc(100% - 26px);padding:9px 17px;
+ border:1px solid var(--md-outline-var);border-radius:24px;background:var(--md-surface);
+ box-shadow:0 4px 16px #0002;color:var(--md-on-surface);text-align:center;
+ font:500 13px/1.4 system-ui,-apple-system,'Segoe UI',sans-serif;pointer-events:none;}
+#text-viewport #pdl-progress-status[hidden]{display:none!important;}
+#text-viewport .pdl-progress-retry{display:block;margin:7px auto 0;padding:5px 12px;border-radius:16px;
+ border:1px solid var(--md-outline-var);background:var(--md-surface);color:var(--md-on-surface);cursor:pointer;font:inherit;}
+@media(max-width:768px){#text-viewport #pdl-progress-status{top:20px;font-size:12px;}}

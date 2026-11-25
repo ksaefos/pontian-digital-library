@@ -1,9 +1,10 @@
+import {inspectionSource,readerSource} from './reader-source.mjs';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
 import {dirname,resolve} from 'node:path';
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
-const page=readFileSync(resolve(root,'index.html'),'utf8');
+const page=inspectionSource();
 const pkg=JSON.parse(readFileSync(resolve(root,'package.json'),'utf8'));
 const lock=JSON.parse(readFileSync(resolve(root,'package-lock.json'),'utf8'));
 const sw=readFileSync(resolve(root,'sw.js'),'utf8');
