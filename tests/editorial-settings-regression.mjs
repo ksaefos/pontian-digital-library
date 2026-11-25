@@ -1,15 +1,16 @@
+import {inspectionSource,readerSource} from './reader-source.mjs';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {resolve} from 'node:path';
 const root=resolve(import.meta.dirname,'..');
-const index=readFileSync(resolve(root,'index.html'),'utf8');
+const index=inspectionSource();
 const admin=readFileSync(resolve(root,'admin.html'),'utf8');
 const books=JSON.parse(readFileSync(resolve(root,'library-data.json'),'utf8')).books;
 const match=index.match(/<script id="pdl-reader-shell" type="application\/json">([\s\S]*?)<\/script>/);
 assert.ok(match,'Missing embedded Reader shell');
 const shell=JSON.parse(match[1]).template;
 // Editorial settings must be published per book and keep safe defaults for older entries.
-assert.ok(index.includes('const PDL_BOOK_EDITOR_SETTINGS = '),'Reader book settings are not injected');
+assert.ok(shell.includes('const PDL_BOOK_EDITOR_SETTINGS=PDL_BOOK_PAYLOAD.settings'),'Reader book settings are not injected');
 assert.ok(index.includes('book.showChapterTitles===true') && index.includes('book.dropCap!==false'), 'Missing legacy-safe editorial defaults');
 assert.ok(index.includes("['el-polyton','el-monoton'].includes(book.hyphenation)"),'Missing mode whitelist');
 assert.ok(admin.includes('id="editShowChapterTitles"') && admin.includes('id="editDropCap"') && admin.includes('id="editHyphenation"'),'Studio controls missing');

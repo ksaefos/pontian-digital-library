@@ -1,0 +1,35 @@
+
+/* All four embedded faces currently define only their regular shape.
+   Allow synthetic bold/italic on the actual reading surfaces and on the
+   CSS-column measurer; otherwise <strong>/<em> are present but visually inert. */
+#page-content,#page-content p,.pdl-second-page,.pdl-second-page p,
+#pdl-opf-host .pdl-opf-page,#pdl-opf-host .pdl-opf-page p,
+#pdl-grid-column-measurer,#pdl-grid-column-measurer p{
+ font-synthesis:weight style!important;
+}
+/* Respect the editor's alignment for every page surface, including the grid
+   measurer. The earlier global p{text-align:justify!important} rules remain
+   the default only where the editor has not specified another alignment. */
+#page-content p[data-pdl-align="left"],.pdl-second-page p[data-pdl-align="left"],
+#pdl-opf-host .pdl-opf-page p[data-pdl-align="left"],
+#pdl-grid-column-measurer p[data-pdl-align="left"]{text-align:left!important;text-align-last:left!important;}
+#page-content p[data-pdl-align="right"],.pdl-second-page p[data-pdl-align="right"],
+#pdl-opf-host .pdl-opf-page p[data-pdl-align="right"],
+#pdl-grid-column-measurer p[data-pdl-align="right"]{text-align:right!important;text-align-last:right!important;}
+#page-content p[data-pdl-align="center"],.pdl-second-page p[data-pdl-align="center"],
+#pdl-opf-host .pdl-opf-page p[data-pdl-align="center"],
+#pdl-grid-column-measurer p[data-pdl-align="center"]{text-align:center!important;text-align-last:center!important;}
+#page-content p[data-pdl-align="justify"],.pdl-second-page p[data-pdl-align="justify"],
+#pdl-opf-host .pdl-opf-page p[data-pdl-align="justify"],
+#pdl-grid-column-measurer p[data-pdl-align="justify"]{text-align:justify!important;text-align-last:auto!important;}
+/* The CSS-column proof must also measure heading size and list/quote spacing,
+   not silently treat all enriched paragraphs as ordinary body text. */
+#pdl-grid-column-measurer p.pdl-rich-h1{font-size:1.5em!important;text-indent:0!important;}
+#pdl-grid-column-measurer p.pdl-rich-h2{font-size:1.29em!important;text-indent:0!important;}
+#pdl-grid-column-measurer p.pdl-rich-h3{font-size:1.13em!important;text-indent:0!important;}
+#pdl-grid-column-measurer p.pdl-rich-list-item{padding-left:1.15em!important;text-indent:-.75em!important;}
+#pdl-grid-column-measurer p.pdl-rich-quote{padding-left:1em!important;border-left:2px solid currentColor!important;font-style:italic!important;}
+/* Hard line breaks from Shift+Enter remain native BR nodes, with the same
+   fixed baseline line-height as other lines, including on the OPF overlay. */
+#page-content p br,.pdl-second-page p br,#pdl-opf-host .pdl-opf-page p br,
+#pdl-grid-column-measurer p br{line-height:inherit!important;}

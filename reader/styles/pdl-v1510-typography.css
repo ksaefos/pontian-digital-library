@@ -1,0 +1,17 @@
+
+/* Never stretch isolated last lines; protect original chapter drop-cap marker. */
+#page-content p,.pdl-second-page p,#pdl-second-page p,
+#pdl-stflip-overlay .page-content p,#text-viewport .pdl-measure p{
+  text-align:justify!important;text-align-last:auto!important;
+  word-spacing:normal!important;letter-spacing:normal!important;
+  hyphens:manual!important;-webkit-hyphens:manual!important;
+}
+#page-content p.pdl-fragment-continues,.pdl-second-page p.pdl-fragment-continues{
+  text-align-last:left!important;
+}
+/* Only a true chapter opening can have a drop cap. */
+#page-content p:not(.pdl-chapter-opening)::first-letter,
+.pdl-second-page p:not(.pdl-chapter-opening)::first-letter{
+ font-size:inherit!important;float:none!important;padding:0!important;margin:0!important;
+ line-height:inherit!important;color:inherit!important;font-weight:inherit!important;
+}

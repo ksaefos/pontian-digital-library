@@ -1,0 +1,52 @@
+
+/* Desktop: respect the permanent 70px rail and the 390px opened drawer. */
+@media (min-width:769px){
+  #text-search-bar:not(.hidden){
+    position:fixed!important;
+    left:86px!important;
+    right:16px!important;
+    max-width:none!important;
+    box-sizing:border-box!important;
+    transition:left .2s ease;
+  }
+  body.pdl-drawer-open #text-search-bar:not(.hidden),
+  body:has(#sidebar.open) #text-search-bar:not(.hidden){
+    left:472px!important;
+  }
+}
+/* Mobile: toolbars overlay the fixed book, rather than consuming its height.
+   The entire reading surface (including OpenPageFlip) is visually scaled as a
+   single screenshot-like stage. Measured page dimensions never change. */
+@media (max-width:768px){
+  #pdl-mobile-top.pdl-mobile-chrome.top,
+  #pdl-mobile-bottom.pdl-mobile-chrome.bottom{
+    position:fixed!important;
+    box-sizing:border-box!important;
+    left:0!important;right:0!important;
+    width:100%!important;
+    margin:0!important;
+    z-index:230!important;
+  }
+  #pdl-mobile-top.pdl-mobile-chrome.top{top:0!important;bottom:auto!important;}
+  #pdl-mobile-bottom.pdl-mobile-chrome.bottom{bottom:0!important;top:auto!important;}
+  .main-area > #text-viewport{
+    flex:1 1 auto!important;
+    height:100%!important;
+    min-height:0!important;
+    transform-origin:center center!important;
+    transition:transform .20s ease!important;
+  }
+  body:not(.immersive) .main-area > #text-viewport{
+    transform:scale(.86)!important;
+  }
+  body.immersive .main-area > #text-viewport{
+    transform:none!important;
+  }
+  /* Never scale the leaf independently: that breaks page hit testing and OPF. */
+  body:not(.immersive) #page-content,body.immersive #page-content{
+    transform:none!important;
+  }
+}
+@media (max-width:768px) and (prefers-reduced-motion:reduce){
+  .main-area > #text-viewport{transition:none!important;}
+}

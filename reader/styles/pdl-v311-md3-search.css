@@ -1,0 +1,85 @@
+
+/* v3.1.1: MD3 compact bottom search dock. Clear query is inside field;
+   collapse sheet is a distinct chevron action. Reader geometry unchanged. */
+#text-search-bar:not(.hidden){
+  background:var(--md-surface-container)!important;
+  border:1px solid var(--md-outline-var)!important;
+  color:var(--md-on-surface)!important;
+  gap:10px!important;
+  align-items:center!important;
+  box-sizing:border-box!important;
+}
+#text-search-bar .pdl-search-field{
+  flex:1 1 240px!important;max-width:650px!important;min-width:0!important;
+  height:48px!important;display:flex!important;align-items:center!important;
+  position:relative!important;background:var(--md-surface)!important;
+  border:1px solid transparent!important;border-radius:28px!important;
+  padding:0 6px 0 16px!important;
+  transition:border-color .15s,box-shadow .15s,background .15s;
+}
+#text-search-bar .pdl-search-field:focus-within{
+  border-color:var(--md-primary)!important;box-shadow:0 0 0 2px color-mix(in srgb,var(--md-primary) 12%,transparent)!important;
+}
+#text-search-bar .pdl-search-leading{display:block;flex:0 0 22px;width:22px;height:22px;
+  margin-right:12px;color:var(--md-on-surface-var);pointer-events:none;}
+#text-search-bar .pdl-search-field .text-search-input{
+  appearance:none!important;-webkit-appearance:none!important;
+  border:0!important;box-shadow:none!important;outline:none!important;
+  border-radius:0!important;background:transparent!important;
+  padding:0!important;height:42px!important;line-height:42px!important;
+  flex:1 1 auto!important;width:100%!important;min-width:0!important;max-width:none!important;
+  font-family:system-ui,-apple-system,'Segoe UI',sans-serif!important;
+  font-size:15px!important;font-style:normal!important;color:var(--md-on-surface)!important;
+}
+#text-search-bar .text-search-input::placeholder{font-style:normal!important;color:var(--md-on-surface-var)!important;opacity:.75!important;}
+#text-search-bar input::-webkit-search-cancel-button{display:none!important;}
+#text-search-bar .pdl-search-clear{
+  position:static!important;inset:auto!important;transform:none!important;
+  display:inline-flex!important;align-items:center!important;justify-content:center!important;
+  flex:0 0 30px!important;width:30px!important;height:30px!important;min-width:30px!important;min-height:30px!important;
+  padding:0!important;border:0!important;border-radius:50%!important;
+  background:var(--md-surface-container)!important;color:var(--md-on-surface-var)!important;
+  opacity:1!important;visibility:visible!important;cursor:pointer!important;
+}
+#text-search-bar .pdl-search-clear svg{display:block;width:17px;height:17px;stroke:currentColor;}
+#text-search-bar .text-search-input:placeholder-shown + .pdl-search-clear{
+  opacity:0!important;visibility:hidden!important;pointer-events:none!important;}
+#text-search-bar .pdl-search-clear:hover{background:var(--md-cont-high,var(--md-surface-cont-high))!important;color:var(--md-on-surface)!important;}
+#text-search-bar .text-search-close{
+  flex:0 0 44px!important;width:44px!important;height:44px!important;
+  min-width:44px!important;min-height:44px!important;display:inline-flex!important;
+  align-items:center!important;justify-content:center!important;
+  padding:0!important;border:1px solid var(--md-outline-var)!important;
+  border-radius:50%!important;background:var(--md-surface)!important;
+  color:var(--md-on-surface-var)!important;cursor:pointer!important;
+}
+#text-search-bar .text-search-close svg{width:23px!important;height:23px!important;stroke:currentColor!important;fill:none!important;}
+#text-search-bar .text-search-close:hover,
+#text-search-bar .text-search-btn:hover:not(:disabled){background:var(--md-surface-cont-high)!important;color:var(--md-on-surface)!important;}
+#text-search-bar .text-search-nav{display:flex!important;align-items:center!important;justify-content:center!important;gap:7px!important;min-width:0;}
+#text-search-bar.nav-hidden .text-search-nav{display:none!important;}
+#text-search-bar .text-search-btn{
+  flex:0 0 40px!important;min-width:40px!important;min-height:40px!important;
+  width:40px!important;height:40px!important;border:1px solid var(--md-outline-var)!important;
+  background:var(--md-surface)!important;border-radius:50%!important;overflow:visible!important;
+}
+#text-search-bar .text-search-count{min-width:62px!important;color:var(--md-on-surface-var)!important;font-size:12px!important;}
+#text-search-bar .pdl-search-clear:focus-visible,
+#text-search-bar .text-search-close:focus-visible,
+#text-search-bar .text-search-btn:focus-visible{outline:3px solid var(--md-primary)!important;outline-offset:2px!important;}
+@media(min-width:769px){
+  .main-area > #text-search-bar:not(.hidden){padding:10px 16px!important;border-radius:0!important;
+    border-left:0!important;border-right:0!important;border-bottom:0!important;}
+  #text-search-bar .text-search-nav{flex:0 0 auto!important;}
+}
+@media(max-width:768px){
+  #text-search-bar:not(.hidden){border-radius:28px 28px 12px 12px!important;
+    padding:12px 11px!important;column-gap:8px!important;row-gap:8px!important;
+    box-shadow:0 -7px 26px var(--md-shadow)!important;}
+  #text-search-bar .pdl-search-field{order:1!important;flex:1 1 calc(100% - 57px)!important;
+    max-width:none!important;height:48px!important;}
+  #text-search-bar .text-search-close{order:2!important;flex:0 0 44px!important;}
+  #text-search-bar .text-search-nav{order:3!important;flex:1 1 100%!important;
+    width:100%!important;justify-content:center!important;}
+  #text-search-bar.nav-hidden .text-search-nav{display:none!important;}
+}

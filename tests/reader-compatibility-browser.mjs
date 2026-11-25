@@ -8,8 +8,8 @@ const engine=process.env.PDL_BROWSER||'chromium',type={chromium,firefox,webkit}[
 assert.ok(type,'PDL_BROWSER must be chromium, firefox or webkit');
 const types={'.html':'text/html; charset=utf-8','.js':'text/javascript','.css':'text/css','.json':'application/json','.wasm':'application/wasm','.svg':'image/svg+xml','.webp':'image/webp','.png':'image/png'};
 const server=createServer(async(req,res)=>{try{
- const file=path.resolve(root,'.'+new URL(req.url,'http://localhost').pathname);
- if(!file.startsWith(root+path.sep)||!(await stat(file)).isFile()){res.writeHead(404).end();return;}
+ const file=path.resolve(root,'dist','.'+new URL(req.url,'http://localhost').pathname);
+ if(!file.startsWith(path.join(root,'dist')+path.sep)||!(await stat(file)).isFile()){res.writeHead(404).end();return;}
  res.writeHead(200,{'Content-Type':types[path.extname(file)]||'application/octet-stream'});res.end(await readFile(file));
 }catch{res.writeHead(404).end();}});
 await new Promise(r=>server.listen(0,'127.0.0.1',r));
@@ -54,7 +54,7 @@ async function search(query){
 }
 try{
  browser=await type.launch({headless:true,timeout:30000});
- page=await browser.newPage({viewport:{width:390,height:844}});page.on('pageerror',e=>errors.push(String(e)));
+ page=await browser.newPage({serviceWorkers:'block',viewport:{width:390,height:844}});page.on('pageerror',e=>errors.push(String(e)));
  await page.goto(`http://127.0.0.1:${server.address().port}/index.html`);await page.waitForFunction(()=>libraryState.books.length===4);
  await page.evaluate(()=>openBook(libraryState.books.find(b=>b.title==='Η Σωνίτσα').id));
  await page.waitForFunction(()=>typeof document.getElementById('reader-frame')?.contentWindow?.pdlProgressStats==='function');

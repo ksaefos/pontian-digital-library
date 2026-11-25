@@ -1,9 +1,10 @@
+import {inspectionSource,readerSource} from './reader-source.mjs';
 import {readFileSync,existsSync} from 'node:fs';
 import {strict as assert} from 'node:assert';
 import vm from 'node:vm';
 import path from 'node:path';
 const root=path.resolve(import.meta.dirname,'..');
-const get=(name)=>readFileSync(path.join(root,name),'utf8');
+const get=(name)=>name==='index.html'?inspectionSource():readFileSync(path.join(root,name),'utf8');
 const studio=get('admin.html'),reader=get('index.html'),sw=get('sw.js'),worker=get('cloudflare-worker.js');
 const data=JSON.parse(get('library-data.json'));
 const test=(name,fn)=>{fn();console.log('PASS '+name)};

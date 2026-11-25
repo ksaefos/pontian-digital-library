@@ -1,0 +1,22 @@
+
+/* v2.0.2: all three modes use precisely the paper color behind the zoomed page.
+   Toolbars intentionally retain their own surface colors for accessibility. */
+@media (max-width:768px){
+ body:not(.immersive),
+ body:not(.immersive) .reader-shell,
+ body:not(.immersive) .main-area,
+ body:not(.immersive) #text-viewport{
+   background-color:var(--pdl-page)!important;
+ }
+ /* One and only one zoom surface. In reading mode it is reset explicitly,
+    including when the engine turns/rebuilds pages during a transition. */
+ body.immersive .main-area > #text-viewport{
+   transform:none!important;
+ }
+ body:not(.immersive) .main-area > #text-viewport{
+   transform:scale(.86)!important;
+ }
+ #page-content, #pdl-second-page, #pdl-opf-host{
+   scale:1!important;
+ }
+}

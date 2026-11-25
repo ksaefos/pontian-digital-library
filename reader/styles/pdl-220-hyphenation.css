@@ -1,0 +1,9 @@
+
+/* Manual, pattern-approved hyphenation; no arbitrary mid-word wrapping. */
+#page-content p,.pdl-second-page p,#pdl-opf-host .pdl-opf-page p,#text-viewport .pdl-measure p {
+ overflow-wrap:normal!important;word-break:normal!important;hyphens:manual!important;
+}
+#page-content p.pdl-fragment-continues,.pdl-second-page p.pdl-fragment-continues,
+#pdl-opf-host .pdl-opf-page p.pdl-fragment-continues{overflow-wrap:normal!important;}
+.pdl-page-break-hyphen::after{content:'‐';display:inline;}
+

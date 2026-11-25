@@ -1,0 +1,16 @@
+
+/* A discreet countdown indicates when a glossary explanation will close. */
+#pdl-inline-gloss, #mobile-gloss-popup{overflow:hidden;}
+#pdl-inline-gloss.pdl-gloss-clock-active::after,
+#mobile-gloss-popup.pdl-gloss-clock-active::after{
+ content:"";position:absolute;inset:auto 0 0;height:3px;
+ background:var(--md-primary,#8b3a1a);transform-origin:left center;
+ animation:pdl-gloss-timer var(--pdl-gloss-duration,7000ms) linear forwards;
+ pointer-events:none;
+}
+.pdl-gloss-clock-paused::after{animation-play-state:paused!important;}
+@keyframes pdl-gloss-timer{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+@media(prefers-reduced-motion:reduce){
+ #pdl-inline-gloss.pdl-gloss-clock-active::after,
+ #mobile-gloss-popup.pdl-gloss-clock-active::after{animation:none;display:none;}
+}

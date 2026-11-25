@@ -1,0 +1,13 @@
+
+/* The user-visible page must never be visually scaled independently of its measurement. */
+@media(max-width:768px){
+ body:not(.immersive) #page-content,body.immersive #page-content{
+   transform:none!important;transition:none!important;
+ }
+}
+/* Measurement is an unscaled, naturally growing column equal to the text area. */
+#text-viewport .pdl-measure{
+  height:auto!important;min-height:0!important;max-height:none!important;
+  padding:0!important;margin:0!important;transform:none!important;
+  display:flow-root!important;flex:none!important;
+}

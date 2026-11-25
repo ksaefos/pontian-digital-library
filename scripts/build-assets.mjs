@@ -82,3 +82,6 @@ const updatedSw = swText
   .replace(optionalPattern, `const OPTIONAL=${JSON.stringify(optionalFiles)};`);
 writeFileSync(swFile, updatedSw);
 console.log(`Built TipTap + Hyphenopoly ${hyVersion} (two Greek WASM patterns); SW cache ${cacheId}`);
+
+const {buildPublic}=await import('./build-public.mjs');
+buildPublic();

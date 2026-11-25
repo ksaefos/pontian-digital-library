@@ -1,14 +1,15 @@
+import {inspectionSource,readerSource} from './reader-source.mjs';
 import {readFileSync} from 'node:fs';
 import {strict as assert} from 'node:assert';
 import vm from 'node:vm';
 import path from 'node:path';
 const root=path.resolve(import.meta.dirname,'..');
-const html=readFileSync(path.join(root,'index.html'),'utf8');
+const html=inspectionSource();
 const match=html.match(/<script id="pdl-reader-shell" type="application\/json">([\s\S]*?)<\/script>/);
 assert.ok(match,'Embedded reader is present');
 const shell=JSON.parse(match[1]).template;
 assert.match(html,/id:String\(c\.id\|\|`legacy-\$\{i\}`\)/);
-assert.match(html,/return \{id:c\.id,number:c\.title,pages:/);
+assert.match(shell,/return \{id:c\.id,number:c\.title,pages:/);
 const from=shell.indexOf('function pdlBMPlain(');
 const to=shell.indexOf('function saveBookmarks(',from);
 assert.ok(from>0&&to>from);

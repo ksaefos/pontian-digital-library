@@ -1,0 +1,17 @@
+
+/* Unified reading geometry. Justification affects both visible and measured pages. */
+.page-content p,.pdl-second-page p,.pdl-measure p,
+#pdl-stflip-overlay .page-content p { text-align:justify!important;text-align-last:auto!important;
+ text-justify:inter-word!important;hyphens:none;overflow-wrap:break-word; }
+/* Dialogue is italic and has no rail, gutter or hanging ornament. */
+.page-content p.dialogue,.pdl-second-page p.dialogue,.pdl-measure p.dialogue,
+#pdl-stflip-overlay .page-content p.dialogue {
+ font-style:italic!important;border-left:0!important;border-right:0!important;
+ padding-left:0!important;padding-right:0!important;margin-left:0!important;
+ background:transparent!important;box-shadow:none!important; }
+@media(max-width:768px){
+ .reader-shell,.main-area{height:100dvh!important;min-height:0!important;}
+ .text-viewport{min-height:0!important;overflow:hidden!important;}
+ .page-content#page-content{margin-top:0!important;margin-bottom:0!important;}
+ .pdl-measure{margin:0!important;}
+}

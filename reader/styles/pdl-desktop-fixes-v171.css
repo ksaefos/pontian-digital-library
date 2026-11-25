@@ -1,0 +1,9 @@
+
+@media (min-width:769px){
+ .text-search-bar .text-search-btn,.text-search-bar .text-search-close{display:inline-flex!important;align-items:center!important;justify-content:center!important;min-width:34px;min-height:34px;color:var(--md-on-surface)!important}
+ .text-search-bar .text-search-btn svg,.text-search-bar .text-search-close svg{display:block;width:22px;height:22px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+ .text-search-bar .text-search-btn:disabled{opacity:.35}
+ .text-search-bar .text-search-nav{display:flex!important;align-items:center;gap:6px}
+ .text-search-bar:not(.hidden){z-index:180}
+ .pdl-desktop-gloss-popup{z-index:250!important}
+}

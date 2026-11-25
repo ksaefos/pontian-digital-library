@@ -7,8 +7,8 @@ const root=path.resolve(import.meta.dirname,'..'),engine=process.env.PDL_BROWSER
 assert.ok(type,'Unknown browser');
 const types={'.html':'text/html; charset=utf-8','.js':'text/javascript','.css':'text/css','.json':'application/json','.svg':'image/svg+xml','.wasm':'application/wasm','.webp':'image/webp','.png':'image/png'};
 const server=createServer(async(req,res)=>{try{
- const name=path.resolve(root,'.'+new URL(req.url,'http://localhost').pathname);
- if(!name.startsWith(root+path.sep)||!(await stat(name)).isFile()){res.writeHead(404).end();return;}
+ const name=path.resolve(root,'dist','.'+new URL(req.url,'http://localhost').pathname);
+ if(!name.startsWith(path.join(root,'dist')+path.sep)||!(await stat(name)).isFile()){res.writeHead(404).end();return;}
  res.writeHead(200,{'Content-Type':types[path.extname(name)]||'application/octet-stream'});res.end(await readFile(name));
 }catch{res.writeHead(404).end();}});
 await new Promise(r=>server.listen(0,'127.0.0.1',r));
@@ -30,7 +30,7 @@ const data={format:'pontian-digital-library',books:[{id:'b',title:'Δοκιμή'
 data.entries.push({...structuredClone(data.entries[0]),id:'legacy-duplicate',sources:['wrong_filename.txt']});
 let browser;
 try{
- browser=await type.launch({headless:true});const page=await browser.newPage({viewport:{width:1200,height:900}}),errors=[];page.on('pageerror',e=>errors.push(String(e)));
+ browser=await type.launch({headless:true});const page=await browser.newPage({serviceWorkers:'block',viewport:{width:1200,height:900}}),errors=[];page.on('pageerror',e=>errors.push(String(e)));
  const password='ci-test-only',worker='https://pontian-library-sync.ksaefos.workers.dev/api/library';let requests=0;const publications=[];
  await page.route(worker,async route=>{
   const req=route.request(),headers={'Access-Control-Allow-Origin':base,'Access-Control-Allow-Headers':'authorization,content-type','Access-Control-Allow-Methods':'GET, PUT, OPTIONS','Cache-Control':'no-store'};

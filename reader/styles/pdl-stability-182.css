@@ -1,0 +1,12 @@
+
+/* Mobile is always a single full-width leaf regardless of saved desktop preference. */
+@media (max-width: 768px) {
+ body.pdl-double #pdl-second-page,body.pdl-double .pdl-second-page {display:none!important}
+ body.pdl-double #page-content, #page-content {width:100%!important;max-width:100%!important;flex:1 1 100%!important;min-width:0!important;border-right:0!important}
+ #text-viewport,.text-viewport {width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important;}
+ .reader-shell{width:100%!important;max-width:100%!important;}
+}
+/* In-page glossary is deliberately above the reading surface. */
+#pdl-inline-gloss-182{position:fixed;z-index:1200;max-width:min(360px,calc(100vw - 28px));min-width:190px;padding:14px 34px 14px 15px;border:1px solid var(--md-outline-var,#bbb);border-radius:12px;background:var(--md-surface,#fff);color:var(--md-on-surface,#222);box-shadow:0 9px 32px rgba(0,0,0,.22);font-family:var(--font-body,Georgia,serif);font-size:14px;line-height:1.5;overflow-wrap:anywhere;}
+#pdl-inline-gloss-182 strong{display:block;color:var(--md-primary,#8b3a1a);margin-bottom:5px;font-size:16px}
+#pdl-inline-gloss-182 .pdl-close{position:absolute;top:5px;right:7px;border:0;background:transparent;color:inherit;font-size:23px;cursor:pointer;line-height:1;padding:4px}

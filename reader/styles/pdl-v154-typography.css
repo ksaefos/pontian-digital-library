@@ -1,0 +1,33 @@
+
+/* Book typography: rendering and measurement columns use matching properties.
+   Hyphenation is determined by the later manual/pattern-controlled rules. */
+#page-content p, .pdl-second-page p, #pdl-stflip-overlay .page-content p,
+#text-viewport .pdl-measure p {
+  text-align:justify!important;
+  text-align-last:auto!important;
+  text-justify:inter-word!important;
+  overflow-wrap:normal!important;
+  word-break:normal!important;
+  word-spacing:normal!important;
+}
+/* Remove first-letter ornament from every ordinary page and the measurement column. */
+#page-content p:first-of-type::first-letter,
+.pdl-second-page p:first-of-type::first-letter,
+#pdl-stflip-overlay .page-content p:first-of-type::first-letter,
+#text-viewport .pdl-measure p:first-of-type::first-letter {
+  font-size:inherit!important;
+  float:none!important;
+  line-height:inherit!important;
+  padding:0!important;
+  margin:0!important;
+  color:inherit!important;
+  font-weight:inherit!important;
+}
+/* Never treat a continuation as a new paragraph: remove top spacing and indentation. */
+#page-content p.pdl-continuation,
+.pdl-second-page p.pdl-continuation,
+#pdl-stflip-overlay .page-content p.pdl-continuation,
+#text-viewport .pdl-measure p.pdl-continuation {
+  margin-top:0!important;
+  text-indent:0!important;
+}

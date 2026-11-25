@@ -6,16 +6,16 @@ import {chromium} from 'playwright';
 const root=path.resolve(import.meta.dirname,'..');
 const types={'.html':'text/html; charset=utf-8','.js':'text/javascript','.css':'text/css','.json':'application/json','.wasm':'application/wasm','.svg':'image/svg+xml','.webp':'image/webp','.png':'image/png'};
 const server=createServer(async(req,res)=>{try{
- const file=path.resolve(root,'.'+new URL(req.url,'http://localhost').pathname);
- if(!file.startsWith(root+path.sep)||!(await stat(file)).isFile()){res.writeHead(404).end();return;}
+ const file=path.resolve(root,'dist','.'+new URL(req.url,'http://localhost').pathname);
+ if(!file.startsWith(path.join(root,'dist')+path.sep)||!(await stat(file)).isFile()){res.writeHead(404).end();return;}
  let data=await readFile(file);
- if(file.endsWith('/index.html')){
-  const source=data.toString(),match=source.match(/<script id="pdl-reader-shell" type="application\/json">([\s\S]*?)<\/script>/),shell=JSON.parse(match[1]);
+ if(/\/reader\/template\.[a-f0-9]+\.html$/.test(file)){
+  const source=data.toString(),shell={template:source};
   // Pause after the controls are parsed, before the main Reader script can
   // initialize. This exposes a genuine opportunity to paint the initial UI.
-  const marker='<script>\nconst glossary = {};';assert.ok(shell.template.includes(marker));
+  const marker='<script>\nconst glossary = PDL_IMPORTED_GLOSSARY;';assert.ok(shell.template.includes(marker));
   shell.template=shell.template.replace(marker,'<script src="./__pdl_initial_ui_gate.js"></script>\n'+marker);
-  data=Buffer.from(source.replace(match[1],()=>JSON.stringify(shell).replaceAll('<','\\u003c')));
+  data=Buffer.from(shell.template);
  }
  res.writeHead(200,{'Content-Type':types[path.extname(file)]||'application/octet-stream'});res.end(data);
 }catch{res.writeHead(404).end();}});
@@ -28,7 +28,7 @@ async function touch(client,type,x,y){await client.send('Input.dispatchTouchEven
 try{
  browser=await chromium.launch({headless:true,...(process.env.PDL_CHROMIUM_EXECUTABLE?{executablePath:process.env.PDL_CHROMIUM_EXECUTABLE}:{})});
  for(const width of [390,320]){
-  const context=await browser.newContext({viewport:{width,height:844},hasTouch:true,isMobile:true});
+  const context=await browser.newContext({serviceWorkers:'block',viewport:{width,height:844},hasTouch:true,isMobile:true});
   const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(String(e)));
   let releaseStartup;const startupGate=new Promise(resolve=>releaseStartup=resolve);
   await page.route('**/__pdl_initial_ui_gate.js',async route=>{await startupGate;await route.fulfill({contentType:'text/javascript',body:''}).catch(()=>{});});

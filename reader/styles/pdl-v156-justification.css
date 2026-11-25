@@ -1,0 +1,14 @@
+
+/* PDL v1.5.6: justification close to Google Play Books.
+   Line breaks inside words come only from the soft hyphens that PDL_HYPH inserts into both the
+   measured and the displayed text (hyphens:manual), so every browser breaks lines identically.
+   None of the four embedded fonts has U+2010, so the hyphen is drawn with U+002D. */
+#page-content p,.pdl-second-page p,#pdl-second-page p,.page-content p,
+#pdl-stflip-overlay .page-content p,#text-viewport .pdl-measure p{
+  text-align:justify!important;text-align-last:auto!important;text-justify:inter-word!important;
+  -webkit-hyphens:manual!important;hyphens:manual!important;
+  -webkit-hyphenate-character:"-";hyphenate-character:"-";
+  word-spacing:normal!important;letter-spacing:normal!important;
+  overflow-wrap:normal!important;word-break:normal!important;
+  orphans:2;widows:2;
+}

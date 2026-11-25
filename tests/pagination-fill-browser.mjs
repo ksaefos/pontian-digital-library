@@ -10,8 +10,8 @@ const types={'.html':'text/html; charset=utf-8','.js':'text/javascript',
  '.svg':'image/svg+xml','.png':'image/png','.webp':'image/webp'};
 const server=createServer(async(req,res)=>{
  try{
-  const file=path.resolve(root,'.'+new URL(req.url,'http://localhost').pathname);
-  if(!file.startsWith(root+path.sep)||!(await stat(file)).isFile()){
+  const file=path.resolve(root,'dist','.'+new URL(req.url,'http://localhost').pathname);
+  if(!file.startsWith(path.join(root,'dist')+path.sep)||!(await stat(file)).isFile()){
    res.writeHead(404).end();return;
   }
   res.writeHead(200,{'Content-Type':types[path.extname(file)]||'application/octet-stream'});
@@ -33,7 +33,7 @@ try{
   {book:"Αέρα σ' μαναχόν κανείται",font:'Barnebok Pontian',size:100,width:844,height:390}
  ];
  for(const c of cases){
-  const context=await browser.newContext({viewport:{width:c.width,height:c.height}});
+  const context=await browser.newContext({serviceWorkers:'block',viewport:{width:c.width,height:c.height}});
   const page=await context.newPage(),errors=[];
   page.on('pageerror',e=>errors.push(String(e)));
   await page.goto(`http://127.0.0.1:${server.address().port}/index.html`);

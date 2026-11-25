@@ -5,10 +5,15 @@ on:
   pull_request:
     branches: [main, stabilization-2.4]
   workflow_dispatch:
+concurrency:
+  group: library-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 permissions:
-  contents: write
+  contents: read
 jobs:
   verify:
+    permissions:
+      contents: write
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
@@ -44,6 +49,11 @@ jobs:
             git commit -m 'Build verified local editor and hyphenation assets'
             git push
           fi
+      - name: Upload verified public site
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
   compatibility:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
@@ -68,3 +78,19 @@ jobs:
         run: npm run test:compat && npm run test:glossary && npm run test:import
         env:
           PDL_BROWSER: ${{ matrix.browser }}
+
+  # Deploy one artifact only after all engines pass; data-only Studio commits build too.
+  deploy:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: [verify, compatibility]
+    runs-on: ubuntu-24.04
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy verified Pages artifact
+        id: deployment
+        uses: actions/deploy-pages@v4

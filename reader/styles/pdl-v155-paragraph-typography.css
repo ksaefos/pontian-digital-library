@@ -1,0 +1,27 @@
+
+/* The final visible line of EVERY page fragment is never force-justified. This
+   prevents 2-word lines stretching edge-to-edge, irrespective of page splits. */
+#page-content p, .pdl-second-page p, .page-content p,
+#pdl-stflip-overlay .page-content p, #text-viewport .pdl-measure p,
+#page-content p.pdl-fragment-continues, .pdl-second-page p.pdl-fragment-continues,
+#pdl-stflip-overlay .page-content p.pdl-fragment-continues,
+#text-viewport .pdl-measure p.pdl-fragment-continues {
+  text-align: justify !important;
+  text-align-last: auto !important;
+}
+/* No arbitrary drop caps: this is the ONLY ornament selector. */
+.page-content p:first-of-type:not(.pdl-chapter-opening)::first-letter,
+#page-content p:first-of-type:not(.pdl-chapter-opening)::first-letter,
+.pdl-second-page p:first-of-type:not(.pdl-chapter-opening)::first-letter,
+#text-viewport .pdl-measure p:first-of-type::first-letter {
+  font-size: inherit !important; float:none !important;
+  line-height:inherit !important; padding:0 !important;
+  margin:0 !important; color:inherit !important; font-weight:inherit !important;
+}
+#page-content p.pdl-chapter-opening::first-letter,
+.pdl-second-page p.pdl-chapter-opening::first-letter,
+#pdl-stflip-overlay .page-content p.pdl-chapter-opening::first-letter {
+  font-size:3em !important; font-weight:700 !important; float:left !important;
+  line-height:.82 !important; padding-right:.07em !important;
+  color:var(--md-primary) !important; margin-top:.07em !important;
+}

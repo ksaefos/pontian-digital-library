@@ -1,0 +1,25 @@
+
+/* v2.0.5: the desktop search is a genuine row in the reader layout.
+   The book is repaginated to the remaining height, so no page content or
+   search result can ever hide beneath the search controls. */
+@media (min-width:769px){
+  .main-area > #text-search-bar:not(.hidden){
+    position:relative!important;
+    inset:auto!important;
+    top:auto!important;left:auto!important;right:auto!important;bottom:auto!important;
+    order:0;flex:0 0 auto!important;
+    width:100%!important;max-width:100%!important;
+    margin:0!important;padding:9px clamp(12px,2.5vw,34px)!important;
+    z-index:10!important;box-shadow:0 1px 6px var(--md-shadow);
+    border-bottom:1px solid var(--md-outline-var);
+    justify-content:center;
+  }
+  /* When the left glossary drawer is open, keep every search control visible. */
+  body.pdl-drawer-open .main-area > #text-search-bar:not(.hidden),
+  body:has(#sidebar.open) .main-area > #text-search-bar:not(.hidden){
+    padding-left:410px!important;
+  }
+  .main-area > #text-search-bar .text-search-input{max-width:660px;min-width:0;flex:1 1 280px}
+  .main-area > #text-search-bar .text-search-nav{flex:0 0 auto}
+  .main-area > #text-viewport{flex:1 1 0%!important;height:auto!important;min-height:0!important;max-height:none!important}
+}
