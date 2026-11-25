@@ -260,4 +260,6 @@ function pdlValidateCatalog(data){
  }return data;
 }
 
-pdlLoadPublishedLibrary();
+// All catalog dependencies (offline/session/help) must initialize before cards
+// become interactive, even when one script is delayed by the network.
+document.addEventListener('DOMContentLoaded',pdlLoadPublishedLibrary,{once:true});
