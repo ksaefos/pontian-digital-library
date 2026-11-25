@@ -478,7 +478,10 @@ function pdlRelayout(){
   // Re-evaluate search locations, which depend on the generated page boundaries.
   if(typeof tsQuery==='string'&&tsQuery)onTextSearch(tsQuery);
 }
-function pdlScheduleRelayout(){clearTimeout(pdlResizeTimer);pdlResizeTimer=setTimeout(pdlRelayout,160);}
+function pdlScheduleRelayout(){
+ if(window.pdlRequestReaderRelayout)return window.pdlRequestReaderRelayout();
+ clearTimeout(pdlResizeTimer);pdlResizeTimer=setTimeout(pdlRelayout,160);
+}
 window.addEventListener('resize',pdlScheduleRelayout);
 // A controls-only transition must not alter the book's page mapping.
 // Reflow on layout-affecting classes only; font/line/viewport changes have their own hooks.

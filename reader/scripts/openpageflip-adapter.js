@@ -4,14 +4,13 @@
 // Fixed v0.7.0 vendored core. The baseline Reader owns pagination and bookmarks.
 // OpenPageFlip owns only the display and turn gestures of measured HTML pages.
 let engine=null,host=null,activeChapter=-1,windowStart=0,windowCount=0;
-let rebuilding=false,needsBuild=true,buildTimer=0,inFlip=false,failed=false;
+let rebuilding=false,needsBuild=true,inFlip=false,failed=false;
 let pdlProgressTurnInFlight=false;
-let pdlOpfLayoutTimer=0;
 // A layout-refresh can temporarily remove the OPF instance. Keep a turn
 // requested during that interval instead of silently falling back to a
 // static native page advance.
 let pdlOpfPendingTurn=null;
-let pdlOpfBuilds=0,pdlOpfAnimatedTurns=0,pdlOpfInterruptedTurns=0,pdlOpfRelayoutTimer=0;
+let pdlOpfBuilds=0,pdlOpfAnimatedTurns=0,pdlOpfInterruptedTurns=0;
 // v3.1.3: a pointer gesture must never be orphaned by an unrelated rebuild.
 // pdlOpfGesture lives outside doBuild() so it survives a replaced host; the
 // hold timestamps defer rebuilds while a finger/mouse is down and briefly after
@@ -30,6 +29,7 @@ const vp=document.getElementById('text-viewport');
 const left=document.getElementById('page-content');
 const right=document.getElementById('pdl-second-page');
 const status=document.getElementById('pdl-opf-status');
+const coordinator=createPDLReaderCoordinator({busy:pdlOpfBusy});
 
 // v2.1.6: OpenPageFlip only has pages for the active chapter. At its first/last
 // leaf, native OPF has nothing more to flip. An intentional horizontal gesture
@@ -65,6 +65,7 @@ vp.addEventListener('pointerdown',event=>{
 function pdlOpfPointerEnd(){
  if(!pdlOpfPointerDownAt)return;
  pdlOpfPointerDownAt=0;pdlOpfHoldUntil=performance.now()+450;
+ coordinator.wake();
 }
 window.addEventListener('pointerup',pdlOpfPointerEnd,{capture:true,passive:true});
 window.addEventListener('pointercancel',pdlOpfPointerEnd,{capture:true,passive:true});
@@ -78,12 +79,17 @@ function pdlOpfGestureHold(){
  return Math.max(0,Math.ceil(pdlOpfHoldUntil-now));
 }
 function pdlOpfBusy(){
- return !!(engine&&(engine.state==='flipping'||pdlProgressTurnInFlight||pdlOpfGestureHold()>0));
+ if(rebuilding||inFlip)return {reason:'rendering',retryAfter:1000};
+ if(pdlProgressTurnInFlight||engine?.state==='flipping')return {reason:'animation',retryAfter:1000};
+ const hold=pdlOpfGestureHold();
+ if(hold)return {reason:pdlOpfPointerDownAt?'pointer':'gesture-settle',
+  retryAfter:pdlOpfPointerDownAt?Math.max(1,4000-(performance.now()-pdlOpfPointerDownAt)):hold};
+ return null;
 }
 
 function setStatus(message){if(status)status.textContent=message||'';}
 function destroy(){
- clearTimeout(buildTimer);buildTimer=0;clearTimeout(pdlOpfRelayoutTimer);pdlOpfRelayoutTimer=0;
+ coordinator.cancel('build');
  // Count *actual* animation interruption. Rebuilding after a completed turn
  // is allowed when a different page window or a new layout is needed.
  if(engine&&(engine.state==='flipping'||pdlProgressTurnInFlight))pdlOpfInterruptedTurns++;
@@ -96,12 +102,11 @@ function destroy(){
 function fallback(error){
  console.warn('OpenPageFlip fallback — native pagination remains usable',error);
  pdlOpfPendingTurn=null;
- destroy();failed=true;setStatus('Απλή σελιδοποιημένη ανάγνωση (εφεδρεία).');
+ coordinator.cancel();destroy();failed=true;setStatus('Απλή σελιδοποιημένη ανάγνωση (εφεδρεία).');
 }
 function queueBuild(delay=55){
  if(!enabled||failed)return;
- clearTimeout(buildTimer);
- buildTimer=setTimeout(build,delay);
+ coordinator.request('build',build,delay);
 }
 function pdlOpfWindowSignature(g){
  const pages=chapters[currentChapter]?.pages||[];
@@ -268,7 +273,12 @@ function doBuild(){
    });
    const boundEngine=engine;
    engine.on('flip',ev=>{if(engine===boundEngine)syncLocation(ev.page);});
-   engine.on('changeState',ev=>{if(engine===boundEngine&&ev.state==='flipping')pdlOpfAnimatedTurns++;});
+   engine.on('changeState',ev=>{
+    if(engine!==boundEngine)return;
+    if(ev.state==='flipping')pdlOpfAnimatedTurns++;
+    // Let the engine finish emitting its page/state events before any DOM work.
+    else if(ev.state==='read')queueMicrotask(()=>{queuePendingTurn();coordinator.wake();});
+   });
    pdlOpfBuilds++;
    vp.classList.add('pdl-opf-active');setStatus('OpenPageFlip 0.7.0 · '+(g.dual?'Διπλή':'Μονή')+' σελίδα');
  }catch(e){rebuilding=false;fallback(e);return;}
@@ -277,31 +287,32 @@ function doBuild(){
  if(typeof tsQuery==='string'&&tsQuery)pdlHighlightVisible(tsCurrent);
  // A navigation request may have arrived while this fresh OPF instance was
  // being constructed. Animate the requested turn on the new instance.
- if(pdlOpfPendingTurn)queueMicrotask(pdlOpfFlushPendingTurn);
+ queuePendingTurn();
 }
 function build(){
- buildTimer=0;
  // Ignore an obsolete timer after the window has already been built.
  // The old code rebuilt an unchanged book whenever any delayed timer fired.
  if(!needsBuild&&engine&&activeChapter===currentChapter&&
-   currentPage>=windowStart&&currentPage<windowStart+windowCount)return;
+   currentPage>=windowStart&&currentPage<windowStart+windowCount&&engine.page===currentPage-windowStart)return;
  // During swipes, OpenPageFlip drives its own state machine (without passing
  // through navigate()). Rebuilding while it reports `flipping` cancels the
  // page curl, leaving the reader looking like a static page switch.
- if(rebuilding||inFlip||pdlProgressTurnInFlight||engine?.state==='flipping'){
-  queueBuild(130);return;
- }
+ // The coordinator also guards window reuse / turnTo while a pointer is down.
  // An unchanged window is never rebuilt: a rebuild replaces the host, which
  // used to swallow a gesture started right after a completed turn.
  if(pdlOpfWindowStillGood()){
    needsBuild=false;pdlOpfSkippedBuilds++;
    const desired=currentPage-windowStart;
    if(engine.page!==desired){try{engine.turnTo(desired);}catch(e){fallback(e);}}
+   // Search may have marked a still-hidden target before this deferred sync.
+   // Refresh it at the visible geometry, also waking the mobile search dock.
+   if(typeof tsQuery==='string'&&tsQuery)pdlHighlightVisible(tsCurrent);
    return;
  }
- const hold=pdlOpfGestureHold();
- if(hold>0){queueBuild(Math.min(250,Math.max(60,hold)));return;}
  try{doBuild();}catch(e){fallback(e);}
+}
+function queuePendingTurn(){
+ if(pdlOpfPendingTurn)coordinator.request('turn',pdlOpfFlushPendingTurn);
 }
 function pdlOpfFlushPendingTurn(){
  const turn=pdlOpfPendingTurn;
@@ -324,6 +335,7 @@ function navigate(delta,retry=false){
  if(!engine||rebuilding||inFlip||pdlProgressTurnInFlight||engine.state==='flipping'){
    pdlOpfPendingTurn={delta,chapter:currentChapter,page:currentPage,retry};
    if(!engine&&!rebuilding)queueBuild(20);
+   queuePendingTurn();
    return true;
  }
  const local=target-windowStart;
@@ -331,7 +343,7 @@ function navigate(delta,retry=false){
    // The next leaf is beyond the mounted 24-page window: do not jump to it
    // statically. Recenter the window on the *current* page, then animate.
    pdlOpfPendingTurn={delta,chapter:currentChapter,page:currentPage,retry};
-   needsBuild=true;queueBuild(40);return true;
+   needsBuild=true;queueBuild(40);queuePendingTurn();return true;
  }
  const fn=delta>0?engine.flipNext:engine.flipPrev;
  const origin={chapter:currentChapter,page:currentPage};
@@ -353,7 +365,7 @@ function navigate(delta,retry=false){
  }).catch(fallback).finally(()=>{
    pdlProgressTurnInFlight=false;
    if(needsBuild)queueBuild(90);
-   else if(pdlOpfPendingTurn)queueMicrotask(pdlOpfFlushPendingTurn);
+   queuePendingTurn();coordinator.wake();
  });
  return true;
 }
@@ -367,7 +379,7 @@ window.render=function(){
  const desired=currentPage-windowStart;
  if(desired<0||desired>=windowCount){needsBuild=true;queueBuild();return out;}
  // Never snap the visible leaf while an animated turn is in progress.
- if(engine.page!==desired&&!pdlProgressTurnInFlight&&engine.state!=='flipping')engine.turnTo(desired);
+ if(engine.page!==desired){needsBuild=true;queueBuild();}
  return out;
 };
 // Preserve text search highlighting inside the displayed page, not merely the hidden baseline.
@@ -381,24 +393,26 @@ if(typeof prevHighlight==='function')window.pdlHighlightVisible=function(...args
 const prevReset=window.pdlResetPageMarks;
 if(typeof prevReset==='function')window.pdlResetPageMarks=function(...args){const result=prevReset.apply(this,args);copyHighlightedPage();return result;};
 const oldPaginate=window.pdlPaginate;
+const oldRelayout=window.pdlRelayout;
+let paginating=false,relayoutRequested=false;
+function requestPagination(context,args,full,delay=0){
+ relayoutRequested=relayoutRequested||full;
+ return coordinator.request('pagination',()=>{
+  const run=relayoutRequested?oldRelayout:oldPaginate;
+  relayoutRequested=false;destroy();needsBuild=true;paginating=true;
+  // Keep render(), layout-ready and search reindexing in the same transaction
+  // as measurement. A deferred pdlPaginate alone would let those run too early.
+  try{return run.apply(context,args);}finally{paginating=false;queueBuild();}
+ },delay);
+}
 window.pdlPaginate=function(...args){
- // Resizing while a page is turning can trigger typography reflow. Let OPF
- // complete the animation before measuring new page geometry and replacing
- // its DOM. Do not silently cancel the user's page turn.
- const run=()=>{
-   if(pdlOpfBusy()){
-     pdlOpfRelayoutTimer=setTimeout(run,75);return;
-   }
-   pdlOpfRelayoutTimer=0;destroy();needsBuild=true;
-   return oldPaginate.apply(this,args);
- };
- if(pdlOpfBusy()){
-   clearTimeout(pdlOpfRelayoutTimer);
-   pdlOpfRelayoutTimer=setTimeout(run,75);
-   return;
- }
- return run();
+ if(paginating)return oldPaginate.apply(this,args);
+ return requestPagination(this,args,false);
 };
+window.pdlRelayout=function(...args){return requestPagination(this,args,true);};
+window.pdlRequestReaderRelayout=()=>requestPagination(window,[],true,160);
+// Transfer a startup/font debounce that predates the adapter to the same gate.
+if(pdlResizeTimer){clearTimeout(pdlResizeTimer);pdlResizeTimer=0;pdlScheduleRelayout();}
 const oldNext=window.nextPage,oldPrev=window.prevPage;
 window.nextPage=function(){if(navigate(1))return;return oldNext.apply(this,arguments);};
 window.prevPage=function(){if(navigate(-1))return;return oldPrev.apply(this,arguments);};
@@ -406,22 +420,18 @@ window.prevPage=function(){if(navigate(-1))return;return oldPrev.apply(this,argu
 const oldSetLayout=window.pdlSetLayout;
 window.pdlSetLayout=function(value){
  if(!['single','double'].includes(value))return;
- clearTimeout(pdlOpfLayoutTimer);pdlOpfLayoutTimer=0;
- const apply=()=>{
+ return coordinator.request('layout',()=>{
    // Defer the CSS geometry change too: destroying only after the animation
    // would still stretch the live book underneath a pointer or turning page.
-   if(pdlOpfBusy()){pdlOpfLayoutTimer=setTimeout(apply,75);return;}
-   pdlOpfLayoutTimer=0;
    const layout=innerWidth<=768?'single':value;
    if(layout===pdlLayout)return;
    destroy();needsBuild=true;return oldSetLayout.call(this,layout);
- };
- return apply();
+ });
 };
 
 window.addEventListener('resize',()=>{needsBuild=true;queueBuild(320);},{passive:true});
 window.addEventListener('pdl-grid-layout-ready',()=>{needsBuild=true;queueBuild(110);});
 window.addEventListener('pdl-progress-opf-extend',()=>{needsBuild=true;queueBuild(240);});
 if(enabled)queueBuild(120);
-window.pdlOpenPageFlipDebug=()=>({enabled,failed,activeChapter,windowStart,windowCount,page:engine?.page,count:engine?.pageCount,layout:engine?.orientation,state:engine?.state,builds:pdlOpfBuilds,animatedTurns:pdlOpfAnimatedTurns,interruptedTurns:pdlOpfInterruptedTurns,pendingTurn:!!pdlOpfPendingTurn,buildQueued:!!(buildTimer||rebuilding||pdlOpfRelayoutTimer||pdlOpfLayoutTimer||pdlOpfPendingTurn),gestureHold:pdlOpfGestureHold(),skippedBuilds:pdlOpfSkippedBuilds,hostWidth:host?.offsetWidth,hostHeight:host?.offsetHeight,measuredWidth:left.offsetWidth,viewportZoom:vp.getBoundingClientRect().width/(vp.offsetWidth||1)});
+window.pdlOpenPageFlipDebug=()=>({enabled,failed,activeChapter,windowStart,windowCount,page:engine?.page,count:engine?.pageCount,layout:engine?.orientation,state:engine?.state,builds:pdlOpfBuilds,animatedTurns:pdlOpfAnimatedTurns,interruptedTurns:pdlOpfInterruptedTurns,pendingTurn:!!pdlOpfPendingTurn,buildQueued:!!(coordinator.debug().pending.length||rebuilding||pdlOpfPendingTurn),coordinator:coordinator.debug(),gestureHold:pdlOpfGestureHold(),skippedBuilds:pdlOpfSkippedBuilds,hostWidth:host?.offsetWidth,hostHeight:host?.offsetHeight,measuredWidth:left.offsetWidth,viewportZoom:vp.getBoundingClientRect().width/(vp.offsetWidth||1)});
 })();

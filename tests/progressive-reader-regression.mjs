@@ -214,6 +214,8 @@ function opfNavigationHarness(flipResult){
    setStatus:message=>actions.push(['status',message]),fallback:error=>{throw error},
    queueMicrotask:cb=>queueMicrotask(cb),console:{warn:message=>actions.push(['warn',message])}
  };
+ ctx.queuePendingTurn=()=>actions.push('queuePendingTurn');
+ ctx.coordinator={wake:()=>actions.push('wake')};
  runInNewContext(navigateSrc+';globalThis.navigateTest=navigate;',ctx);
  return {ctx,actions};
 }

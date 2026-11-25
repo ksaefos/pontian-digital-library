@@ -10,6 +10,7 @@
 - `scripts/core/pagination-layout.js`: typography, Hyphenopoly, measuring and legacy fallback.
 - `scripts/core/progressive-pagination.js`: verified batches, cancellation, source mapping and scheduling.
 - `scripts/openpageflip-adapter.js`: display engine lifetime, bounded page window, animation/gesture protection.
+- `scripts/reader-coordinator.js`: one ordered gate for layout, pagination, window builds and pending turns; latest requests coalesce, gestures/animations defer work. See `docs/reader-coordination.md` for its contract and measurements.
 - Other named scripts: position bridge, mobile/desktop controls, chapter/progress navigation, glossary gestures, viewport, clean copying.
 - `styles/`: original stylesheet boundaries, identifiers and cascade order.
 - `media/`: byte-identical fonts and SVGs extracted from the previous inline data URLs. Filenames are content hashes; existing font licensing applies.
