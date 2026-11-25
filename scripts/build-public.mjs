@@ -21,12 +21,12 @@ export function publicDataset(data){
 export function buildPublic(){
  const dist=path.join(root,'dist');rmSync(dist,{recursive:true,force:true});mkdirSync(dist,{recursive:true});
  const write=(file,content)=>{const dest=path.join(dist,file);mkdirSync(path.dirname(dest),{recursive:true});writeFileSync(dest,content);};
- for(const file of ['admin.html','library-data.json','manifest.webmanifest','PontianDL_Logo.svg','assets','icons','vendor','catalog'])cpSync(path.join(root,file),path.join(dist,file),{recursive:true});
- const catalogScripts=new Map();
- for(const name of ['reader-session','library','offline','help']){
-  const source=readFileSync(path.join(root,'catalog',name+'.js'));
-  const file='catalog/'+name+'.'+hash(source)+'.js';write(file,source);catalogScripts.set('./catalog/'+name+'.js','./'+file);
- }
+ for(const file of ['admin.html','library-data.json','manifest.webmanifest','PontianDL_Logo.svg','assets','icons','vendor'])cpSync(path.join(root,file),path.join(dist,file),{recursive:true});
+ const names=['reader-session','library','offline','help'];
+ const app=names.map(name=>readFileSync(path.join(root,'catalog',name+'.js'),'utf8')).join('\n;\n');
+ const appPath='./catalog/app.'+hash(app)+'.js';write(appPath.slice(2),app);
+ cpSync(path.join(root,'catalog/media'),path.join(dist,'catalog/media'),{recursive:true});
+ const catalogScripts=new Map(names.map(name=>['./catalog/'+name+'.js',appPath]));
  for(const directory of ['reader/media','catalog/media'])for(const file of readdirSync(path.join(root,directory))){
   const prefix=file.split('.')[0],actual=createHash('sha256').update(readFileSync(path.join(root,directory,file))).digest('hex');
   if(!actual.startsWith(prefix))throw Error('Content-addressed media changed without a new filename: '+directory+'/'+file);
@@ -38,12 +38,12 @@ export function buildPublic(){
  for(const [file,content] of files)write(file,content);
  write('public-data/catalog.json',JSON.stringify(catalog));
  let index=readFileSync(path.join(root,'index.html'),'utf8').replace('__PDL_RUNTIME_CONFIG__',JSON.stringify({template:'./'+templatePath,readerAssets}).replaceAll('<','\\u003c'));
- for(const [original,hashed] of catalogScripts)index=index.replaceAll(original,hashed);write('index.html',index);
+ let inserted=false;index=index.replace(/<script\b[^>]*src="\.\/catalog\/[^"]+"[^>]*><\/script>/g,()=>{if(inserted)return '';inserted=true;return '<script id="pdl-catalog-script" src="'+appPath+'"></script>';});write('index.html',index);
  // Cache identity follows application code AND data. Immutable data URLs remain
  // revision-specific; an offline catalog cannot silently load another revision.
  const revision=hash(readFileSync(path.join(dist,'index.html'))+template+JSON.stringify(catalog)+readFileSync(path.join(root,'sw.js'),'utf8')+['reader-session','library','offline','help'].map(n=>readFileSync(path.join(root,'catalog',n+'.js'),'utf8')).join(''));
  let worker=readFileSync(path.join(root,'sw.js'),'utf8').replace("'./catalog/help.js'","'./catalog/help.js',"+readdirSync(path.join(root,'catalog/media')).map(file=>JSON.stringify('./catalog/media/'+file)).join(',' )).replace(/const CACHE='[^']+';/,`const CACHE='pontian-digital-library-v${JSON.parse(readFileSync(path.join(root,'package.json'))).version}-${revision}';`);
- for(const [original,hashed] of catalogScripts)worker=worker.replaceAll(original,hashed);write('sw.js',worker);
+ worker=worker.replace(/const CORE=\[[^\n]+\];/,literal=>{const urls=[...literal.matchAll(/['"]([^'"]+)['"]/g)].map(match=>catalogScripts.get(match[1])||match[1]);return 'const CORE='+JSON.stringify([...new Set(urls)])+';';});write('sw.js',worker);
  console.log(`Public build: ${Buffer.byteLength(readFileSync(path.join(dist,'index.html')))} B index, ${Buffer.byteLength(JSON.stringify(catalog))} B catalog; ${booksLength(catalog)} books loaded on demand.`);
  return {dist,catalog,readerAssets};
 }

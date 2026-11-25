@@ -40,7 +40,7 @@ try{
  await race.route('**/'+first.url.slice(2),async route=>{entered();await gate;await route.continue();});
  let releaseDependencies,dependenciesEntered;
  const dependencyGate=new Promise(r=>releaseDependencies=r),dependencyHit=new Promise(r=>dependenciesEntered=r);
- await race.route('**/catalog/offline.*.js',async route=>{dependenciesEntered();await dependencyGate;await route.continue();});
+ await race.route('**/catalog/app.*.js',async route=>{dependenciesEntered();await dependencyGate;await route.continue();});
  await race.goto(base+'index.html',{waitUntil:'commit'});await dependencyHit;
  assert.equal(await race.locator('.library-grid .book-card').count(),0,'Cards must not become interactive while catalog dependencies are missing');
  releaseDependencies();await loaded(race);await race.evaluate(id=>{openBook('studio:'+id);},first.id);await hit;

@@ -20,6 +20,7 @@ assert.deepEqual(glossary,data.entries.map(({term,definition,etymology})=>({term
 assert.ok(glossary.every(e=>!('references'in e)&&!('sources'in e)),'Global lookup must not depend on Studio provenance');
 const html=readFileSync(path.join(root,'dist/index.html'),'utf8');assert.ok(Buffer.byteLength(html)<40000);
 assert.ok(!html.includes('pdl-reader-shell')&&!html.includes('data:font'));
+assert.equal([...html.matchAll(/<script[^>]+src="/g)].length,1,'Catalog code must load in one request');
 for(const match of html.matchAll(/<script[^>]+src="\.\/(catalog\/[^"]+)"/g)){assert.match(match[1],/\.[a-f0-9]{20}\.js$/);assert.ok(readFileSync(path.join(root,'dist',match[1])).length);}
 const config=JSON.parse(html.match(/<script id="pdl-runtime-config" type="application\/json">([\s\S]*?)<\/script>/)[1]);
 assert.equal(readFileSync(path.join(root,'dist',config.template.slice(2)),'utf8'),readerSource());

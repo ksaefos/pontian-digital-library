@@ -6,7 +6,7 @@ Source baseline: `b35a40dba21ea7fadc4f9485e520da0640e1e908`. The canonical JSON,
 
 The catalog is now separate from `reader/`. See `reader/README.md` for the source contracts. Reader JavaScript/styles keep their original order and scopes; the build assembles them into a lazy template. Fonts and SVGs extracted from data URLs are byte-identical. This establishes maintainable source boundaries without simultaneously rewriting gesture/pagination state transitions.
 
-Book content enters the iframe through a safely serialized JSON payload. No function-body or object-boundary string rewriting is needed when opening a book. The catalog data store validates generated paths, coalesces loads, caches the common dictionary and uses generation tokens to isolate cancelled opens or dataset changes.
+Book content enters the iframe through a safely serialized JSON payload. No function-body or object-boundary string rewriting is needed when opening a book. The catalog data store validates generated paths, coalesces loads, caches the common dictionary and uses generation tokens to isolate cancelled opens or dataset changes. Catalog source files build into one content-addressed script; data loading starts after dependencies initialize. Delayed script loading is exercised in the browser test.
 
 ## Build output and measured sizes
 
