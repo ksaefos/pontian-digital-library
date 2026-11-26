@@ -157,6 +157,7 @@ function syncLocation(pg){
  // Native render updates all progress, popup/lookup and bookmark state.
  nativeRender();
  inFlip=false;
+ window.dispatchEvent(new Event('pdl-reader-page-ready'));
  const local=val-windowStart;
  if(local>=windowCount-REBUILD_MARGIN||local<=REBUILD_MARGIN-2){
    needsBuild=true;queueBuild(210);
@@ -182,7 +183,7 @@ function doBuild(){
  }
  const last=Math.min(pages.length,first+PAGE_WINDOW);
  destroy();rebuilding=true;
- const mount=document.createElement('div');mount.id='pdl-opf-host';
+ const mount=document.createElement('div');mount.id='pdl-opf-host';mount.setAttribute('aria-hidden','true');
  mount.style.left=g.x+'px';mount.style.top=g.y+'px';
  mount.style.width=g.hostWidth+'px';mount.style.height=g.height+'px';
  const mainStyle=getComputedStyle(left);
@@ -277,7 +278,7 @@ function doBuild(){
     if(engine!==boundEngine)return;
     if(ev.state==='flipping')pdlOpfAnimatedTurns++;
     // Let the engine finish emitting its page/state events before any DOM work.
-    else if(ev.state==='read')queueMicrotask(()=>{queuePendingTurn();coordinator.wake();});
+    else if(ev.state==='read')queueMicrotask(()=>{queuePendingTurn();coordinator.wake();window.dispatchEvent(new Event('pdl-reader-page-ready'));});
    });
    pdlOpfBuilds++;
    vp.classList.add('pdl-opf-active');setStatus('OpenPageFlip 0.7.0 · '+(g.dual?'Διπλή':'Μονή')+' σελίδα');
@@ -288,6 +289,7 @@ function doBuild(){
  // A navigation request may have arrived while this fresh OPF instance was
  // being constructed. Animate the requested turn on the new instance.
  queuePendingTurn();
+ window.dispatchEvent(new Event('pdl-reader-page-ready'));
 }
 function build(){
  // Ignore an obsolete timer after the window has already been built.

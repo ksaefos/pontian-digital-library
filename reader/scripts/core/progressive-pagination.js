@@ -60,8 +60,14 @@ function pdlProgressMarkup(ci,page,firstPage){
 }
 function pdlProgressValidator(leaf){
  const vp=document.getElementById('text-viewport');const probe=leaf.cloneNode(false);
- probe.className=(leaf.className||'')+' pdl-grid-final-probe';
- const style={position:'fixed',left:'-100000px',top:'0px',width:leaf.offsetWidth+'px',
+ // Reuse the same shared typography selectors as the companion leaf without
+ // duplicating the real page's ID. Geometry remains that of the measured leaf.
+ probe.className=(leaf.className||'')+' pdl-second-page pdl-grid-final-probe';
+ probe.removeAttribute('id');probe.removeAttribute('tabindex');
+ probe.ariaHidden='true';probe.inert=true;
+ const computed=getComputedStyle(leaf);
+ for(const name of ['box-sizing','padding-top','padding-right','padding-bottom','padding-left','font-family','font-size','font-weight','line-height','letter-spacing'])probe.style.setProperty(name,computed.getPropertyValue(name),'important');
+ const style={position:'fixed',display:'block',left:'-100000px',top:'0px',width:leaf.offsetWidth+'px',
  'min-width':leaf.offsetWidth+'px','max-width':leaf.offsetWidth+'px',height:leaf.offsetHeight+'px',
  'min-height':leaf.offsetHeight+'px','max-height':leaf.offsetHeight+'px',margin:'0',flex:'none',
  transform:'none',overflow:'visible',visibility:'hidden','pointer-events':'none','z-index':'-100'};
@@ -157,6 +163,7 @@ async function pdlProgressBatch(ci,config,generation){
  const source=PDL_SOURCE[ci],start=state.cursor,measurer=document.createElement('div');
  const hyphenated=PDL_HYPH.mode()!=='off'&&PDL_HYPH.ready();
  measurer.id='pdl-grid-column-measurer';
+ measurer.ariaHidden='true';measurer.inert=true;
  if(hyphenated)measurer.classList.add('pdl-progress-hyphenated');
  for(const [name,val]of Object.entries({width:config.width+'px',height:config.used+'px',
   'column-width':config.width+'px','column-gap':PDL_PROGRESS_GAP+'px',
@@ -554,6 +561,7 @@ pdlMeasureBox=function(){
   const height=Math.max(60,leaf.clientHeight-(parseFloat(cs.paddingTop)||0)-(parseFloat(cs.paddingBottom)||0));
   const box=document.createElement('div');
   box.className='page-content pdl-measure';
+  box.ariaHidden='true';box.inert=true;
   box.style.cssText=[
     'position:fixed','left:-100000px','top:0','visibility:hidden','pointer-events:none','z-index:-1',
     'display:flow-root','flex:none','box-sizing:border-box',

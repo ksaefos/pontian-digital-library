@@ -32,18 +32,7 @@
   const out=closeBookmarks.apply(this,arguments);bookmark.setAttribute('aria-expanded','false');
   if(open)bookmark.focus({preventScroll:true});return out;
  };
- // Keep keyboard focus inside the active mobile sheet and return via its
- // existing close handler. Long press also has a Shift+F10 alternative.
- document.addEventListener('keydown',e=>{
-  if(!mobile()||e.key!=='Tab')return;
-  const panel=['pdl-chapters-sheet','pdl-mobile-bookmarks','pdl-appearance'].map(id=>document.getElementById(id)).find(n=>!n.hidden);
-  if(!panel)return;
-  const items=[...panel.querySelectorAll('button,input,select,[tabindex="0"]')].filter(n=>!n.disabled&&n.getClientRects().length);
-  if(!items.length)return;
-  const first=items[0],last=items.at(-1);
-  if(e.shiftKey&&(document.activeElement===first||!panel.contains(document.activeElement))){e.preventDefault();last.focus();}
-  else if(!e.shiftKey&&(document.activeElement===last||!panel.contains(document.activeElement))){e.preventDefault();first.focus();}
- });
+ // Sheet focus/isolation is shared by mobile and desktop in accessibility.js.
  const bar=document.getElementById('text-search-bar'),input=document.getElementById('text-search-input');
  // A srcdoc iframe's own visual viewport may stay full-height when the
  // phone keyboard shrinks the top-level viewport. Use the parent's metrics

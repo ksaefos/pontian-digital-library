@@ -10,8 +10,14 @@
  
  function setMode(mode){
    aside.dataset.pdlPanel=mode;
-   nav.querySelectorAll('button').forEach(b=>{const on=b.id==='pdl-tab-'+mode;b.classList.toggle('active',on);b.setAttribute('aria-selected',String(on));});
+   nav.querySelectorAll('button').forEach(b=>{const on=b.id==='pdl-tab-'+mode;b.classList.toggle('active',on);b.setAttribute('aria-selected',String(on));b.tabIndex=on?0:-1;});
  }
+ nav.addEventListener('keydown',event=>{
+  if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;
+  event.preventDefault();
+  const mode=event.key==='Home'?'book':event.key==='End'?'appearance':aside.dataset.pdlPanel==='book'?'appearance':'book';
+  setMode(mode);document.getElementById('pdl-tab-'+mode).focus();
+ });
  setMode('book');
  nav.querySelector('#pdl-tab-book').onclick=()=>setMode('book');
  nav.querySelector('#pdl-tab-appearance').onclick=()=>setMode('appearance');

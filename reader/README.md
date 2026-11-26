@@ -11,6 +11,7 @@
 - `scripts/core/progressive-pagination.js`: verified batches, cancellation, source mapping and scheduling.
 - `scripts/openpageflip-adapter.js`: display engine lifetime, bounded page window, animation/gesture protection.
 - `scripts/reader-coordinator.js`: one ordered gate for layout, pagination, window builds and pending turns; latest requests coalesce, gestures/animations defer work. See `docs/reader-coordination.md` for its contract and measurements.
+- `scripts/accessibility.js` / `styles/accessibility.css`: discoverable mobile alternatives, first-use hint, shared sheet focus/isolation, search focus, static semantic text and coalesced location announcements. Source content and pagination decisions remain in core. Native VoiceOver/TalkBack validation is tracked separately in `docs/reader-accessibility.md`.
 - Other named scripts: position bridge, mobile/desktop controls, chapter/progress navigation, glossary gestures, viewport, clean copying.
 - `styles/`: original stylesheet boundaries, identifiers and cascade order.
 - `media/`: byte-identical fonts and SVGs extracted from the previous inline data URLs. Filenames are content hashes; existing font licensing applies.

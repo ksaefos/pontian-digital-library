@@ -75,7 +75,7 @@ jobs:
       - name: Install selected compatibility browser
         run: npx playwright install --with-deps ${{ matrix.browser }}
       - name: Reader compatibility
-        run: npm run test:compat && npm run test:coordination && npm run test:glossary && npm run test:import
+        run: npm run test:compat && npm run test:coordination && npm run test:accessibility && npm run test:glossary && npm run test:import
         env:
           PDL_BROWSER: ${{ matrix.browser }}
 
