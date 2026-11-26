@@ -9,6 +9,7 @@ function pdlLoadReaderTemplate(){if(!pdlReaderPromise)pdlReaderPromise=pdlFetchT
 const importedBooks=Object.create(null);
 const titleMap=Object.create(null);
 let activeBook=null;
+let pdlReaderOpener=null;
 const safeRead=k=>{try{return localStorage.getItem(k);}catch(e){return null;}};
 const safeWrite=(k,v)=>{try{localStorage.setItem(k,v);}catch(e){console.warn('Progress save:',e);}};
 function progressOf(id){try{
@@ -41,6 +42,7 @@ function pdlMigrateProgress(id){
 }
 async function openBook(id){
  if(!importedBooks[id])return;
+ pdlReaderOpener=[...document.querySelectorAll('.book-card')].find(node=>node.dataset.book===id)||document.activeElement;
  const generation=++pdlOpenGeneration;activeBook=id;
  document.body.classList.add('reading');
  document.title=(titleMap[id]||'Βιβλίο')+' — Pontian Digital Library';
@@ -49,6 +51,7 @@ async function openBook(id){
   const [book]=await Promise.all([pdlLoadBook(id),pdlLoadReaderTemplate(),pdlLoadGlossary()]);
   if(generation!==pdlOpenGeneration||activeBook!==id)return;
   const migrated=pdlMigrateProgress(id),position=progressOf(id)||migrated;
+  document.getElementById('reader-frame').title='Ανάγνωση: '+String(book.title||'Βιβλίο');
   document.getElementById('reader-frame').srcdoc=buildImportedMarkup(book,position);
   document.getElementById('pdl-book-loading').hidden=true;
   if(libraryState.catalog)pdlOfflineBookReady=pdlCacheAssets(pdlBookOfflineAssets(book)).then(()=>true).catch(error=>{console.warn('Offline book preparation:',error);return false;});
@@ -61,6 +64,7 @@ function closeBook(){
  try{if(frame.contentDocument?.fullscreenElement)frame.contentDocument.exitFullscreen();}catch(e){}
  frame.removeAttribute('srcdoc');frame.src='about:blank';activeBook=null;
  document.body.classList.remove('reading');document.title=PDL_LIBRARY_TITLE;refreshCatalog();
+ if(pdlReaderOpener?.isConnected)pdlReaderOpener.focus({preventScroll:true});
 }
 window.addEventListener('message',event=>{
  if(event.source!==document.getElementById('reader-frame').contentWindow)return;

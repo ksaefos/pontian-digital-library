@@ -570,9 +570,9 @@ function gotoChapter(idx) { currentChapter = idx; currentPage = 0; render(); }
 function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
 
 document.addEventListener('keydown', e => {
-  if (e.target.closest('input, textarea, select, [contenteditable]') || e.altKey || e.ctrlKey || e.metaKey) return;
-  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') nextPage();
-  if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   prevPage();
+  if (e.defaultPrevented || e.target.closest('input, textarea, select, button, a, [contenteditable], [role="dialog"], dialog, #sidebar') || e.altKey || e.ctrlKey || e.metaKey) return;
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {e.preventDefault();nextPage();}
+  if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   {e.preventDefault();prevPage();}
 });
 
 document.getElementById('text-viewport').addEventListener('click', () => {

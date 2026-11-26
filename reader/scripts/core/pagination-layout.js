@@ -218,6 +218,7 @@ function pdlMeasureBox() {
   const width=Math.max(140,targetWidth);
   const box=document.createElement('div');
   box.className='page-content pdl-measure';
+  box.ariaHidden='true';box.inert=true;
   box.style.cssText=`position:fixed;left:-100000px;top:0;visibility:hidden;pointer-events:none;z-index:-1;width:${width}px;min-width:${width}px;max-width:${width}px;margin:0;box-sizing:border-box;`;
   // Attach inside the same viewport so inherited font, line-height, and typography agree.
   vp.appendChild(box);

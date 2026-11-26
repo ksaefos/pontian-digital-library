@@ -1,0 +1,36 @@
+.pdl-sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;overflow:hidden!important;clip-path:inset(50%);white-space:nowrap;}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,[tabindex="0"]:focus-visible{outline:3px solid var(--md-primary,#72513c)!important;outline-offset:3px;}
+.pdl-skip-link{position:fixed;top:4px;left:80px;z-index:2000;transform:translateY(-150%);padding:12px;background:var(--md-surface);color:var(--md-on-surface);}
+.pdl-skip-link:focus{transform:none;}
+/* The static, measured pages remain the sole accessible reading text. The
+   animated copy is visual only. Opacity preserves the accessibility tree;
+   keyboard link focus can display the static leaf without intercepting touch. */
+#text-viewport.pdl-opf-active > #page-content,#text-viewport.pdl-opf-active > #pdl-second-page{visibility:visible!important;opacity:0;pointer-events:none;}
+#text-viewport.pdl-opf-active > #page-content:has(a:focus-visible),#text-viewport.pdl-opf-active > #pdl-second-page:has(a:focus-visible){opacity:1;z-index:7;}
+#text-viewport:has(#page-content:focus-visible){outline:3px solid var(--md-primary,#72513c);outline-offset:-3px;}
+#pdl-access-nav,#pdl-hide-tools{display:none;}
+#pdl-reader-help{box-sizing:border-box;width:min(540px,calc(100vw - 24px));max-height:85dvh;overflow:auto;border:1px solid var(--md-outline-var);border-radius:18px;padding:20px;background:var(--md-surface);color:var(--md-on-surface);font:16px/1.55 system-ui,sans-serif;}
+#pdl-reader-help::backdrop{background:#16120e88;}
+#pdl-reader-help header{display:flex;gap:12px;align-items:flex-start;justify-content:space-between;}
+#pdl-reader-help h2{margin:0;font-size:20px;}
+#pdl-reader-help button,.pdl-sheet-tools button,#pdl-first-use button{min-height:44px;min-width:44px;border:1px solid var(--md-outline-var);border-radius:8px;background:var(--md-surface);color:var(--md-on-surface);padding:8px 12px;font:inherit;cursor:pointer;}
+.pdl-sheet-tools{display:flex;flex-wrap:wrap;gap:6px;padding:8px 12px;border-bottom:1px solid var(--md-outline-var);}
+#pdl-reader-help-button{font:600 20px/1 system-ui,sans-serif;}
+#pdl-first-use[hidden]{display:none!important;}
+#sidebar .book-title,#sidebar .section-label,#sidebar .glossary-title,#sidebar .pdl-reading-help,#sidebar #fontsize-value{color:var(--md-on-surface)!important;opacity:1!important;}
+@media(max-width:768px){
+ /* Reserve the same small strip in BOTH controls states: no text obstruction
+    and no page-mapping change when controls are shown or hidden. */
+ .reader-shell,.main-area{height:calc(100dvh - 48px - env(safe-area-inset-bottom))!important;}
+ #pdl-access-nav{position:fixed;z-index:229;bottom:0;left:0;right:0;display:flex;align-items:center;height:calc(48px + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);box-sizing:border-box;background:var(--pdl-page);color:var(--pdl-page-ink);}
+ #pdl-access-nav button{flex:1;min-width:44px;min-height:44px;border:0;background:transparent;color:inherit;font:600 13px/1.2 system-ui,sans-serif;cursor:pointer;padding:0 4px;}
+ #pdl-access-nav button:first-child,#pdl-access-nav button:last-child{flex:0 0 44px;font-size:22px;}
+ body:not(.immersive) #pdl-access-nav{visibility:hidden;}
+ #pdl-hide-tools{display:block;min-height:28px;border:0;padding:0 4px;background:transparent;color:inherit;font:600 12px/1.2 system-ui,sans-serif;}
+ #pdl-mobile-bottom .pdl-trial-progress-label{display:none;}
+ #pdl-first-use{position:fixed;z-index:240;left:12px;right:12px;bottom:calc(58px + env(safe-area-inset-bottom));padding:12px 14px;border:1px solid var(--md-outline-var);border-radius:12px;background:var(--md-surface);color:var(--md-on-surface);box-shadow:0 3px 18px var(--md-shadow);font:14px/1.45 system-ui,sans-serif;}
+ #pdl-first-use p{margin:0 0 6px;}
+ body #sidebar.open{display:flex!important;visibility:visible!important;flex-direction:column;z-index:1002!important;left:0!important;top:0!important;width:min(100%,390px)!important;min-width:0!important;height:100dvh!important;transform:none!important;}
+ #sidebar.open .pdl-panel-tabs,#sidebar.open .toc-section,#sidebar.open .bookmark-section,#sidebar.open .pdl-mobile-actions,#sidebar.open .pdl-reading-panel,#sidebar.open .fontsize-section{display:none!important;}
+ .pdl-skip-link{left:8px;}
+}
