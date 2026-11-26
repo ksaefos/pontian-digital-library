@@ -185,7 +185,7 @@
  <button type="button" id="pdl-access-next" onclick="nextPage()" aria-label="Επόμενη σελίδα">→</button>
 </nav>
 <aside id="pdl-first-use" aria-label="Βοήθεια πρώτης ανάγνωσης" hidden>
- <p>Τα «Χειριστήρια» ανοίγουν με ένα πάτημα. Εκεί βρίσκεις κεφάλαια, αναζήτηση και σελιδοδείκτες. Το διπλό άγγιγμα παραμένει διαθέσιμο.</p>
+ <p>Άγγιξε δύο φορές το κείμενο για να εμφανίσεις ή να κρύψεις τα χειριστήρια.</p>
  <button type="button" onclick="pdlDismissReaderHint()">Το είδα</button>
 </aside>
 <div id="pdl-page-announcement" class="pdl-sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
@@ -271,11 +271,20 @@
 <script id="pdl-mobile-controls" data-source="scripts/mobile-controls.js"></script>
 <dialog id="pdl-reader-help" aria-labelledby="pdl-reader-help-title">
  <header><h2 id="pdl-reader-help-title">Οδηγίες ανάγνωσης</h2><button type="button" onclick="pdlCloseReaderHelp()" aria-label="Κλείσιμο οδηγιών">×</button></header>
- <p>Στο κινητό, τα «Χειριστήρια» ανοίγουν με ένα πάτημα. Μπορείς επίσης να αγγίξεις δύο φορές το κείμενο. Τα βέλη αλλάζουν σελίδα.</p>
- <p>Το κουμπί σελιδοδείκτη προσθέτει ή αφαιρεί την τρέχουσα θέση. Η επιλογή «Όλοι οι σελιδοδείκτες» ανοίγει τη λίστα χωρίς παρατεταμένο πάτημα.</p>
+ <p>Στο κινητό, άγγιξε δύο φορές το κείμενο για να εμφανίσεις ή να κρύψεις τις μπάρες. Σύρε αριστερά ή δεξιά για αλλαγή σελίδας.</p>
+ <p>Πάτησε «Αναζήτηση» στην κάτω μπάρα για μια λέξη ή φράση. Το κουμπί σελιδοδείκτη προσθέτει ή αφαιρεί την τρέχουσα θέση· με παρατεταμένο πάτημα ανοίγει τη λίστα.</p>
  <p>Με πληκτρολόγιο: Tab και Shift+Tab μετακινούν την εστίαση, Enter ή Διάστημα ενεργοποιούν κουμπιά, Escape κλείνει το ανοικτό παράθυρο. Τα βελάκια αλλάζουν σελίδα όταν η εστίαση βρίσκεται στο κείμενο.</p>
- <p>Το γλωσσάρι έχει και πεδίο αναζήτησης, ώστε να μη χρειάζεται διπλό κλικ ή παρατεταμένο πάτημα σε λέξη.</p>
- <button type="button" onclick="pdlCloseReaderHelp();pdlOpenGlossary()">Αναζήτηση στο γλωσσάρι</button>
+ <p>Κράτησε πατημένη μια λέξη στο κινητό ή κάνε διπλό κλικ στον υπολογιστή για την ερμηνεία της.</p>
+ <section class="pdl-assistance-help" aria-labelledby="pdl-reader-assistance-title">
+  <h3 id="pdl-reader-assistance-title">Βοήθεια προσβασιμότητας</h3>
+  <p>Αν δυσκολεύεσαι με το διπλό άγγιγμα ή το παρατεταμένο πάτημα, μπορείς να ενεργοποιήσεις εναλλακτικούς τρόπους χειρισμού.</p>
+  <label><input type="checkbox" id="pdl-reader-assistance-setting" aria-describedby="pdl-reader-assistance-description" onchange="pdlSetReaderAssistance(this.checked)"/>Εναλλακτικοί τρόποι χειρισμού</label>
+  <p id="pdl-reader-assistance-description">Προσθέτει στο κινητό μια μόνιμη μικρή μπάρα και τις παρακάτω άμεσες ενέργειες. Η μπάρα χρησιμοποιεί μέρος του χώρου του κειμένου. Μπορείς να την απενεργοποιήσεις οποτεδήποτε.</p>
+  <div id="pdl-assistance-actions" hidden>
+   <button type="button" onclick="pdlCloseReaderHelp();pdlOpenMobileBookmarks()">Όλοι οι σελιδοδείκτες</button>
+   <button type="button" onclick="pdlCloseReaderHelp();pdlOpenGlossary()">Αναζήτηση στο γλωσσάρι</button>
+  </div>
+ </section>
 </dialog>
 <script id="pdl-reader-accessibility" data-source="scripts/accessibility.js"></script>
 </body>

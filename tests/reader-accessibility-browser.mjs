@@ -23,6 +23,12 @@ async function quiet(){
  },null,{timeout:180000});
 }
 async function focused(locator){assert.equal(await locator.evaluate(n=>document.activeElement===n),true,'Keyboard focus: '+await locator.getAttribute('id'));}
+async function containsAnchor(anchor){
+ const position=await frame.evaluate(()=>({start:pdlPageAnchor(currentChapter,currentPage),next:currentPage+1<chapters[currentChapter].pages.length?pdlPageAnchor(currentChapter,currentPage+1):null}));
+ const compare=(a,b)=>a.index-b.index||a.offset-b.offset;
+ assert.ok(compare(position.start,anchor)<=0,'Mode change must not skip the source anchor');
+ if(position.next)assert.ok(compare(position.next,anchor)>0,'Saved source anchor must remain in the visible page');
+}
 async function audit(label){
  const report=await frame.evaluate(async()=>{
   // Audit the fully shown UI, including the existing 250 ms glossary fade.
@@ -59,6 +65,10 @@ try{
   await audit(width+' reading');
 
   if(width<769){
+   assert.equal(await frame.locator('#pdl-access-nav').isVisible(),false,'Default mobile reading has no permanent toolbar');
+   assert.equal(await frame.evaluate(()=>document.body.classList.contains('pdl-reader-assistance')),false);
+   const fullHeight=await frame.locator('.main-area').evaluate(n=>n.clientHeight);
+   assert.equal(fullHeight,900,'Default mobile reading uses the whole viewport height');
    assert.equal(await frame.locator('#pdl-first-use').isVisible(),true,'First-use hint is discoverable without a gesture');
    await frame.getByRole('button',{name:'Το είδα',exact:true}).press('Enter');
    const before=await frame.evaluate(()=>({generation:pdlProgress.generation,page:currentPage,chapter:currentChapter}));
@@ -92,6 +102,17 @@ try{
    const chapters=frame.getByRole('button',{name:'Περιεχόμενα και κεφάλαια',exact:true});
    await chapters.press('Enter');await audit(width+' chapter dialog');
    assert.equal(await frame.getByRole('main').count(),0,'Modal background must leave the accessibility tree');
+   assert.equal(await frame.getByRole('button',{name:'Όλοι οι σελιδοδείκτες',exact:true}).count(),0,'Contents must not expose optional actions');
+   await frame.getByRole('button',{name:'Οδηγίες ανάγνωσης',exact:true}).press('Enter');
+   await audit(width+' default reading help');
+   const preference=frame.locator('#pdl-reader-assistance-setting');
+   assert.equal(await preference.isChecked(),false,'Visible assistance starts off');
+   const beforeMode=await frame.evaluate(()=>({anchor:pdlPageAnchor(currentChapter,currentPage),height:document.querySelector('.main-area').clientHeight}));
+   await preference.press('Space');await quiet();await containsAnchor(beforeMode.anchor);
+   assert.equal(await frame.locator('.main-area').evaluate(n=>n.clientHeight),beforeMode.height-48,'Only explicit assistance reserves the 48 px strip');
+   assert.equal(await page.evaluate(()=>pdlReaderAssistancePreference),true,'Reader choice must synchronize to the catalog');
+   assert.equal(await page.evaluate(()=>localStorage.getItem('pdl:reader:assistance:v1')),'on');
+   await audit(width+' enabled assistance help');
    await frame.getByRole('button',{name:'Όλοι οι σελιδοδείκτες',exact:true}).press('Enter');
    await frame.locator('#pdl-mobile-bookmarks').waitFor({state:'visible'});
    await audit(width+' empty bookmarks dialog');
@@ -99,10 +120,13 @@ try{
    assert.equal(await frame.locator('#pdl-chapters-sheet').isVisible(),false,'Switching sheets must close the old sheet');
 
    await chapters.press('Enter');
-   await frame.getByRole('button',{name:'Γλωσσάρι',exact:true}).press('Enter');
+   await frame.getByRole('button',{name:'Οδηγίες ανάγνωσης',exact:true}).press('Enter');
+   await frame.getByRole('button',{name:'Αναζήτηση στο γλωσσάρι',exact:true}).press('Enter');
    const glossary=frame.getByRole('textbox',{name:'Αναζήτηση στο γλωσσάρι',exact:true});
    await focused(glossary);await glossary.fill('κουρφίζει');
    assert.ok((await frame.locator('#glossary-content').textContent()).length>10);
+   const glossaryBox=await frame.locator('#sidebar').boundingBox();
+   assert.ok(glossaryBox.x>=7&&glossaryBox.x+glossaryBox.width<=width-7&&glossaryBox.height<=675,'Optional glossary uses a mobile sheet');
    await audit(width+' glossary dialog');
    await page.keyboard.press('Escape');await focused(chapters);
 
@@ -111,8 +135,13 @@ try{
    const text=await frame.locator('#page-content').boundingBox(),nav=await frame.locator('#pdl-access-nav').boundingBox();
    assert.ok(text.y+text.height<=nav.y+1,'Persistent controls must have reserved space, not cover the reading leaf');
    await frame.getByRole('button',{name:'Βοήθεια',exact:true}).press('Enter');
-   await audit(width+' help dialog');await page.keyboard.press('Escape');
-   await focused(frame.getByRole('button',{name:'Βοήθεια',exact:true}));
+   await audit(width+' help dialog');
+   const assistedAnchor=await frame.evaluate(()=>pdlPageAnchor(currentChapter,currentPage));
+   await preference.press('Space');await quiet();await containsAnchor(assistedAnchor);
+   assert.equal(await frame.locator('.main-area').evaluate(n=>n.clientHeight),fullHeight,'Disabling assistance returns all reserved space to text');
+   assert.equal(await frame.locator('#pdl-access-nav').isVisible(),false);
+   assert.equal(await page.evaluate(()=>localStorage.getItem('pdl:reader:assistance:v1')),'off');
+   await page.keyboard.press('Escape');await focused(frame.locator('#page-content'));
   }else{
    const drawer=frame.locator('#pdl-drawer-toggle');await drawer.press('Enter');
    await focused(frame.locator('#pdl-tab-book'));
@@ -144,9 +173,24 @@ try{
    {text:unchanged,changes:0},'Background pagination notifications must not repeat the page announcement');
   if(process.env.PDL_CAPTURE_DIR)await page.screenshot({path:path.join(process.env.PDL_CAPTURE_DIR,'accessibility-'+width+'.png')});
   await frame.evaluate(()=>pdlReturnToLibrary());await page.waitForFunction(()=>activeBook===null);await focused(card);
+  await page.waitForFunction(()=>document.getElementById('reader-frame').contentDocument?.URL==='about:blank');
   await card.press('Enter');await page.waitForFunction(()=>typeof document.getElementById('reader-frame')?.contentWindow?.pdlOpenPageFlipDebug==='function');
   frame=page.frames().find(f=>f.url()==='about:srcdoc');await quiet();
-  if(width<769)assert.equal(await frame.locator('#pdl-first-use').isVisible(),false,'Dismissed hint must not recur on reopen');
+  if(width<769){
+   assert.equal(await frame.locator('#pdl-first-use').isVisible(),false,'Dismissed hint must not recur on reopen');
+   assert.equal(await frame.locator('#pdl-access-nav').isVisible(),false,'Disabled assistance persists after reopening');
+  }
+  if(width===320){
+   await frame.evaluate(()=>pdlReturnToLibrary());await page.waitForFunction(()=>activeBook===null);
+   await page.waitForFunction(()=>document.getElementById('reader-frame').contentDocument?.URL==='about:blank');
+   await page.locator('#pdl-help-trigger').press('Enter');
+   const catalogPreference=page.locator('#pdl-assistance-setting');await catalogPreference.press('Space');
+   assert.equal(await catalogPreference.isChecked(),true);
+   await page.locator('#pdl-help-close').press('Enter');await card.press('Enter');
+   await page.waitForFunction(()=>typeof document.getElementById('reader-frame')?.contentWindow?.pdlOpenPageFlipDebug==='function');
+   frame=page.frames().find(f=>f.url()==='about:srcdoc');await quiet();
+   assert.equal(await frame.locator('#pdl-access-nav').isVisible(),true,'Catalog instructions enable assistance before the next book opens');
+  }
   await page.close();console.log('PASS '+engine+' '+width+': keyboard, focus return, menus, single text copy, page announcements and first use');
  }
  assert.deepEqual(errors,[],'No uncaught JavaScript errors');

@@ -110,7 +110,10 @@ try{
   await bookmark.press('Enter');assert.equal(await f.evaluate(()=>loadBookmarks().length),0);
   await client.detach();
   await f.locator('#pdl-mobile-search-action').tap();
-  const input=f.locator('#text-search-input');await input.fill('Σωνίτσα');
+  const input=f.locator('#text-search-input');
+  assert.equal(await input.evaluate(n=>document.activeElement===n),true,'One tap must open and focus the compact mobile search');
+  assert.equal(await f.locator('#sidebar').isVisible(),false,'Text search must not open a desktop-style sidebar');
+  await input.fill('Σωνίτσα');
   await f.waitForFunction(()=>tsResults.length>5);
   await input.press('Enter');await quiet(f);
   assert.equal(await f.locator('#text-search-bar').getAttribute('data-search-mode'),'browse');

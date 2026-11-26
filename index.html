@@ -158,6 +158,9 @@ body.pdl-public-error #pdl-import-panel{display:block}
 #pdl-help-dialog .pdl-help-step p{margin:0;font-size:14px;line-height:1.45;color:var(--muted)}
 #pdl-help-dialog .pdl-help-note{font-size:13px;line-height:1.5;color:var(--muted);margin:11px 0 0}
 #pdl-help-dialog button:focus-visible{outline:3px solid #7797bb;outline-offset:2px}
+#pdl-help-dialog .pdl-assistance-help{margin-top:20px;padding-top:12px;border-top:1px solid var(--line)}
+#pdl-help-dialog .pdl-assistance-help label{display:flex;gap:10px;align-items:center;min-height:44px;font-weight:600;cursor:pointer}
+#pdl-help-dialog .pdl-assistance-help input{width:20px;height:20px;flex:0 0 20px}
 @media(max-width:740px){
  #library .pdl-help-trigger{font-size:13px;padding:7px 12px}
  #pdl-help-dialog .pdl-help-head{padding:18px 18px 9px}
@@ -194,13 +197,13 @@ body.pdl-public-error #pdl-import-panel{display:block}
   <div class="pdl-help-body">
     <p class="pdl-help-lede" id="pdl-help-description">Διάλεξε ένα βιβλίο από τη βιβλιοθήκη. Τα χειριστήρια προσαρμόζονται στο μέγεθος της οθόνης.</p>
     <h3>Σε κινητό ή στενή οθόνη</h3>
-    <div class="pdl-help-step"><span class="pdl-help-icon" aria-hidden="true">↔</span><div><strong>Αλλαγή σελίδας</strong><p>Χρησιμοποίησε τα βέλη κάτω από το κείμενο ή σύρε το δάχτυλό σου προς τα αριστερά για την επόμενη σελίδα και προς τα δεξιά για την προηγούμενη.</p></div></div>
-    <div class="pdl-help-step"><span class="pdl-help-icon" aria-hidden="true">2×</span><div><strong>Εμφάνιση χειριστηρίων</strong><p>Πάτησε «Χειριστήρια» κάτω από το κείμενο για την επάνω και την κάτω μπάρα. Η «Απόκρυψη» επιστρέφει στο κείμενο. Μπορείς επίσης να αγγίξεις δύο φορές το κείμενο. Η «Βοήθεια» ανοίγει αυτές τις βασικές οδηγίες μέσα στο βιβλίο.</p></div></div>
+    <div class="pdl-help-step"><span class="pdl-help-icon" aria-hidden="true">↔</span><div><strong>Αλλαγή σελίδας</strong><p>Σύρε το δάχτυλό σου προς τα αριστερά για την επόμενη σελίδα ή προς τα δεξιά για την προηγούμενη.</p></div></div>
+    <div class="pdl-help-step"><span class="pdl-help-icon" aria-hidden="true">2×</span><div><strong>Εμφάνιση χειριστηρίων</strong><p>Άγγιξε δύο φορές το κείμενο για να εμφανίσεις την επάνω και την κάτω μπάρα. Με νέο διπλό άγγιγμα τις κρύβεις, ώστε όλη η οθόνη να χρησιμοποιείται για ανάγνωση. Από τα Κεφάλαια ανοίγεις ξανά τις Οδηγίες ανάγνωσης.</p></div></div>
     <div class="pdl-help-step"><span class="pdl-help-icon" aria-hidden="true">Aa</span><div><strong>Επάνω μπάρα</strong><p>Αριστερά, η «Γραμματοσειρά» αλλάζει γραμματοσειρά, μέγεθος και διάστιχο. Στη μέση, το λογότυπο επιστρέφει στη βιβλιοθήκη. Δεξιά, ο «Φωτισμός» επιλέγει φωτεινή, sepia ή νυχτερινή εμφάνιση.</p></div></div>
     <div class="pdl-help-step"><span class="pdl-help-icon" aria-hidden="true">☷</span><div><strong>Κεφάλαια</strong><p>Στην κάτω μπάρα πάτησε «Κεφάλαια». Το μενού δείχνει τον τίτλο του βιβλίου και τα περιεχόμενά του· επίλεξε το κεφάλαιο που θέλεις.</p></div></div>
     <div class="pdl-help-step"><span class="pdl-help-icon" aria-hidden="true">⌕</span><div><strong>Αναζήτηση</strong><p>Πάτησε «Αναζήτηση» στην κάτω μπάρα και γράψε μια λέξη ή φράση. Με Enter ή τα βέλη μετακινείσαι στα επισημασμένα ευρήματα και κλείνει το πληκτρολόγιο. Πάτησε ξανά τον όρο για να τον αλλάξεις.</p></div></div>
-    <div class="pdl-help-step"><span class="pdl-help-icon" aria-hidden="true"><svg width="20" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 3h12v18l-6-4-6 4V3Z"/></svg></span><div><strong>Σελιδοδείκτες</strong><p>Με σύντομο πάτημα προσθέτεις ή αφαιρείς σελιδοδείκτη στην τρέχουσα θέση. Άνοιξε «Κεφάλαια → Όλοι οι σελιδοδείκτες» για τη λίστα. Παραμένουν διαθέσιμα το παρατεταμένο πάτημα και το Shift+F10 πάνω στο κουμπί.</p></div></div>
-    <div class="pdl-help-step"><span class="pdl-help-icon" aria-hidden="true">…</span><div><strong>Γλωσσάρι</strong><p>Αναζήτησε μια λέξη από το «Κεφάλαια → Γλωσσάρι». Μπορείς επίσης να κρατήσεις πατημένη μια λέξη στο κείμενο για να εμφανιστεί η επεξήγησή της, εφόσον υπάρχει καταχώριση.</p></div></div>
+    <div class="pdl-help-step"><span class="pdl-help-icon" aria-hidden="true"><svg width="20" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 3h12v18l-6-4-6 4V3Z"/></svg></span><div><strong>Σελιδοδείκτες</strong><p>Με σύντομο πάτημα προσθέτεις ή αφαιρείς σελιδοδείκτη στην τρέχουσα θέση. Κράτησε πατημένο το κουμπί για τη λίστα όλων των σελιδοδεικτών. Με πληκτρολόγιο χρησιμοποίησε Shift+F10 πάνω στο κουμπί.</p></div></div>
+    <div class="pdl-help-step"><span class="pdl-help-icon" aria-hidden="true">…</span><div><strong>Γλωσσάρι</strong><p>Κράτησε πατημένη μια λέξη στο κείμενο για να εμφανιστεί η επεξήγησή της, εφόσον υπάρχει καταχώριση.</p></div></div>
     <h3>Σε υπολογιστή ή μεγάλη οθόνη</h3>
     <div class="pdl-help-step"><span class="pdl-help-icon" aria-hidden="true">↔</span><div><strong>Σελίδες και εργαλεία</strong><p>Άλλαξε σελίδα με τα κουμπιά προηγούμενης/επόμενης σελίδας, τα βελάκια του πληκτρολογίου ή σύροντας τη σελίδα με το ποντίκι. Στην αριστερή μπάρα βρίσκεις τις ρυθμίσεις, την αναζήτηση και τους σελιδοδείκτες. Το λογότυπο επιστρέφει στη βιβλιοθήκη.</p></div></div>
     <div class="pdl-help-step"><span class="pdl-help-icon" aria-hidden="true">…</span><div><strong>Γλωσσάρι</strong><p>Κάνε διπλό κλικ σε μια λέξη για να εμφανιστεί η ερμηνεία της από το ενιαίο γλωσσάρι. Οι καταχωρίσεις αναγνωρίζονται σε όλα τα βιβλία, ανεξάρτητα από την πηγή τους.</p></div></div>
@@ -210,6 +213,12 @@ body.pdl-public-error #pdl-import-panel{display:block}
     <h3>Συνέχεια ανάγνωσης</h3>
     <p class="pdl-help-note">Η θέση ανάγνωσης και οι σελιδοδείκτες αποθηκεύονται στον ίδιο browser, στην ίδια συσκευή. Όταν ξανανοίξεις το βιβλίο, συνεχίζεις από το αποθηκευμένο σημείο.</p>
     <p class="pdl-help-note">Στην αρχή, το σύνολο των σελίδων μπορεί να ενημερώνεται όσο ετοιμάζεται το βιβλίο. Με διαφορετική γραμματοσειρά, μέγεθος ή προσανατολισμό αλλάζει η σελιδοποίηση, διατηρώντας το σημείο ανάγνωσης.</p>
+    <section class="pdl-assistance-help" aria-labelledby="pdl-assistance-title">
+      <h3 id="pdl-assistance-title">Βοήθεια προσβασιμότητας</h3>
+      <p class="pdl-help-note">Αν δυσκολεύεσαι με το διπλό άγγιγμα ή το παρατεταμένο πάτημα, μπορείς προαιρετικά να ενεργοποιήσεις εναλλακτικούς τρόπους χειρισμού.</p>
+      <label><input type="checkbox" id="pdl-assistance-setting" aria-describedby="pdl-assistance-description"/>Εναλλακτικοί τρόποι χειρισμού</label>
+      <p class="pdl-help-note" id="pdl-assistance-description">Στο κινητό εμφανίζεται μια μικρή μόνιμη μπάρα με βέλη και βοήθεια. Μέσα στις Οδηγίες προστίθενται άμεση πρόσβαση στους σελιδοδείκτες και αναζήτηση γλωσσαρίου. Η μπάρα μειώνει λίγο τον χώρο του κειμένου. Η επιλογή αποθηκεύεται στον ίδιο browser και απενεργοποιείται οποτεδήποτε από εδώ ή από τις Οδηγίες μέσα στο βιβλίο.</p>
+    </section>
   </div>
 </dialog>
 
