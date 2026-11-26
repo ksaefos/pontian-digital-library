@@ -77,11 +77,12 @@
  };
  window.pdlOpenReaderHelp=function(){closeActive();helpOpener=document.activeElement;help.showModal();};
  window.pdlCloseReaderHelp=function(){help.close();returnFocus(helpOpener);};
- let searchOpener=null;
+ let searchOpener=null,keyboardNavigation=false;
+ document.addEventListener('pointerdown',()=>{keyboardNavigation=false;},{capture:true,passive:true});
  const searchBar=byId('text-search-bar'),toggleSearch=window.toggleTextSearch,closeSearch=window.closeTextSearch,goToResult=window.goToTsResult;
  window.toggleTextSearch=function(...args){if(searchBar.classList.contains('hidden'))searchOpener=document.activeElement;return toggleSearch.apply(this,args);};
  window.closeTextSearch=function(...args){const open=!searchBar.classList.contains('hidden'),result=closeSearch.apply(this,args);if(open)returnFocus(searchOpener);return result;};
- window.goToTsResult=function(...args){const editing=document.activeElement===byId('text-search-input'),result=goToResult.apply(this,args);if(mobile()&&editing&&tsResults.length)focus(byId('ts-next'));return result;};
+ window.goToTsResult=function(...args){const editing=document.activeElement===byId('text-search-input'),result=goToResult.apply(this,args);if(mobile()&&editing&&tsResults.length&&(assistanceEnabled()||keyboardNavigation))focus(byId('ts-next'));return result;};
  window.pdlShowReaderTools=function(){exitImmersive();syncTools();focus(byId('pdl-mobile-font-action'));};
  window.pdlHideReaderTools=function(){closeActive();enterImmersive();syncTools();returnFocus(null);};
  window.pdlDismissReaderHint=function(){const hint=byId('pdl-first-use'),hadFocus=hint.contains(document.activeElement);hint.hidden=true;try{localStorage.setItem('pdl:reader:hint:v1','seen');}catch{}if(hadFocus)focus(byId('page-content'));};
@@ -127,6 +128,7 @@
  document.querySelector('.pdl-rail').append(helpButton);
  // Do not let other global Escape handlers close several sheets at once.
  document.addEventListener('keydown',event=>{
+  if(event.key==='Tab')keyboardNavigation=true;
   if(event.key==='Escape'&&(active||help.open||sidebarOpen)){
    event.preventDefault();event.stopImmediatePropagation();
    if(help.open)pdlCloseReaderHelp();else if(active)closeActive();else{sidebar.classList.remove('open');syncSidebar();}

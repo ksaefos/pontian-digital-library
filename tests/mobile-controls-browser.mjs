@@ -119,6 +119,7 @@ try{
   assert.equal(await f.locator('#text-search-bar').getAttribute('data-search-mode'),'browse');
   assert.equal(await input.isVisible(),false);
   assert.equal(await f.locator('#text-search-input').evaluate(n=>document.activeElement===n),false,'Browsing must release the keyboard');
+  assert.equal(await f.locator('#ts-next').evaluate(n=>document.activeElement===n),false,'Default touch search must not force keyboard focus styling onto the next-result button');
   const generation=await f.evaluate(()=>pdlProgressStats().generation);
   const docks=new Set();
   // Exercise actual matches at different heights, including pages outside
