@@ -110,12 +110,16 @@ try{
   await bookmark.press('Enter');assert.equal(await f.evaluate(()=>loadBookmarks().length),0);
   await client.detach();
   await f.locator('#pdl-mobile-search-action').tap();
-  const input=f.locator('#text-search-input');await input.fill('Σωνίτσα');
+  const input=f.locator('#text-search-input');
+  assert.equal(await input.evaluate(n=>document.activeElement===n),true,'One tap must open and focus the compact mobile search');
+  assert.equal(await f.locator('#sidebar').isVisible(),false,'Text search must not open a desktop-style sidebar');
+  await input.fill('Σωνίτσα');
   await f.waitForFunction(()=>tsResults.length>5);
   await input.press('Enter');await quiet(f);
   assert.equal(await f.locator('#text-search-bar').getAttribute('data-search-mode'),'browse');
   assert.equal(await input.isVisible(),false);
   assert.equal(await f.locator('#text-search-input').evaluate(n=>document.activeElement===n),false,'Browsing must release the keyboard');
+  assert.equal(await f.locator('#ts-next').evaluate(n=>document.activeElement===n),false,'Default touch search must not force keyboard focus styling onto the next-result button');
   const generation=await f.evaluate(()=>pdlProgressStats().generation);
   const docks=new Set();
   // Exercise actual matches at different heights, including pages outside

@@ -6,6 +6,8 @@
  const focus=node=>{if(visible(node))node.focus({preventScroll:true});};
  const items=panel=>[...panel.querySelectorAll('button,a[href],input,select,textarea,[tabindex]')].filter(n=>!n.disabled&&n.tabIndex>=0&&visible(n));
  const sidebar=byId('sidebar'),help=byId('pdl-reader-help');
+ let helpOpener=null;
+ const assistanceEnabled=()=>document.body.classList.contains('pdl-reader-assistance');
  const definitions={
   'pdl-chapters-sheet':['pdlShowChapters','pdlHideChapters','pdl-chapters-backdrop'],
   'pdl-mobile-bookmarks':['pdlOpenMobileBookmarks','pdlCloseMobileBookmarks','pdl-mobile-bookmarks-backdrop'],
@@ -27,7 +29,7 @@
    branch=branch.parentElement;
   }
  }
- function returnFocus(target){focus(visible(target)?target:mobile()&&document.body.classList.contains('immersive')?byId('pdl-show-tools'):byId('page-content'));}
+ function returnFocus(target){focus(visible(target)?target:mobile()&&assistanceEnabled()&&document.body.classList.contains('immersive')?byId('pdl-show-tools'):byId('page-content'));}
  function release(id){
   if(active!==id)return;
   const target=opener;active=null;opener=null;restore();returnFocus(target);
@@ -39,7 +41,7 @@
  for(const [id,[openName,closeName,backdrop]] of Object.entries(definitions)){
   const open=window[openName],close=window[closeName],panel=byId(id);
   window[openName]=function(...args){
-   if(help.open)help.close();
+   if(help.open)pdlCloseReaderHelp();
    if(active!==id)closeActive();
    const previous=active===id?opener:document.activeElement;
    const result=open.apply(this,args);
@@ -70,33 +72,55 @@
  }
  new MutationObserver(syncSidebar).observe(sidebar,{attributes:true,attributeFilter:['class']});
  window.pdlOpenGlossary=function(){
+  if(mobile()&&!assistanceEnabled())return;
   closeActive();sidebar.classList.add('open');sidebar.dataset.pdlPanel='book';pdlSyncDrawer();syncSidebar();focus(byId('gloss-search'));
  };
- window.pdlOpenReaderHelp=function(){closeActive();help.showModal();};
- window.pdlCloseReaderHelp=()=>help.close();
- let searchOpener=null;
+ window.pdlOpenReaderHelp=function(){closeActive();helpOpener=document.activeElement;help.showModal();};
+ window.pdlCloseReaderHelp=function(){help.close();returnFocus(helpOpener);};
+ let searchOpener=null,keyboardNavigation=false;
+ document.addEventListener('pointerdown',()=>{keyboardNavigation=false;},{capture:true,passive:true});
  const searchBar=byId('text-search-bar'),toggleSearch=window.toggleTextSearch,closeSearch=window.closeTextSearch,goToResult=window.goToTsResult;
  window.toggleTextSearch=function(...args){if(searchBar.classList.contains('hidden'))searchOpener=document.activeElement;return toggleSearch.apply(this,args);};
  window.closeTextSearch=function(...args){const open=!searchBar.classList.contains('hidden'),result=closeSearch.apply(this,args);if(open)returnFocus(searchOpener);return result;};
- window.goToTsResult=function(...args){const editing=document.activeElement===byId('text-search-input'),result=goToResult.apply(this,args);if(mobile()&&editing&&tsResults.length)focus(byId('ts-next'));return result;};
+ window.goToTsResult=function(...args){const editing=document.activeElement===byId('text-search-input'),result=goToResult.apply(this,args);if(mobile()&&editing&&tsResults.length&&(assistanceEnabled()||keyboardNavigation))focus(byId('ts-next'));return result;};
  window.pdlShowReaderTools=function(){exitImmersive();syncTools();focus(byId('pdl-mobile-font-action'));};
- window.pdlHideReaderTools=function(){closeActive();enterImmersive();syncTools();focus(byId('pdl-show-tools'));};
+ window.pdlHideReaderTools=function(){closeActive();enterImmersive();syncTools();returnFocus(null);};
  window.pdlDismissReaderHint=function(){const hint=byId('pdl-first-use'),hadFocus=hint.contains(document.activeElement);hint.hidden=true;try{localStorage.setItem('pdl:reader:hint:v1','seen');}catch{}if(hadFocus)focus(byId('page-content'));};
  function syncTools(){
   const immersive=mobile()&&document.body.classList.contains('immersive');
   byId('pdl-show-tools').setAttribute('aria-expanded',String(!immersive));
-  byId('pdl-access-nav').inert=!immersive;
+  byId('pdl-access-nav').inert=!immersive||!assistanceEnabled();
+  byId('pdl-reader-assistance-setting').checked=assistanceEnabled();
+  byId('pdl-assistance-actions').hidden=!assistanceEnabled()||!mobile();
   if(!immersive)byId('pdl-first-use').hidden=true;
  }
+ window.pdlSetReaderAssistance=function(enabled,persist=true){
+  enabled=!!enabled;
+  const changed=enabled!==assistanceEnabled();
+  if(changed&&!enabled)closeActive();
+  document.body.classList.toggle('pdl-reader-assistance',enabled);
+  window.pdlReaderAssistancePreference=enabled;syncTools();
+  if(persist){
+   try{
+    if(parent!==window&&typeof parent.pdlSetReaderAssistancePreference==='function')parent.pdlSetReaderAssistancePreference(enabled);
+    else localStorage.setItem('pdl:reader:assistance:v1',enabled?'on':'off');
+   }catch{}
+  }
+  if(changed&&mobile())pdlScheduleRelayout();
+  if(!visible(document.activeElement))returnFocus(null);
+ };
+ window.addEventListener('storage',event=>{if(event.key==='pdl:reader:assistance:v1'||event.key===null)pdlSetReaderAssistance(event.newValue==='on',false);});
  new MutationObserver(syncTools).observe(document.body,{attributes:true,attributeFilter:['class']});
+ window.addEventListener('resize',syncTools,{passive:true});
  syncTools();syncSidebar();
  byId('text-viewport').addEventListener('pointerdown',()=>{
   const focused=document.activeElement;
   if(focused?.matches('a')&&(byId('page-content').contains(focused)||byId('pdl-second-page').contains(focused)))focused.blur();
  },{capture:true,passive:true});
- // Explicit single-activation alternatives, next to the chapter menu heading.
+ // Reading instructions are available from Contents; optional actions live
+ // inside their clearly labelled accessibility section.
  const actions=document.createElement('div');actions.className='pdl-sheet-tools';
- for(const [label,run] of [['Όλοι οι σελιδοδείκτες',()=>pdlOpenMobileBookmarks()],['Γλωσσάρι',()=>pdlOpenGlossary()],['Οδηγίες',()=>pdlOpenReaderHelp()]]){
+ for(const [label,run] of [['Οδηγίες ανάγνωσης',()=>pdlOpenReaderHelp()]]){
   const b=document.createElement('button');b.type='button';b.textContent=label;b.onclick=run;actions.append(b);
  }
  byId('pdl-chapters-sheet').querySelector('header').after(actions);
@@ -104,9 +128,10 @@
  document.querySelector('.pdl-rail').append(helpButton);
  // Do not let other global Escape handlers close several sheets at once.
  document.addEventListener('keydown',event=>{
+  if(event.key==='Tab')keyboardNavigation=true;
   if(event.key==='Escape'&&(active||help.open||sidebarOpen)){
    event.preventDefault();event.stopImmediatePropagation();
-   if(help.open)help.close();else if(active)closeActive();else{sidebar.classList.remove('open');syncSidebar();}
+   if(help.open)pdlCloseReaderHelp();else if(active)closeActive();else{sidebar.classList.remove('open');syncSidebar();}
    return;
   }
   if(event.key!=='Tab')return;
@@ -142,6 +167,9 @@
     initialized=true;
     if(document.activeElement===document.body)focus(byId('page-content'));
     let seen=false;try{seen=localStorage.getItem('pdl:reader:hint:v1')==='seen';}catch{}
+    byId('pdl-first-use').querySelector('p').textContent=assistanceEnabled()
+     ?'Τα «Χειριστήρια» ανοίγουν με ένα πάτημα. Η προαιρετική βοήθεια αλλάζει από τις Οδηγίες ανάγνωσης.'
+     :'Άγγιξε δύο φορές το κείμενο για να εμφανίσεις ή να κρύψεις τα χειριστήρια. Στα Κεφάλαια θα βρεις και τις Οδηγίες ανάγνωσης.';
     byId('pdl-first-use').hidden=seen||!mobile()||!document.body.classList.contains('immersive');
    }
   },180);

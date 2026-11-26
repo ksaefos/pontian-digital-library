@@ -17,20 +17,27 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,[t
 .pdl-sheet-tools{display:flex;flex-wrap:wrap;gap:6px;padding:8px 12px;border-bottom:1px solid var(--md-outline-var);}
 #pdl-reader-help-button{font:600 20px/1 system-ui,sans-serif;}
 #pdl-first-use[hidden]{display:none!important;}
+.pdl-assistance-help{margin-top:20px;border-top:1px solid var(--md-outline-var,#ddd);padding-top:12px;}
+.pdl-assistance-help h3{font:600 17px/1.35 system-ui,sans-serif;}
+.pdl-assistance-help label{display:flex;gap:10px;align-items:center;min-height:44px;font:600 15px/1.4 system-ui,sans-serif;cursor:pointer;}
+.pdl-assistance-help input{width:20px;height:20px;flex:0 0 20px;}
+#pdl-assistance-actions[hidden]{display:none!important;}
+#pdl-assistance-actions{display:flex;flex-wrap:wrap;gap:8px;}
 #sidebar .book-title,#sidebar .section-label,#sidebar .glossary-title,#sidebar .pdl-reading-help,#sidebar #fontsize-value{color:var(--md-on-surface)!important;opacity:1!important;}
 @media(max-width:768px){
- /* Reserve the same small strip in BOTH controls states: no text obstruction
-    and no page-mapping change when controls are shown or hidden. */
- .reader-shell,.main-area{height:calc(100dvh - 48px - env(safe-area-inset-bottom))!important;}
- #pdl-access-nav{position:fixed;z-index:229;bottom:0;left:0;right:0;display:flex;align-items:center;height:calc(48px + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);box-sizing:border-box;background:var(--pdl-page);color:var(--pdl-page-ink);}
+ /* Full reading height by default. Only explicit assistance reserves a strip;
+    showing/hiding the normal toolbars does not change page geometry. */
+ body.pdl-reader-assistance .reader-shell,body.pdl-reader-assistance .main-area{height:calc(100dvh - 48px - env(safe-area-inset-bottom))!important;}
+ body.pdl-reader-assistance #pdl-access-nav{position:fixed;z-index:229;bottom:0;left:0;right:0;display:flex;align-items:center;height:calc(48px + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);box-sizing:border-box;background:var(--pdl-page);color:var(--pdl-page-ink);}
  #pdl-access-nav button{flex:1;min-width:44px;min-height:44px;border:0;background:transparent;color:inherit;font:600 13px/1.2 system-ui,sans-serif;cursor:pointer;padding:0 4px;}
  #pdl-access-nav button:first-child,#pdl-access-nav button:last-child{flex:0 0 44px;font-size:22px;}
  body:not(.immersive) #pdl-access-nav{visibility:hidden;}
- #pdl-hide-tools{display:block;min-height:28px;border:0;padding:0 4px;background:transparent;color:inherit;font:600 12px/1.2 system-ui,sans-serif;}
- #pdl-mobile-bottom .pdl-trial-progress-label{display:none;}
- #pdl-first-use{position:fixed;z-index:240;left:12px;right:12px;bottom:calc(58px + env(safe-area-inset-bottom));padding:12px 14px;border:1px solid var(--md-outline-var);border-radius:12px;background:var(--md-surface);color:var(--md-on-surface);box-shadow:0 3px 18px var(--md-shadow);font:14px/1.45 system-ui,sans-serif;}
+ body.pdl-reader-assistance #pdl-hide-tools{display:block;min-height:28px;border:0;padding:0 4px;background:transparent;color:inherit;font:600 12px/1.2 system-ui,sans-serif;}
+ body.pdl-reader-assistance #pdl-mobile-bottom .pdl-trial-progress-label{display:none;}
+ #pdl-first-use{position:fixed;z-index:240;left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom));padding:12px 14px;border:1px solid var(--md-outline-var);border-radius:12px;background:var(--md-surface);color:var(--md-on-surface);box-shadow:0 3px 18px var(--md-shadow);font:14px/1.45 system-ui,sans-serif;}
+ body.pdl-reader-assistance #pdl-first-use{bottom:calc(58px + env(safe-area-inset-bottom));}
  #pdl-first-use p{margin:0 0 6px;}
- body #sidebar.open{display:flex!important;visibility:visible!important;flex-direction:column;z-index:1002!important;left:0!important;top:0!important;width:min(100%,390px)!important;min-width:0!important;height:100dvh!important;transform:none!important;}
+ body.pdl-reader-assistance #sidebar.open{display:flex!important;visibility:visible!important;flex-direction:column;z-index:1002!important;left:8px!important;right:8px!important;top:auto!important;bottom:calc(8px + env(safe-area-inset-bottom))!important;width:auto!important;min-width:0!important;height:auto!important;max-height:75dvh!important;border-radius:20px!important;transform:none!important;overflow:auto!important;}
  #sidebar.open .pdl-panel-tabs,#sidebar.open .toc-section,#sidebar.open .bookmark-section,#sidebar.open .pdl-mobile-actions,#sidebar.open .pdl-reading-panel,#sidebar.open .fontsize-section{display:none!important;}
  .pdl-skip-link{left:8px;}
 }
