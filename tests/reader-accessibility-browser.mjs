@@ -25,6 +25,10 @@ async function quiet(){
 async function focused(locator){assert.equal(await locator.evaluate(n=>document.activeElement===n),true,'Keyboard focus: '+await locator.getAttribute('id'));}
 async function audit(label){
  const report=await frame.evaluate(async()=>{
+  // Audit the fully shown UI, including the existing 250 ms glossary fade.
+  // Keep the animation enabled; wait for finite animations instead of testing
+  // a translucent intermediate frame whose contrast depends on runner speed.
+  await Promise.all(document.getAnimations().filter(a=>a.playState==='running'&&a.effect?.getTiming().iterations!==Infinity).map(a=>a.finished.catch(()=>{})));
   const r=await axe.run(document,{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa']}});
   return {passes:r.passes.length,incomplete:r.incomplete.map(i=>({id:i.id,targets:i.nodes.map(n=>n.target),reason:i.nodes[0]?.failureSummary})),
    violations:r.violations.map(v=>({id:v.id,impact:v.impact,nodes:v.nodes.map(n=>({target:n.target,reason:n.failureSummary}))}))};

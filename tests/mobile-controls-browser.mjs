@@ -145,6 +145,41 @@ try{
    docks.add(result.dock);allDocks.add(result.dock);
   }
   assert.equal(await f.evaluate(()=>pdlProgressStats().generation),generation,'Search dock movement must not re-paginate the book');
+  // The reserved direct-navigation strip can leave every sampled frequent-word
+  // match above the bottom dock. Exercise the top alternative with an actual
+  // match and a modelled on-screen keyboard, preserving the same page mapping.
+  let keyboardMatch=null;
+  for(const index of indices){
+   await f.evaluate(i=>goToTsResult(i),index);await quiet(f);await page.waitForTimeout(80);
+   const candidate=await f.evaluate(()=>{
+    const mark=document.querySelector('#pdl-opf-host .pdl-opf-page[data-page="'+currentPage+'"] mark.text-hit.current');
+    const r=mark?.getBoundingClientRect(),bar=document.getElementById('text-search-bar').getBoundingClientRect();
+    const header=document.getElementById('pdl-mobile-top').getBoundingClientRect();
+    return r&&r.top>header.bottom+bar.height+30&&r.bottom<innerHeight-80?{height:r.bottom+bar.height/2+8}:null;
+   });
+   if(candidate){keyboardMatch=candidate;break;}
+  }
+  assert.ok(keyboardMatch,'Fixture must contain a real match clear of the upper dock');
+  await page.evaluate(height=>{
+   const proto=Object.getPrototypeOf(visualViewport);
+   window.__searchDockHeightDescriptor=Object.getOwnPropertyDescriptor(proto,'height');
+   Object.defineProperty(proto,'height',{configurable:true,get:()=>height});
+   visualViewport.dispatchEvent(new Event('resize'));
+  },keyboardMatch.height);
+  await page.waitForTimeout(80);
+  const keyboardSearch=await f.evaluate(()=>{
+   const b=document.getElementById('text-search-bar'),r=b.getBoundingClientRect();
+   const marks=[...document.querySelectorAll('#pdl-opf-host .pdl-opf-page[data-page="'+currentPage+'"] mark.text-hit.current')];
+   return {dock:b.dataset.dock,overlap:marks.some(n=>[...n.getClientRects()].some(m=>m.top<r.bottom&&m.bottom>r.top&&m.left<r.right&&m.right>r.left))};
+  });
+  assert.equal(keyboardSearch.dock,'top','The keyboard must move the dock away from the real result');
+  assert.equal(keyboardSearch.overlap,false,'The upper dock must leave the actual match uncovered');
+  docks.add(keyboardSearch.dock);allDocks.add(keyboardSearch.dock);
+  await page.evaluate(()=>{
+   Object.defineProperty(Object.getPrototypeOf(visualViewport),'height',window.__searchDockHeightDescriptor);
+   visualViewport.dispatchEvent(new Event('resize'));
+  });
+  assert.equal(await f.evaluate(()=>pdlProgressStats().generation),generation,'Keyboard dock placement must not re-paginate the book');
   // Also search the last word on a full page, rather than only a frequent
   // name that may happen to occur above the footer in every sampled page.
   await f.evaluate(()=>pdlProgressGo(0,4));await quiet(f);
